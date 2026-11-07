@@ -62,13 +62,12 @@ exports.crearEntrenador = onCall({ region: REGION }, async (req) => {
 })
 
 // Da acceso a la app a un paciente: crea su perfil de rol "paciente" enlazado a su ficha.
-// Requiere correo y consentimiento registrado en la ficha. El paciente entra después con
-// Google o con un enlace que le llega a ese correo.
+// Requiere el correo en la ficha. El paciente entra después con Google o con un enlace que le
+// llega a ese correo, y acepta el consentimiento él mismo en su primera entrada.
 exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
   const { ref, pacienteId, ficha } = await fichaAutorizada(req)
   const email = String(ficha.email ?? '').trim().toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpsError('failed-precondition', 'La ficha no tiene un correo válido. Añádelo y guarda.')
-  if (!ficha.consentimiento) throw new HttpsError('failed-precondition', 'Falta registrar el consentimiento del paciente en la ficha.')
 
   const user = await cuentaPorCorreo(email, ficha.nombre)
   const uRef = getFirestore().doc(`usuarios/${user.uid}`)

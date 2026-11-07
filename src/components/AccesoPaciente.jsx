@@ -33,9 +33,9 @@ export default function AccesoPaciente({ paciente, onActualizado }) {
         </>
       ) : (
         <>
-          <p className="text-sm text-slate-600">Para que el paciente vea su rutina y anote sus pesos, necesita acceso. Hace falta su correo y el consentimiento registrados <b>y guardados</b> en la ficha.</p>
-          <button className="btn" onClick={darAcceso} disabled={ocupado || !paciente.email || !paciente.consentimiento}>{ocupado ? 'Dando acceso…' : 'Dar acceso a la app'}</button>
-          {(!paciente.email || !paciente.consentimiento) && <p className="text-xs text-amber-700">Falta {!paciente.email ? 'el correo' : 'el consentimiento'} (guarda la ficha después de añadirlo).</p>}
+          <p className="text-sm text-slate-600">Para que el paciente vea su rutina y anote sus pesos, necesita acceso. Hace falta su correo, guardado en la ficha. La primera vez que entre, el propio paciente tendrá que leer y aceptar el consentimiento de protección de datos.</p>
+          <button className="btn" onClick={darAcceso} disabled={ocupado || !paciente.email}>{ocupado ? 'Dando acceso…' : 'Dar acceso a la app'}</button>
+          {!paciente.email && <p className="text-xs text-amber-700">Falta el correo (guarda la ficha después de añadirlo).</p>}
         </>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}

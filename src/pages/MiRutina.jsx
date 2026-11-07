@@ -4,6 +4,8 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { describirLinea, formatLinea } from '../lib/volumen'
 import Foto from '../components/Foto'
+import PantallaConsentimiento from '../components/PantallaConsentimiento'
+import { consentimientoVigente } from '../lib/consentimiento'
 
 const VISIBLES = ['activa', 'pendiente', 'cerrada']
 const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -11,19 +13,35 @@ const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDate
 export default function MiRutina() {
   const { perfil } = useAuth()
   const pid = perfil.pacienteId
+  const [ficha, setFicha] = useState(undefined) // undefined = cargando
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!pid) return
+    return onSnapshot(doc(db, 'pacientes', pid), s => setFicha(s.exists() ? s.data() : null),
+      e => setError('No se pudo cargar tu ficha: ' + e.message))
+  }, [pid])
+
+  if (!pid) return <p className="tarjeta text-slate-600">Tu cuenta aún no está enlazada a una ficha. Contacta con tu entrenador.</p>
+  if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
+  if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
+  if (!consentimientoVigente(ficha?.consentimiento)) return <PantallaConsentimiento pacienteId={pid} />
+  return <ContenidoRutina pid={pid} />
+}
+
+function ContenidoRutina({ pid }) {
+  const { perfil } = useAuth()
   const [rutinas, setRutinas] = useState(null)
   const [elegida, setElegida] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!pid) return
     // Solo rutinas ya activadas: los borradores no son visibles para el paciente
     return onSnapshot(query(collection(db, 'pacientes', pid, 'rutinas'), where('estado', 'in', VISIBLES)),
       s => setRutinas(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.numero - a.numero)),
       e => setError('No se pudo cargar tu rutina: ' + e.message))
   }, [pid])
 
-  if (!pid) return <p className="tarjeta text-slate-600">Tu cuenta aún no está enlazada a una ficha. Contacta con tu entrenador.</p>
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (!rutinas) return <p className="text-slate-500">Cargando…</p>
   if (!rutinas.length) return (

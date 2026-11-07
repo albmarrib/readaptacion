@@ -65,11 +65,20 @@ service cloud.firestore {
       allow read: if esAdmin()
         || (esEntrenador() && resource.data.entrenadorId == request.auth.uid)
         || soyPaciente(pid);
-      allow create: if esAdmin()
-        || (esEntrenador() && request.resource.data.entrenadorId == request.auth.uid);
-      allow update: if esAdmin()
-        || (esEntrenador() && resource.data.entrenadorId == request.auth.uid
-            && request.resource.data.entrenadorId == request.auth.uid);
+      // El consentimiento solo lo escribe el propio paciente; el personal no puede crearlo ni cambiarlo
+      allow create: if (esAdmin()
+        || (esEntrenador() && request.resource.data.entrenadorId == request.auth.uid))
+        && !('consentimiento' in request.resource.data);
+      allow update: if ((esAdmin()
+            || (esEntrenador() && resource.data.entrenadorId == request.auth.uid
+                && request.resource.data.entrenadorId == request.auth.uid))
+          && request.resource.data.get('consentimiento', null) == resource.data.get('consentimiento', null))
+        // El paciente solo puede registrar su aceptación, con la hora del servidor
+        || (soyPaciente(pid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consentimiento'])
+            && request.resource.data.consentimiento.keys().hasOnly(['fecha', 'version'])
+            && request.resource.data.consentimiento.fecha == request.time
+            && request.resource.data.consentimiento.version is string);
       allow delete: if esAdmin()
         || (esEntrenador() && resource.data.entrenadorId == request.auth.uid);
 

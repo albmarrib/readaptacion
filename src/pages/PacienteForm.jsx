@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteField, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { sinVacios } from '../lib/util'
@@ -8,8 +8,8 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 import { app } from '../lib/firebase'
 import RutinasPaciente from '../components/RutinasPaciente'
 import AccesoPaciente from '../components/AccesoPaciente'
+import { consentimientoVigente } from '../lib/consentimiento'
 
-const VERSION_CONSENTIMIENTO = 'borrador' // se actualizará cuando exista el texto legal definitivo
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
 
 const VACIO = {
@@ -29,7 +29,7 @@ export default function PacienteForm() {
   const navigate = useNavigate()
   const { perfil, esAdmin } = useAuth()
   const [f, setF] = useState({ ...VACIO, entrenadorId: perfil.uid })
-  const [consentimiento, setConsentimiento] = useState(null) // { fecha, version } | null
+  const [consentimiento, setConsentimiento] = useState(null) // solo lectura: lo acepta el paciente
   const [entrenadores, setEntrenadores] = useState([])
   const [cargando, setCargando] = useState(!nuevo)
   const [guardando, setGuardando] = useState(false)
@@ -59,17 +59,25 @@ export default function PacienteForm() {
     if (!f.nombre.trim()) { setError('El nombre es obligatorio.'); return }
     setGuardando(true); setError('')
     try {
-      const { id: _id, ...resto } = f // eslint-disable-line no-unused-vars
-      const datos = sinVacios({
-        ...resto,
-        nombre: f.nombre.trim(), email: f.email.trim().toLowerCase(),
+      const nombre = f.nombre.trim(), email = f.email.trim().toLowerCase()
+      const campos = {
+        ...f, nombre, email,
         alturaCm: f.alturaCm === '' ? '' : Number(f.alturaCm), pesoKg: f.pesoKg === '' ? '' : Number(f.pesoKg),
-        consentimiento: consentimiento ?? undefined,
-      })
-      datos.entrenadorId = esAdmin ? f.entrenadorId : perfil.uid
-      datos.estado = f.estado || 'invitado'
-      if (nuevo) await addDoc(collection(db, 'pacientes'), datos)
-      else await setDoc(doc(db, 'pacientes', id), datos)
+        entrenadorId: esAdmin ? f.entrenadorId : perfil.uid, estado: f.estado || 'invitado',
+      }
+      // El acceso (uid) y el consentimiento no se tocan desde este formulario
+      delete campos.uid; delete campos.consentimiento; delete campos.id
+      if (nuevo) await addDoc(collection(db, 'pacientes'), sinVacios(campos))
+      else {
+        // Los campos que se dejan vacíos se borran; el resto se actualiza (sin pisar lo que el paciente haya cambiado)
+        const parche = {}
+        for (const [k, v] of Object.entries(campos)) {
+          const limpio = typeof v === 'object' && v !== null ? sinVacios(v) : v
+          const vacio = limpio === '' || limpio === undefined || limpio === null || (typeof limpio === 'object' && !Object.keys(limpio).length)
+          parche[k] = vacio ? deleteField() : limpio
+        }
+        await updateDoc(doc(db, 'pacientes', id), parche)
+      }
       navigate('/pacientes')
     } catch (err) { setError('No se pudo guardar: ' + err.message); setGuardando(false) }
   }
@@ -91,7 +99,7 @@ export default function PacienteForm() {
       </div>
 
       {!nuevo && <RutinasPaciente pacienteId={id} />}
-      {!nuevo && <AccesoPaciente paciente={{ ...f, id, consentimiento }} onActualizado={parche => setF(x => ({ ...x, ...parche }))} />}
+      {!nuevo && <AccesoPaciente paciente={{ ...f, id }} onActualizado={parche => setF(x => ({ ...x, ...parche }))} />}
 
       <section className="tarjeta space-y-4">
         <h2 className="font-semibold">Datos básicos</h2>
@@ -150,16 +158,14 @@ export default function PacienteForm() {
         <Campo etiqueta="Notas del entrenador"><textarea rows={3} className="input" {...input('notas')} /></Campo>
       </section>
 
-      <section className="tarjeta space-y-2">
-        <h2 className="font-semibold">Protección de datos</h2>
-        <label className="flex items-start gap-3">
-          <input type="checkbox" className="mt-1 h-5 w-5" checked={!!consentimiento}
-            onChange={e => setConsentimiento(e.target.checked ? { fecha: new Date().toISOString(), version: VERSION_CONSENTIMIENTO } : null)} />
-          <span className="text-sm">Tengo el consentimiento explícito del paciente para tratar sus datos de salud.
-            {consentimiento && <span className="block text-xs text-slate-500">Registrado el {new Date(consentimiento.fecha).toLocaleDateString('es-ES')} (versión del texto: {consentimiento.version}).</span>}
-          </span>
-        </label>
-      </section>
+      {!nuevo && (
+        <section className="tarjeta space-y-1">
+          <h2 className="font-semibold">Protección de datos</h2>
+          {consentimientoVigente(consentimiento)
+            ? <p className="text-sm text-teal-800">✓ El paciente aceptó el consentimiento el {consentimiento.fecha?.toDate?.().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
+            : <p className="text-sm text-amber-800">El paciente aún no ha aceptado el consentimiento. Lo hará él mismo la primera vez que entre a la app. Hasta entonces, evita anotar datos de salud en la ficha.</p>}
+        </section>
+      )}
 
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       <div className="flex flex-wrap items-center justify-between gap-2">
