@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { describirLinea, formatLinea } from '../lib/volumen'
 import Foto from '../components/Foto'
 import PantallaConsentimiento from '../components/PantallaConsentimiento'
+import InstalarApp from '../components/InstalarApp'
 import { consentimientoVigente } from '../lib/consentimiento'
 
 const VISIBLES = ['activa', 'pendiente', 'cerrada']
@@ -63,9 +64,12 @@ function ContenidoRutina({ pid, nombre, soloLectura = false }) {
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (!rutinas) return <p className="text-slate-500">Cargando…</p>
   if (!rutinas.length) return (
+    <div className="space-y-4">
+      {!soloLectura && <InstalarApp />}
     <div className="tarjeta text-center">
       <h1 className="text-xl font-semibold">Hola, {nombre.split(' ')[0]}</h1>
       <p className="mt-2 text-slate-600">Tu entrenador todavía no te ha activado ninguna rutina. Cuando lo haga, aparecerá aquí.</p>
+    </div>
     </div>
   )
 
@@ -74,7 +78,8 @@ function ContenidoRutina({ pid, nombre, soloLectura = false }) {
   const anteriores = rutinas.filter(r => r.id !== mostrada.id)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {!soloLectura && <InstalarApp />}
       <VistaRutina key={mostrada.id} pid={pid} rutina={mostrada} esActual={mostrada.id === actual.id} soloLectura={soloLectura} />
       {anteriores.length > 0 && (
         <section className="space-y-2">
@@ -98,6 +103,7 @@ function ContenidoRutina({ pid, nombre, soloLectura = false }) {
 function VistaRutina({ pid, rutina, esActual, soloLectura }) {
   const [ejercicios, setEjercicios] = useState(null)
   const [dia, setDia] = useState(0)
+  const [abierto, setAbierto] = useState(null) // id del ejercicio abierto
   const puedeAnotar = rutina.estado === 'activa' && !soloLectura
 
   useEffect(() => onSnapshot(collection(db, 'pacientes', pid, 'rutinas', rutina.id, 'ejercicios'),
@@ -106,6 +112,7 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
   const delDia = useMemo(() => (ejercicios ?? []).filter(e => e.dia === rutina.dias[dia]?.numero).sort((a, b) => a.orden - b.orden), [ejercicios, rutina.dias, dia])
   const seriesDia = delDia.reduce((s, e) => s + (e.seriesTotales ?? 0), 0)
   const d = rutina.dias[dia]
+  const indiceAbierto = delDia.findIndex(e => e.id === abierto)
 
   // Progreso: pesos anotados sobre el total de líneas de la rutina
   const totalLineas = (ejercicios ?? []).reduce((s, e) => s + (e.lineas?.length ?? 0), 0)
@@ -113,29 +120,29 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
   const pct = totalLineas ? Math.round((anotados / totalLineas) * 100) : 0
 
   return (
-    <div className="space-y-5">
-      <header className="overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 to-teal-600 p-5 text-white shadow-lg shadow-teal-900/10">
-        <p className="text-sm font-medium text-teal-100">{esActual ? 'Tu rutina actual' : 'Rutina anterior'}</p>
-        <h1 className="mt-0.5 text-2xl font-bold tracking-tight">Rutina {rutina.numero}</h1>
-        <p className="mt-1 text-sm text-teal-100">
+    <div className="space-y-4">
+      <header className="overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 to-teal-600 p-4 text-white shadow-lg shadow-teal-900/10">
+        <p className="text-xs font-medium text-teal-100">{esActual ? 'Tu rutina actual' : 'Rutina anterior'}</p>
+        <h1 className="mt-0.5 text-xl font-bold tracking-tight">Rutina {rutina.numero}</h1>
+        <p className="mt-0.5 text-xs text-teal-100">
           Temporada {rutina.temporada}{rutina.fechaInicio && <> · {fmt(rutina.fechaInicio)} – {fmt(rutina.fechaFin)}</>}
         </p>
         {puedeAnotar && totalLineas > 0 && (
-          <div className="mt-4">
-            <div className="flex items-baseline justify-between text-sm"><span className="font-medium">Pesos anotados</span><span className="font-semibold">{anotados} de {totalLineas}</span></div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${pct}%` }} /></div>
+          <div className="mt-3">
+            <div className="flex items-baseline justify-between text-xs"><span className="font-medium">Pesos anotados</span><span className="font-semibold">{anotados} de {totalLineas}</span></div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${pct}%` }} /></div>
           </div>
         )}
       </header>
 
-      {!puedeAnotar && !soloLectura && <p className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
-      {rutina.notaGeneral && <p className="rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm leading-relaxed text-teal-900"><b className="font-semibold">Nota de tu entrenador:</b> {rutina.notaGeneral}</p>}
+      {!puedeAnotar && !soloLectura && <p className="rounded-2xl bg-slate-100 p-3.5 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
+      {rutina.notaGeneral && <p className="rounded-2xl border border-teal-200 bg-teal-50 p-3.5 text-sm leading-relaxed text-teal-900"><b className="font-semibold">Nota de tu entrenador:</b> {rutina.notaGeneral}</p>}
 
       <div className="sticky top-12 z-10 -mx-4 bg-fondo/95 px-4 py-2 backdrop-blur">
         <div className="flex gap-2 overflow-x-auto pb-0.5">
           {rutina.dias.map((x, i) => (
             <button key={x.numero} onClick={() => setDia(i)} aria-pressed={i === dia}
-              className={`min-h-11 shrink-0 rounded-full px-5 text-base font-semibold transition ${i === dia ? 'bg-teal-700 text-white shadow-md shadow-teal-900/15' : 'border border-slate-300 bg-white text-slate-700'}`}>
+              className={`min-h-10 shrink-0 rounded-full px-5 text-[15px] font-semibold transition ${i === dia ? 'bg-teal-700 text-white shadow-md shadow-teal-900/15' : 'border border-slate-300 bg-white text-slate-700'}`}>
               Día {x.numero}
             </button>
           ))}
@@ -143,14 +150,21 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold tracking-tight">{d.titulo || `Día ${d.numero}`}</h2>
-        <p className="mt-0.5 text-sm text-slate-500">{delDia.length} ejercicio{delDia.length === 1 ? '' : 's'} · {seriesDia} series en total</p>
+        <h2 className="text-lg font-bold tracking-tight">{d.titulo || `Día ${d.numero}`}</h2>
+        <p className="text-xs text-slate-500">{delDia.length} ejercicio{delDia.length === 1 ? '' : 's'} · {seriesDia} series en total</p>
       </div>
 
       {ejercicios === null ? <p className="text-slate-500">Cargando…</p> : (
-        <ul className="space-y-5">
-          {delDia.map((e, i) => <TarjetaEjercicio key={e.id} pid={pid} rid={rutina.id} ejercicio={e} numero={i + 1} puedeAnotar={puedeAnotar} />)}
+        <ul className="space-y-2.5">
+          {delDia.map((e, i) => <FilaEjercicio key={e.id} ejercicio={e} numero={i + 1} puedeAnotar={puedeAnotar} onAbrir={() => setAbierto(e.id)} />)}
         </ul>
+      )}
+
+      {indiceAbierto >= 0 && (
+        <DetalleEjercicio pid={pid} rid={rutina.id} ejercicio={delDia[indiceAbierto]} numero={indiceAbierto + 1} total={delDia.length} puedeAnotar={puedeAnotar}
+          onCerrar={() => setAbierto(null)}
+          onAnterior={indiceAbierto > 0 ? () => setAbierto(delDia[indiceAbierto - 1].id) : null}
+          onSiguiente={indiceAbierto < delDia.length - 1 ? () => setAbierto(delDia[indiceAbierto + 1].id) : null} />
       )}
     </div>
   )
@@ -158,59 +172,127 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
 
 const catalogo = new Map() // ejercicioId -> datos del catálogo (fotos y vídeos)
 
-function TarjetaEjercicio({ pid, rid, ejercicio: e, numero, puedeAnotar }) {
-  const [cat, setCat] = useState(() => catalogo.get(e.ejercicioId) ?? null)
-  const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
-
+function useCatalogo(ejercicioId) {
+  const [cat, setCat] = useState(() => catalogo.get(ejercicioId) ?? null)
   useEffect(() => {
-    if (cat || !e.ejercicioId) return
+    if (cat || !ejercicioId) return
     let vivo = true
-    getDoc(doc(db, 'ejercicios', e.ejercicioId)).then(s => {
+    getDoc(doc(db, 'ejercicios', ejercicioId)).then(s => {
       const datos = s.exists() ? s.data() : { fotos: [], videos: [] }
-      catalogo.set(e.ejercicioId, datos)
+      catalogo.set(ejercicioId, datos)
       if (vivo) setCat(datos)
     }).catch(() => vivo && setCat({ fotos: [], videos: [] }))
     return () => { vivo = false }
-  }, [cat, e.ejercicioId])
+  }, [cat, ejercicioId])
+  return cat
+}
+
+// Resumen del volumen en una línea: 1*10  2*10+3  3*5
+const resumen = lineas => (lineas ?? []).map(formatLinea).join('   ')
+
+// Una fila de la lista del día: nombre, volumen resumido, observaciones y estado de los pesos
+export function FilaEjercicio({ ejercicio: e, numero, puedeAnotar, onAbrir }) {
+  const cat = useCatalogo(e.ejercicioId)
+  const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
+  const n = e.lineas?.length ?? 0
+  const hechos = Object.keys(e.pesos ?? {}).length
+  const completo = n > 0 && hechos >= n
 
   return (
-    <li className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
-      {cat?.fotos?.length > 0 && (
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto bg-slate-100 p-2.5">
-          {cat.fotos.map(f => <Foto key={f} ruta={f} className="aspect-[4/3] w-[88%] shrink-0 snap-center rounded-2xl bg-white sm:w-80" />)}
+    <li>
+      <button onClick={onAbrir} className="flex w-full items-stretch gap-3 rounded-2xl border border-slate-200/80 bg-white p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition active:scale-[0.99] active:bg-slate-50">
+        <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${completo ? 'bg-emerald-500 text-white' : 'bg-teal-700 text-white'}`}>{completo ? '✓' : numero}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold leading-snug">{titulo}</span>
+          {resto.length > 0 && <span className="block text-xs text-slate-500">{resto.join(' · ')}</span>}
+          <span className="mt-1 block font-mono text-[15px] font-bold tracking-tight text-teal-800">{resumen(e.lineas) || '—'}</span>
+          {e.observaciones && <span className="mt-1.5 block rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs leading-snug text-amber-900 ring-1 ring-amber-200/70"><b className="font-semibold">Obs.:</b> {e.observaciones}</span>}
+          {puedeAnotar && n > 0 && <span className={`mt-1.5 block text-xs font-medium ${completo ? 'text-emerald-700' : 'text-slate-500'}`}>{completo ? 'Pesos anotados' : `Pesos: ${hechos} de ${n} · toca para anotar`}</span>}
+        </span>
+        <span className="flex shrink-0 flex-col items-end justify-between">
+          {cat?.fotos?.[0] ? <Foto ruta={cat.fotos[0]} className="h-12 w-16 rounded-lg bg-slate-100" /> : <span className="h-12 w-16" />}
+          <span className="text-lg leading-none text-slate-300">›</span>
+        </span>
+      </button>
+    </li>
+  )
+}
+
+// Ficha completa del ejercicio: fotos pequeñas (se amplían al tocar), vídeos, y un peso por línea
+export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeAnotar, onCerrar, onAnterior, onSiguiente }) {
+  const cat = useCatalogo(e.ejercicioId)
+  const [ampliada, setAmpliada] = useState(null)
+  const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
+
+  useEffect(() => {
+    const tecla = ev => ev.key === 'Escape' && (ampliada ? setAmpliada(null) : onCerrar())
+    document.addEventListener('keydown', tecla)
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', tecla); document.body.style.overflow = '' }
+  }, [onCerrar, ampliada])
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-fondo sm:items-center sm:justify-center sm:bg-slate-900/50 sm:p-4">
+      <div className="flex min-h-0 w-full flex-1 flex-col bg-fondo sm:max-h-[92dvh] sm:max-w-lg sm:flex-none sm:overflow-hidden sm:rounded-3xl">
+        <div className="flex items-center gap-2 bg-gradient-to-r from-teal-700 to-teal-600 px-3 py-3 text-white">
+          <button onClick={onCerrar} aria-label="Volver a la lista" className="flex h-9 items-center gap-1 rounded-full bg-white/15 pl-2 pr-3 text-sm font-medium"><span className="text-lg leading-none">‹</span> Lista</button>
+          <span className="ml-auto text-xs font-medium text-teal-100">Ejercicio {numero} de {total}</span>
         </div>
-      )}
-      <div className="space-y-4 p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-700 text-base font-bold text-white">{numero}</span>
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold leading-snug tracking-tight">{titulo}</h3>
+
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+          <div>
+            <h2 className="text-xl font-bold leading-snug tracking-tight">{titulo}</h2>
             {resto.length > 0 && <p className="mt-0.5 text-sm text-slate-500">{resto.join(' · ')}</p>}
           </div>
+
+          {cat?.fotos?.length > 0 && (
+            <div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {cat.fotos.map(f => (
+                  <button key={f} onClick={() => setAmpliada(f)} aria-label="Ampliar foto" className="shrink-0 overflow-hidden rounded-xl ring-1 ring-slate-200 transition active:scale-95">
+                    <Foto ruta={f} className="h-24 w-32 bg-white" />
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-slate-400">Toca una foto para ampliarla</p>
+            </div>
+          )}
+
+          {cat?.videos?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {cat.videos.map((v, i) => <a key={v} href={v} target="_blank" rel="noreferrer" className="btn-sec !h-10 text-sm">▶ Ver vídeo{cat.videos.length > 1 ? ` ${i + 1}` : ''}</a>)}
+            </div>
+          )}
+
+          {e.observaciones && <p className="rounded-2xl bg-amber-50 p-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200/70"><b className="font-semibold">Observaciones:</b> {e.observaciones}</p>}
+
+          <ul className="space-y-3">
+            {(e.lineas ?? []).map((l, i) => (
+              <li key={i} className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-slate-200/70">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-lg font-bold tracking-tight">{formatLinea(l)}</div>
+                  <div className="mt-0.5 text-sm leading-snug text-slate-600">{describirLinea(l)}</div>
+                </div>
+                <CampoPeso pid={pid} rid={rid} ejercicio={e} indice={i} puedeAnotar={puedeAnotar} />
+              </li>
+            ))}
+          </ul>
+          {e.pesosActualizado && <p className="text-xs text-slate-400">Pesos actualizados el {fmt(e.pesosActualizado)}</p>}
         </div>
 
-        {cat?.videos?.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {cat.videos.map((v, i) => <a key={v} href={v} target="_blank" rel="noreferrer" className="btn-sec !min-h-10 !py-2 text-sm">▶ Ver vídeo{cat.videos.length > 1 ? ` ${i + 1}` : ''}</a>)}
-          </div>
-        )}
-
-        <ul className="space-y-3">
-          {(e.lineas ?? []).map((l, i) => (
-            <li key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 ring-1 ring-slate-200/70">
-              <div className="min-w-0 flex-1">
-                <div className="font-mono text-lg font-bold tracking-tight text-slate-900">{formatLinea(l)}</div>
-                <div className="mt-0.5 text-sm leading-snug text-slate-600">{describirLinea(l)}</div>
-              </div>
-              <CampoPeso pid={pid} rid={rid} ejercicio={e} indice={i} puedeAnotar={puedeAnotar} />
-            </li>
-          ))}
-        </ul>
-
-        {e.observaciones && <p className="rounded-2xl bg-amber-50 p-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200/70"><b className="font-semibold">Observaciones:</b> {e.observaciones}</p>}
-        {e.pesosActualizado && <p className="text-xs text-slate-400">Pesos actualizados el {fmt(e.pesosActualizado)}</p>}
+        <div className="flex gap-2 border-t border-slate-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button className="btn-sec !h-11 flex-1" onClick={onAnterior ?? undefined} disabled={!onAnterior}>‹ Anterior</button>
+          {onSiguiente ? <button className="btn !h-11 flex-1" onClick={onSiguiente}>Siguiente ›</button> : <button className="btn !h-11 flex-1" onClick={onCerrar}>Terminar</button>}
+        </div>
       </div>
-    </li>
+
+      {ampliada && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-3" onClick={() => setAmpliada(null)}>
+          <Foto ruta={ampliada} className="h-full max-h-[85dvh] w-full max-w-3xl !bg-transparent" />
+          <button aria-label="Cerrar foto" className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-xl text-white">✕</button>
+        </div>
+      )}
+    </div>
   )
 }
 

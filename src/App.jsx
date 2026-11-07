@@ -12,6 +12,8 @@ import Volumenes from './pages/Volumenes'
 import Avisos from './pages/Avisos'
 import Perfil from './pages/Perfil'
 import Evolucion from './pages/Evolucion'
+import { lazy, Suspense } from 'react'
+const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
 
 function Cargando() {
   return <div className="flex min-h-dvh items-center justify-center text-slate-500">Cargando…</div>
@@ -36,6 +38,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      {DemoPaciente && <Route path="/demo-paciente" element={<Suspense fallback={null}><DemoPaciente /></Suspense>} />}
       <Route element={<Protegida />}>
         <Route index element={<Inicio />} />
         <Route path="catalogo" element={<Solo cond={esPersonal}><Catalogo /></Solo>} />
