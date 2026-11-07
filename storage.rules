@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Bucket por defecto (EE. UU.): solo fotos genéricas del catálogo.
+// Los archivos personales de pacientes irán a un bucket adicional en la UE.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function perfil() {
+      return firestore.get(/databases/(default)/documents/usuarios/$(request.auth.uid)).data;
+    }
+    function activo() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/usuarios/$(request.auth.uid))
+        && perfil().activo == true;
+    }
+    function puedeCatalogo() {
+      return activo() && (perfil().rol == 'admin'
+        || (perfil().rol == 'entrenador' && perfil().puedeEditarCatalogo == true));
+    }
+
+    match /ejercicios/{ejercicio}/{archivo} {
+      allow read: if activo();
+      allow write: if puedeCatalogo()
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024;
+      allow delete: if puedeCatalogo();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

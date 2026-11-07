@@ -27,7 +27,8 @@ Varios entrenadores, cada uno con sus pacientes. Un paciente pertenece a un entr
 - Frontend: **React + Vite + Tailwind CSS**, instalable como **PWA**. Idioma: solo español.
 - Backend: **Firebase**: Authentication, Firestore (región UE), Cloud Storage, Cloud Functions (Node), Hosting.
 - Código en un repositorio de **GitHub**.
-- Acceso del paciente: el entrenador crea la ficha con su correo; el paciente recibe un enlace de invitación y entra con enlace de acceso por correo (sin contraseña). Entrenadores y administrador: correo + contraseña o Google.
+- Acceso del paciente: el entrenador crea la ficha con su correo; el paciente recibe un enlace de invitación y entra con enlace de acceso por correo (sin contraseña).
+- Acceso de entrenadores y administrador: **Google o enlace de acceso por correo** (sin contraseñas que guardar ni olvidar; sustituye al "correo + contraseña" de la v1.2). El administrador da de alta a cada entrenador con la Cloud Function `crearEntrenador`; el primer administrador se crea con `scripts/crear-admin.js`.
 
 ## 4. Reglas de negocio
 
