@@ -4,6 +4,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'fir
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { sinVacios } from '../lib/util'
+import RutinasPaciente from '../components/RutinasPaciente'
 
 const VERSION_CONSENTIMIENTO = 'borrador' // se actualizará cuando exista el texto legal definitivo
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
@@ -85,6 +86,8 @@ export default function PacienteForm() {
         <Link to="/pacientes" className="text-slate-500 hover:text-slate-800" aria-label="Volver">←</Link>
         <h1 className="text-xl font-semibold">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
       </div>
+
+      {!nuevo && <RutinasPaciente pacienteId={id} />}
 
       <section className="tarjeta space-y-4">
         <h2 className="font-semibold">Datos básicos</h2>

@@ -6,7 +6,7 @@ const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Pacie
 export default function Layout() {
   const { perfil, esAdmin, esPersonal, salir } = useAuth()
   const enlaces = esPersonal
-    ? [['/pacientes', 'Pacientes'], ['/catalogo', 'Catálogo'], ...(esAdmin ? [['/entrenadores', 'Entrenadores']] : [])]
+    ? [['/pacientes', 'Pacientes'], ['/catalogo', 'Catálogo'], ['/volumenes', 'Volúmenes'], ...(esAdmin ? [['/entrenadores', 'Entrenadores']] : [])]
     : [['/mi-rutina', 'Mi rutina']]
   const clase = ({ isActive }) =>
     `rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-100'}`
