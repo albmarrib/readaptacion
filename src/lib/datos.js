@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from './firebase'
 
 // Escucha una colección entera (solo para colecciones pequeñas). null = cargando.
@@ -23,4 +23,16 @@ export function useSistemas() {
 
 export function useVolumenes() {
   return useColeccion('volumenes')
+}
+
+// Avisos del entrenador actual (los suyos, leídos y sin leer), más recientes primero
+export function useAvisos(uid) {
+  const [avisos, setAvisos] = useState(null)
+  useEffect(() => {
+    if (!uid) return
+    return onSnapshot(query(collection(db, 'avisos'), where('entrenadorId', '==', uid)),
+      s => setAvisos(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.fecha?.seconds ?? 0) - (a.fecha?.seconds ?? 0))),
+      e => { console.error('avisos', e); setAvisos([]) })
+  }, [uid])
+  return avisos
 }

@@ -19,7 +19,10 @@ export default function RutinasPaciente({ pacienteId }) {
     <section className="tarjeta space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold">Rutinas</h2>
-        <Link to={`/pacientes/${pacienteId}/rutinas/nueva`} className="btn !py-2">+ Nueva rutina</Link>
+        <div className="flex gap-2">
+          {rutinas?.some(x => x.estado !== 'borrador') && <Link to={`/pacientes/${pacienteId}/evolucion`} className="btn-sec !py-2">Evolución</Link>}
+          <Link to={`/pacientes/${pacienteId}/rutinas/nueva`} className="btn !py-2">+ Nueva rutina</Link>
+        </div>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       {rutinas === null ? <p className="text-sm text-slate-500">Cargando…</p>

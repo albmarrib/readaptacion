@@ -7,6 +7,7 @@ import { useGrupos } from '../lib/datos'
 import { describirLinea, formatLineas, seriesTotales, tituloDia, tituloGrupo } from '../lib/volumen'
 import SelectorEjercicios from '../components/SelectorEjercicios'
 import SelectorVolumen from '../components/SelectorVolumen'
+import SeguimientoRutina from '../components/SeguimientoRutina'
 
 const ESTADOS = { borrador: 'Borrador', activa: 'Activa', pendiente: 'Pendiente de revisión', cerrada: 'Cerrada' }
 const COLOR = { borrador: 'bg-slate-200 text-slate-700', activa: 'bg-teal-100 text-teal-800', pendiente: 'bg-amber-100 text-amber-800', cerrada: 'bg-slate-300 text-slate-700' }
@@ -34,6 +35,7 @@ export default function RutinaEditor() {
   const [aviso, setAviso] = useState('')
   const [selector, setSelector] = useState(false)
   const [volumenDe, setVolumenDe] = useState(null)  // clave del ejercicio que elige volumen
+  const [duplicando, setDuplicando] = useState(false)
 
   const editable = meta.estado === 'borrador'
 
@@ -72,6 +74,7 @@ export default function RutinaEditor() {
   }, [sucio])
 
   // ---- Cambios en memoria ----
+  const cambiarEstadoLocal = estado => setMeta(m => ({ ...m, estado }))
   const cambiarMeta = parche => { setMeta(m => ({ ...m, ...parche })); setSucio(true) }
   const cambiarDia = (i, fn) => { setDias(ds => ds.map((d, j) => (j === i ? fn(d) : d))); setSucio(true) }
   const cambiarEj = (clave, parche) => cambiarDia(diaActivo, d => ({ ...d, ejercicios: d.ejercicios.map(e => (e.clave === clave ? { ...e, ...parche } : e)) }))
@@ -186,6 +189,36 @@ export default function RutinaEditor() {
     guardar({ activar: true })
   }
 
+  // Copia la rutina como un borrador nuevo (sin pesos), para preparar la siguiente
+  const duplicar = async () => {
+    if (!window.confirm('Se creará una rutina nueva en borrador con los mismos días y ejercicios, sin pesos. ¿Continuar?')) return
+    setDuplicando(true); setError('')
+    try {
+      const s = await getDocs(collection(db, 'pacientes', pid, 'rutinas'))
+      const numero = Math.max(0, ...s.docs.map(d => d.data().numero ?? 0)) + 1
+      const nuevaRef = doc(collection(db, 'pacientes', pid, 'rutinas'))
+      const datos = {
+        numero, temporada: new Date().getFullYear(), semanas: Number(meta.semanas), estado: 'borrador', creadaPor: perfil.uid,
+        dias: dias.map((d, i) => ({ numero: i + 1, gruposIds: d.gruposIds, titulo: tituloDia(d.gruposIds, grupos) })),
+      }
+      if (meta.frecuencia !== '') datos.frecuencia = Number(meta.frecuencia)
+      if (meta.notaGeneral.trim()) datos.notaGeneral = meta.notaGeneral.trim()
+      const lote = writeBatch(db)
+      lote.set(nuevaRef, datos)
+      dias.forEach((d, i) => d.ejercicios.forEach((e, orden) => {
+        const ej = {
+          dia: i + 1, orden: orden + 1, ejercicioId: e.ejercicioId, nombre: e.nombre, grupoId: e.grupoId,
+          lineas: e.lineas ?? [], seriesTotales: e.lineas ? seriesTotales(e.lineas) : 0, observaciones: e.observaciones ?? '', pesos: {},
+        }
+        if (e.volumenId) ej.volumenId = e.volumenId
+        if (e.volumenNombre) ej.volumenNombre = e.volumenNombre
+        lote.set(doc(db, 'pacientes', pid, 'rutinas', nuevaRef.id, 'ejercicios', crypto.randomUUID()), ej)
+      }))
+      await lote.commit()
+      navigate(`/pacientes/${pid}/rutinas/${nuevaRef.id}`)
+    } catch (e) { setError('No se pudo duplicar: ' + e.message); setDuplicando(false) }
+  }
+
   const eliminar = async () => {
     if (!window.confirm('¿Eliminar esta rutina borrador? No se puede deshacer.')) return
     setGuardando(true)
@@ -213,7 +246,7 @@ export default function RutinaEditor() {
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${COLOR[meta.estado]}`}>{ESTADOS[meta.estado]}</span>
       </div>
 
-      {!editable && <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-600">Esta rutina ya no es un borrador y no se puede modificar.</p>}
+      {!editable && <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-600">Esta rutina ya no es un borrador y no se puede modificar. Abajo tienes el seguimiento.</p>}
 
       {/* Ajustes generales */}
       <section className="tarjeta space-y-3">
@@ -324,6 +357,8 @@ export default function RutinaEditor() {
 
         {editable && <button className="btn-sec w-full" disabled={!dia.gruposIds.length} onClick={() => setSelector(true)}>+ Añadir ejercicios</button>}
       </section>
+
+      {!nueva && !editable && <SeguimientoRutina paciente={paciente} rutina={{ ...meta }} rid={rid} onCerrada={() => cambiarEstadoLocal('cerrada')} onDuplicar={duplicar} duplicando={duplicando} />}
 
       {(error || aviso) && <p role="alert" className={`rounded-xl p-3 text-sm ${error ? 'bg-red-50 text-red-700' : 'bg-teal-50 text-teal-800'}`}>{error || aviso}</p>}
 

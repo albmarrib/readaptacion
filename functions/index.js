@@ -1,7 +1,8 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
-const { getFirestore } = require('firebase-admin/firestore')
+const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
+const { onSchedule } = require('firebase-functions/v2/scheduler')
 
 initializeApp()
 const REGION = 'europe-west1'
@@ -101,4 +102,27 @@ exports.eliminarPaciente = onCall({ region: REGION }, async (req) => {
   await Promise.all(avisos.docs.map(d => d.ref.delete()))
   await db.recursiveDelete(ref)
   return { ok: true }
+})
+
+// Cada día: las rutinas activas cuya fecha de fin ya pasó pasan a "pendiente" (requieren revisión)
+// y se crea un aviso para el entrenador del paciente. Se puede repetir sin duplicar avisos.
+exports.revisarRutinas = onSchedule({ region: REGION, schedule: 'every day 07:00', timeZone: 'Europe/Madrid' }, async () => {
+  const db = getFirestore()
+  const vencidas = await db.collectionGroup('rutinas').where('fechaFin', '<=', Timestamp.now()).get()
+  let n = 0
+  for (const r of vencidas.docs) {
+    if (r.data().estado !== 'activa') continue
+    const pacienteRef = r.ref.parent.parent
+    const paciente = await pacienteRef.get()
+    if (!paciente.exists) continue
+    const lote = db.batch()
+    lote.update(r.ref, { estado: 'pendiente' })
+    lote.set(db.doc(`avisos/${r.id}`), {
+      entrenadorId: paciente.data().entrenadorId, pacienteId: pacienteRef.id, rutinaId: r.id,
+      tipo: 'rutina_vencida', fecha: FieldValue.serverTimestamp(), leido: false,
+    })
+    await lote.commit()
+    n++
+  }
+  console.log(`Rutinas vencidas procesadas: ${n}`)
 })

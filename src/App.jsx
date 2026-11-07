@@ -9,6 +9,8 @@ import Entrenadores from './pages/Entrenadores'
 import MiRutina from './pages/MiRutina'
 import RutinaEditor from './pages/RutinaEditor'
 import Volumenes from './pages/Volumenes'
+import Avisos from './pages/Avisos'
+import Evolucion from './pages/Evolucion'
 
 function Cargando() {
   return <div className="flex min-h-dvh items-center justify-center text-slate-500">Cargando…</div>
@@ -41,6 +43,8 @@ export default function App() {
         <Route path="pacientes/:id" element={<Solo cond={esPersonal}><PacienteForm /></Solo>} />
         <Route path="pacientes/:id/rutinas/nueva" element={<Solo cond={esPersonal}><RutinaEditor /></Solo>} />
         <Route path="pacientes/:id/rutinas/:rid" element={<Solo cond={esPersonal}><RutinaEditor /></Solo>} />
+        <Route path="pacientes/:id/evolucion" element={<Solo cond={esPersonal}><Evolucion /></Solo>} />
+        <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />
         <Route path="mi-rutina" element={<Solo cond={esPaciente}><MiRutina /></Solo>} />
