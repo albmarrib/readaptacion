@@ -107,30 +107,44 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
   const seriesDia = delDia.reduce((s, e) => s + (e.seriesTotales ?? 0), 0)
   const d = rutina.dias[dia]
 
+  // Progreso: pesos anotados sobre el total de líneas de la rutina
+  const totalLineas = (ejercicios ?? []).reduce((s, e) => s + (e.lineas?.length ?? 0), 0)
+  const anotados = (ejercicios ?? []).reduce((s, e) => s + Object.keys(e.pesos ?? {}).length, 0)
+  const pct = totalLineas ? Math.round((anotados / totalLineas) * 100) : 0
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">{esActual ? 'Tu rutina' : `Rutina ${rutina.numero}`}</h1>
-        <p className="text-sm text-slate-500">
-          Rutina {rutina.numero} · temporada {rutina.temporada}
-          {rutina.fechaInicio && <> · {fmt(rutina.fechaInicio)} – {fmt(rutina.fechaFin)}</>}
+    <div className="space-y-5">
+      <header className="overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 to-teal-600 p-5 text-white shadow-lg shadow-teal-900/10">
+        <p className="text-sm font-medium text-teal-100">{esActual ? 'Tu rutina actual' : 'Rutina anterior'}</p>
+        <h1 className="mt-0.5 text-2xl font-bold tracking-tight">Rutina {rutina.numero}</h1>
+        <p className="mt-1 text-sm text-teal-100">
+          Temporada {rutina.temporada}{rutina.fechaInicio && <> · {fmt(rutina.fechaInicio)} – {fmt(rutina.fechaFin)}</>}
         </p>
-        {!puedeAnotar && !soloLectura && <p className="mt-2 rounded-xl bg-slate-100 p-3 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
-        {rutina.notaGeneral && <p className="mt-2 rounded-xl bg-teal-50 p-3 text-sm text-teal-900">{rutina.notaGeneral}</p>}
-      </div>
+        {puedeAnotar && totalLineas > 0 && (
+          <div className="mt-4">
+            <div className="flex items-baseline justify-between text-sm"><span className="font-medium">Pesos anotados</span><span className="font-semibold">{anotados} de {totalLineas}</span></div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${pct}%` }} /></div>
+          </div>
+        )}
+      </header>
 
-      <div className="sticky top-[3.4rem] z-10 -mx-4 flex gap-2 overflow-x-auto bg-slate-50/95 px-4 py-2 backdrop-blur">
-        {rutina.dias.map((x, i) => (
-          <button key={x.numero} onClick={() => setDia(i)}
-            className={`shrink-0 rounded-full px-5 py-2.5 text-base font-semibold ${i === dia ? 'bg-teal-700 text-white' : 'border border-slate-300 bg-white text-slate-700'}`}>
-            Día {x.numero}
-          </button>
-        ))}
+      {!puedeAnotar && !soloLectura && <p className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
+      {rutina.notaGeneral && <p className="rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm leading-relaxed text-teal-900"><b className="font-semibold">Nota de tu entrenador:</b> {rutina.notaGeneral}</p>}
+
+      <div className="sticky top-[3.6rem] z-10 -mx-4 bg-fondo/95 px-4 py-2 backdrop-blur">
+        <div className="flex gap-2 overflow-x-auto pb-0.5">
+          {rutina.dias.map((x, i) => (
+            <button key={x.numero} onClick={() => setDia(i)} aria-pressed={i === dia}
+              className={`min-h-11 shrink-0 rounded-full px-5 text-base font-semibold transition ${i === dia ? 'bg-teal-700 text-white shadow-md shadow-teal-900/15' : 'border border-slate-300 bg-white text-slate-700'}`}>
+              Día {x.numero}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold">{d.titulo || `Día ${d.numero}`}</h2>
-        <p className="text-sm text-slate-500">{delDia.length} ejercicio{delDia.length === 1 ? '' : 's'} · {seriesDia} series</p>
+        <h2 className="text-xl font-bold tracking-tight">{d.titulo || `Día ${d.numero}`}</h2>
+        <p className="mt-0.5 text-sm text-slate-500">{delDia.length} ejercicio{delDia.length === 1 ? '' : 's'} · {seriesDia} series en total</p>
       </div>
 
       {ejercicios === null ? <p className="text-slate-500">Cargando…</p> : (
@@ -160,39 +174,40 @@ function TarjetaEjercicio({ pid, rid, ejercicio: e, numero, puedeAnotar }) {
   }, [cat, e.ejercicioId])
 
   return (
-    <li className="tarjeta space-y-3 !p-0 overflow-hidden">
+    <li className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
       {cat?.fotos?.length > 0 && (
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto bg-slate-100 p-2">
-          {cat.fotos.map(f => <Foto key={f} ruta={f} className="aspect-[4/3] w-[85%] shrink-0 snap-center rounded-xl bg-white sm:w-72" />)}
+        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto bg-slate-100 p-2.5">
+          {cat.fotos.map(f => <Foto key={f} ruta={f} className="aspect-[4/3] w-[88%] shrink-0 snap-center rounded-2xl bg-white sm:w-80" />)}
         </div>
       )}
-      <div className="space-y-3 px-4 pb-4 pt-1">
+      <div className="space-y-4 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-700 text-sm font-bold text-white">{numero}</span>
-          <div>
-            <h3 className="text-lg font-semibold leading-snug">{titulo}</h3>
-            {resto.length > 0 && <p className="text-sm text-slate-500">{resto.join(' · ')}</p>}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-700 text-base font-bold text-white">{numero}</span>
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold leading-snug tracking-tight">{titulo}</h3>
+            {resto.length > 0 && <p className="mt-0.5 text-sm text-slate-500">{resto.join(' · ')}</p>}
           </div>
         </div>
+
         {cat?.videos?.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {cat.videos.map((v, i) => <a key={v} href={v} target="_blank" rel="noreferrer" className="btn-sec !py-2 text-sm">▶ Ver vídeo{cat.videos.length > 1 ? ` ${i + 1}` : ''}</a>)}
+            {cat.videos.map((v, i) => <a key={v} href={v} target="_blank" rel="noreferrer" className="btn-sec !min-h-10 !py-2 text-sm">▶ Ver vídeo{cat.videos.length > 1 ? ` ${i + 1}` : ''}</a>)}
           </div>
         )}
 
-        <ul className="space-y-2.5">
+        <ul className="space-y-3">
           {(e.lineas ?? []).map((l, i) => (
-            <li key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
+            <li key={i} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 ring-1 ring-slate-200/70">
               <div className="min-w-0 flex-1">
-                <div className="font-mono text-base font-bold">{formatLinea(l)}</div>
-                <div className="text-sm text-slate-600">{describirLinea(l)}</div>
+                <div className="font-mono text-lg font-bold tracking-tight text-slate-900">{formatLinea(l)}</div>
+                <div className="mt-0.5 text-sm leading-snug text-slate-600">{describirLinea(l)}</div>
               </div>
               <CampoPeso pid={pid} rid={rid} ejercicio={e} indice={i} puedeAnotar={puedeAnotar} />
             </li>
           ))}
         </ul>
 
-        {e.observaciones && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900"><b>Observaciones:</b> {e.observaciones}</p>}
+        {e.observaciones && <p className="rounded-2xl bg-amber-50 p-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200/70"><b className="font-semibold">Observaciones:</b> {e.observaciones}</p>}
         {e.pesosActualizado && <p className="text-xs text-slate-400">Pesos actualizados el {fmt(e.pesosActualizado)}</p>}
       </div>
     </li>
@@ -207,7 +222,7 @@ function CampoPeso({ pid, rid, ejercicio: e, indice, puedeAnotar }) {
 
   useEffect(() => { setValor(guardado ?? '') }, [guardado])
 
-  if (!puedeAnotar) return <div className="w-24 text-right text-lg font-semibold">{guardado != null ? `${guardado} kg` : <span className="text-sm font-normal text-slate-400">sin peso</span>}</div>
+  if (!puedeAnotar) return <div className="w-24 text-right text-lg font-bold">{guardado != null ? `${guardado} kg` : <span className="text-sm font-normal text-slate-400">sin peso</span>}</div>
 
   const guardar = async () => {
     const texto = String(valor).replace(',', '.').trim()
@@ -228,12 +243,12 @@ function CampoPeso({ pid, rid, ejercicio: e, indice, puedeAnotar }) {
     <label className="flex shrink-0 flex-col items-end">
       <span className="flex items-center gap-1.5">
         <input type="text" inputMode="decimal" placeholder="0" aria-label={`Peso de la línea ${indice + 1} en kilos`}
-          className={`h-14 w-24 rounded-xl border-2 bg-white px-2 text-center text-xl font-bold focus:outline-none ${estado === 'error' ? 'border-red-400' : 'border-slate-300 focus:border-teal-600'}`}
+          className={`h-14 w-24 rounded-xl border-2 bg-white px-2 text-center text-xl font-bold shadow-sm focus:outline-none focus:ring-4 ${estado === 'error' ? 'border-red-400 focus:ring-red-200' : guardado != null ? 'border-teal-500 focus:ring-teal-600/15' : 'border-slate-300 focus:border-teal-600 focus:ring-teal-600/15'}`}
           value={valor} onChange={ev => { setValor(ev.target.value); setEstado('') }} onBlur={guardar}
           onKeyDown={ev => ev.key === 'Enter' && ev.currentTarget.blur()} />
-        <span className="text-sm font-medium text-slate-500">kg</span>
+        <span className="text-sm font-semibold text-slate-500">kg</span>
       </span>
-      <span className={`h-4 text-xs ${estado === 'error' ? 'text-red-600' : 'text-teal-700'}`}>
+      <span className={`mt-0.5 h-4 text-xs font-medium ${estado === 'error' ? 'text-red-600' : 'text-teal-700'}`}>
         {estado === 'guardando' ? 'Guardando…' : estado === 'ok' ? '✓ Guardado' : estado === 'error' ? 'No se pudo guardar' : ''}
       </span>
     </label>

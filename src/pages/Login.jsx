@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { GoogleAuthProvider, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithPopup } from 'firebase/auth'
 import { auth, firebaseConfigurado } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
+import { Logo } from '../components/Iconos'
 
 const CLAVE_CORREO = 'readaptacion.correoEnlace'
 
@@ -58,11 +59,12 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-slate-50 p-4">
-      <div className="tarjeta w-full max-w-sm space-y-5 !p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-teal-700">Readaptación</h1>
-          <p className="mt-1 text-sm text-slate-500">Entrenamiento personalizado</p>
+    <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-teal-50 via-fondo to-fondo p-4">
+      <div className="tarjeta w-full max-w-sm space-y-6 !p-7 shadow-xl shadow-teal-900/5">
+        <div className="flex flex-col items-center text-center">
+          <Logo tamano={56} />
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Readaptación</h1>
+          <p className="mt-1 text-sm text-slate-500">Tu plan de entrenamiento, siempre contigo</p>
         </div>
 
         {!firebaseConfigurado && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Falta la configuración de Firebase (archivo <code>.env</code>).</p>}
