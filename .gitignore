@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.env
+.env.local
+*.local
+
+# Claves de cuenta de servicio: nunca al repositorio
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+*clave*.json
+*key*.json
+
+# Datos de pacientes y material pesado
+words/
+data/fotos/
+data/originales/
+carga_firebase/data/fotos/
+
+.firebase/
+*.log
+.DS_Store
+Thumbs.db

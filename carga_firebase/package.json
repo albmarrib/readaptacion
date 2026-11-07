@@ -1,0 +1,7 @@
+{
+  "name": "readaptacion-carga",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "subir": "node subir.js" },
+  "dependencies": { "firebase-admin": "^12.0.0" }
+}

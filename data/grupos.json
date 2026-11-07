@@ -1,0 +1,56 @@
+[
+  {
+    "id": "funcional",
+    "nombre": "FUNCIONAL",
+    "orden": 1,
+    "origen": "1 Ejercicios Funcional.docx"
+  },
+  {
+    "id": "piernas",
+    "nombre": "PIERNAS",
+    "orden": 2,
+    "origen": "2 Ejercicios Pierna.docx"
+  },
+  {
+    "id": "dorsal",
+    "nombre": "DORSAL",
+    "orden": 3,
+    "origen": "3 Ejercicios Dorsal.docx"
+  },
+  {
+    "id": "pectoral",
+    "nombre": "PECTORAL",
+    "orden": 4,
+    "origen": "4 Ejercicios Pectoral.docx"
+  },
+  {
+    "id": "hombro",
+    "nombre": "HOMBRO",
+    "orden": 5,
+    "origen": "5 Ejercicios Deltoides.docx"
+  },
+  {
+    "id": "brazo",
+    "nombre": "BRAZO",
+    "orden": 6,
+    "origen": "6 Ejercicios Brazo.docx"
+  },
+  {
+    "id": "abdominal",
+    "nombre": "ABDOMINAL",
+    "orden": 7,
+    "origen": "7 Ejercicios Abdominal y Estiramientos.docx"
+  },
+  {
+    "id": "estiramientos",
+    "nombre": "ESTIRAMIENTOS",
+    "orden": 8,
+    "origen": "7 Ejercicios Abdominal y Estiramientos.docx"
+  },
+  {
+    "id": "halterofilia-y-crossfit",
+    "nombre": "HALTEROFILIA Y CROSSFIT",
+    "orden": 9,
+    "origen": "8 Ejercicios Halterofilia y Crossfit.docx"
+  }
+]
