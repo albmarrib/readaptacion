@@ -1,5 +1,0 @@
-1) Instala Node.js (https://nodejs.org) si no lo tienes.
-2) Abre una terminal en esta carpeta y ejecuta:   npm install
-3) Prueba sin subir nada:   node subir.js "RUTA\a\tu-clave.json" --solo-probar
-4) Subida real:             node subir.js "RUTA\a\tu-clave.json"
-No guardes la clave dentro de esta carpeta ni la subas a GitHub.
