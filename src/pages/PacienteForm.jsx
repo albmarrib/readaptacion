@@ -68,7 +68,7 @@ export default function PacienteForm() {
         entrenadorId: esAdmin ? f.entrenadorId : perfil.uid, estado: f.estado || 'invitado',
       }
       // El acceso (uid) y el consentimiento no se tocan desde este formulario
-      delete campos.uid; delete campos.consentimiento; delete campos.id
+      delete campos.uid; delete campos.consentimiento; delete campos.id; delete campos.foto
       if (nuevo) await addDoc(collection(db, 'pacientes'), sinVacios(campos))
       else {
         // Los campos que se dejan vacíos se borran; el resto se actualiza (sin pisar lo que el paciente haya cambiado)
@@ -106,7 +106,7 @@ export default function PacienteForm() {
     <form id="ficha" onSubmit={guardar} className="space-y-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Volver to="/pacientes" texto="Pacientes" />
-        {!nuevo && <Avatar nombre={f.nombre} tamano={34} />}
+        {!nuevo && <Avatar nombre={f.nombre} foto={f.foto} tamano={34} />}
         <h1 className="titulo-pagina">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
         <div className="ml-auto flex items-center gap-2">
           {!nuevo && <button type="button" className="btn-peligro" onClick={eliminar} disabled={guardando}>Eliminar</button>}

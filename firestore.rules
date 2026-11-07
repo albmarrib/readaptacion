@@ -20,6 +20,9 @@ service cloud.firestore {
     function puedeCatalogo() {
       return esAdmin() || (esEntrenador() && yo().puedeEditarCatalogo == true);
     }
+    function fotoValida(d) {
+      return !('foto' in d) || (d.foto is string && d.foto.size() < 40000);
+    }
     function pacienteDe(pid) {
       return get(/databases/$(database)/documents/pacientes/$(pid)).data;
     }
@@ -36,9 +39,17 @@ service cloud.firestore {
     match /usuarios/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || esAdmin());
       // Altas mediante Cloud Function. El administrador puede cambiar permisos y desactivar.
-      allow update: if esAdmin()
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['nombre', 'activo', 'puedeEditarCatalogo']);
+      allow update: if (esAdmin()
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['nombre', 'activo', 'puedeEditarCatalogo', 'foto'])
+            && fotoValida(request.resource.data))
+        // Cada persona puede cambiar su propia foto; el personal, también su nombre
+        || (request.auth != null && request.auth.uid == uid && activo()
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(resource.data.rol == 'paciente' ? ['foto'] : ['foto', 'nombre'])
+            && fotoValida(request.resource.data)
+            && request.resource.data.nombre is string
+            && request.resource.data.nombre.size() > 1 && request.resource.data.nombre.size() < 121);
       allow create, delete: if false;
     }
 
@@ -78,7 +89,11 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consentimiento'])
             && request.resource.data.consentimiento.keys().hasOnly(['fecha', 'version'])
             && request.resource.data.consentimiento.fecha == request.time
-            && request.resource.data.consentimiento.version is string);
+            && request.resource.data.consentimiento.version is string)
+        // El paciente puede cambiar su foto
+        || (soyPaciente(pid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['foto'])
+            && fotoValida(request.resource.data));
       allow delete: if esAdmin()
         || (esEntrenador() && resource.data.entrenadorId == request.auth.uid);
 

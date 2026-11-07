@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react'
 import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
 import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
+
+const describirVolumen = v => v.lineas.map(describirLinea).join('\n')
 import EditorVolumen from '../components/EditorVolumen'
 import { EncabezadoPagina, IconoVolumenes } from '../components/Iconos'
+import Pestanas from '../components/Pestanas'
 
 export default function Volumenes() {
   const sistemas = useSistemas()
@@ -30,14 +33,7 @@ export default function Volumenes() {
 
       {volumenes.length > 0 && (
         <>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-            {[{ id: 'todos', nombre: 'Todos' }, ...sistemas].map(s => (
-              <button key={s.id} onClick={() => setSistemaId(s.id)}
-                className={`chip ${s.id === sistemaId ? 'chip-on' : 'chip-off'}`}>
-                {s.nombre}
-              </button>
-            ))}
-          </div>
+          <Pestanas items={[{ id: 'todos', etiqueta: 'Todos', n: volumenes.length }, ...sistemas.map(s => ({ id: s.id, etiqueta: s.nombre, n: volumenes.filter(v => v.sistemaId === s.id).length }))]} activo={sistemaId} onChange={setSistemaId} />
           <input className="input" type="search" placeholder="Buscar volumen…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
         </>
       )}
@@ -51,14 +47,13 @@ export default function Volumenes() {
               <h2 className="mb-2 flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
                 {sistema.nombre} <span className="text-xs font-normal normal-case text-slate-400">{items.length} volumen{items.length === 1 ? '' : 'es'}</span>
               </h2>
-              <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+              <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
                 {items.map(v => (
                   <li key={v.id}>
-                    <button onClick={() => setEditor({ volumen: v })} className="tarjeta block w-full !p-3 text-left hover:border-teal-500">
-                      <div className="font-medium">{nombreVolumen(v)}</div>
-                      {v.nombre && <div className="font-mono text-sm text-slate-600">{formatLineas(v.lineas)}</div>}
-                      <ul className="mt-1 text-xs text-slate-500">{v.lineas.map((l, i) => <li key={i}>{describirLinea(l)}</li>)}</ul>
-                      <div className="mt-1.5 text-xs font-medium text-teal-800">{v.seriesTotales} series en total</div>
+                    <button onClick={() => setEditor({ volumen: v })} title={describirVolumen(v)} className="tarjeta flex h-[78px] w-full flex-col justify-between !p-3 text-left transition hover:border-teal-400 hover:shadow-md">
+                      <div className={`truncate text-[13px] font-semibold text-slate-900 ${v.nombre ? '' : 'font-mono'}`}>{nombreVolumen(v)}</div>
+                      <div className="truncate font-mono text-xs text-slate-500">{v.nombre ? formatLineas(v.lineas) : `${v.lineas.length} línea${v.lineas.length === 1 ? '' : 's'}`}</div>
+                      <div className="flex items-center justify-between"><span className="insignia bg-teal-50 text-teal-700">{v.seriesTotales} series</span><span className="text-[11px] text-slate-400">Ver ›</span></div>
                     </button>
                   </li>
                 ))}

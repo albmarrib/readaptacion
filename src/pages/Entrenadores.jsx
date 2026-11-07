@@ -4,7 +4,8 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 import { app, db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import Modal from '../components/Modal'
-import { Avatar, EncabezadoPagina, IconoEntrenadores } from '../components/Iconos'
+import { Link } from 'react-router-dom'
+import { Avatar, EncabezadoPagina, IconoEntrenadores, IconoLapiz } from '../components/Iconos'
 
 const crearEntrenador = () => httpsCallable(getFunctions(app, 'europe-west1'), 'crearEntrenador')
 
@@ -12,6 +13,7 @@ export default function Entrenadores() {
   const { perfil } = useAuth()
   const [usuarios, setUsuarios] = useState(null)
   const [alta, setAlta] = useState(false)
+  const [edicion, setEdicion] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => onSnapshot(collection(db, 'usuarios'),
@@ -36,7 +38,7 @@ export default function Entrenadores() {
             const yo = u.uid === perfil.uid
             return (
               <li key={u.uid} className="tarjeta flex flex-wrap items-center gap-x-4 gap-y-2 !p-3">
-                <Avatar nombre={u.nombre} tamano={34} />
+                <Avatar nombre={u.nombre} foto={u.foto} tamano={36} />
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">{u.nombre} {u.rol === 'admin' && <span className="ml-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800">Administrador</span>}</div>
                   <div className="truncate text-sm text-slate-500">{u.email}</div>
@@ -53,7 +55,9 @@ export default function Entrenadores() {
                     </label>
                   </>
                 )}
-                {yo && <span className="text-xs text-slate-400">Eres tú</span>}
+                {yo
+                  ? <Link to="/perfil" className="btn-sec btn-xs"><IconoLapiz width={14} height={14} /> Mi perfil</Link>
+                  : <button className="btn-sec btn-xs" onClick={() => setEdicion(u)}><IconoLapiz width={14} height={14} /> Editar</button>}
               </li>
             )
           })}
@@ -61,7 +65,33 @@ export default function Entrenadores() {
       )}
       <p className="text-sm text-slate-500">Un entrenador desactivado no puede entrar, pero conserva sus pacientes. Entra con Google o con un enlace al correo con el que lo des de alta.</p>
       {alta && <Alta onClose={() => setAlta(false)} />}
+      {edicion && <Edicion usuario={edicion} onClose={() => setEdicion(null)} />}
     </div>
+  )
+}
+
+function Edicion({ usuario, onClose }) {
+  const [nombre, setNombre] = useState(usuario.nombre)
+  const [ocupado, setOcupado] = useState(false)
+  const [error, setError] = useState('')
+  const guardar = async e => {
+    e.preventDefault(); setOcupado(true); setError('')
+    try { await updateDoc(doc(db, 'usuarios', usuario.uid), { nombre: nombre.trim() }); onClose() }
+    catch (err) { setError(err.message); setOcupado(false) }
+  }
+  return (
+    <Modal titulo="Editar miembro del equipo" onClose={onClose} ancho="max-w-md">
+      <form onSubmit={guardar} className="space-y-3">
+        <div className="flex items-center gap-3"><Avatar nombre={usuario.nombre} foto={usuario.foto} tamano={48} /><div className="min-w-0"><div className="truncate text-sm text-slate-500">{usuario.email}</div></div></div>
+        <label className="block"><span className="etiqueta">Nombre</span><input className="input" required minLength={2} value={nombre} onChange={e => setNombre(e.target.value)} autoFocus /></label>
+        <p className="text-xs text-slate-500">La foto la cambia cada persona desde su propio perfil. Los permisos se cambian en la lista.</p>
+        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-sec" onClick={onClose} disabled={ocupado}>Cancelar</button>
+          <button className="btn" disabled={ocupado || nombre.trim().length < 2}>Guardar</button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

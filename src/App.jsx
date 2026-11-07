@@ -10,6 +10,7 @@ import MiRutina, { VistaPreviaPaciente } from './pages/MiRutina'
 import RutinaEditor from './pages/RutinaEditor'
 import Volumenes from './pages/Volumenes'
 import Avisos from './pages/Avisos'
+import Perfil from './pages/Perfil'
 import Evolucion from './pages/Evolucion'
 
 function Cargando() {
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="pacientes/:id/rutinas/:rid" element={<Solo cond={esPersonal}><RutinaEditor /></Solo>} />
         <Route path="pacientes/:id/evolucion" element={<Solo cond={esPersonal}><Evolucion /></Solo>} />
         <Route path="pacientes/:id/vista-paciente" element={<Solo cond={esPersonal}><VistaPreviaPaciente /></Solo>} />
+        <Route path="perfil" element={<Solo cond={esPersonal}><Perfil /></Solo>} />
         <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />

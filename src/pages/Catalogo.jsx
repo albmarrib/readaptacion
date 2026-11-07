@@ -7,6 +7,8 @@ import { comprimirImagen, normalizar, slug } from '../lib/util'
 import Foto from '../components/Foto'
 import Modal from '../components/Modal'
 import { EncabezadoPagina, IconoCatalogo } from '../components/Iconos'
+import Pestanas from '../components/Pestanas'
+import { tituloGrupo } from '../lib/volumen'
 
 const POR_PAGINA = 60
 
@@ -71,14 +73,7 @@ export default function Catalogo() {
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {grupos.map(g => (
-          <button key={g.id} onClick={() => setGrupoId(g.id)}
-            className={`chip ${g.id === grupoId ? 'chip-on' : 'chip-off'}`}>
-            {g.nombre}
-          </button>
-        ))}
-      </div>
+      <Pestanas items={grupos.map(g => ({ id: g.id, etiqueta: tituloGrupo(g.nombre) }))} activo={grupoId} onChange={setGrupoId} />
 
       <div className="flex items-center gap-2">
         <input className="input" type="search" placeholder={`Buscar en ${grupo?.nombre ?? 'el grupo'}…`} value={busqueda} onChange={e => setBusqueda(e.target.value)} />

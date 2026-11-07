@@ -3,6 +3,7 @@ import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
 import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
 import EditorVolumen from './EditorVolumen'
+import Pestanas from './Pestanas'
 import Modal from './Modal'
 
 // Elige un volumen del catálogo, o crea uno nuevo (que se guarda en el catálogo y se asigna).
@@ -30,12 +31,7 @@ export default function SelectorVolumen({ actual, onClose, onElegir, onQuitar })
 
         {volumenes.length > 0 && (
           <>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {[{ id: 'todos', nombre: 'Todos' }, ...sistemas].map(s => (
-                <button key={s.id} onClick={() => setSistemaId(s.id)}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${s.id === sistemaId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>{s.nombre}</button>
-              ))}
-            </div>
+            <Pestanas items={[{ id: 'todos', etiqueta: 'Todos' }, ...sistemas.map(s => ({ id: s.id, etiqueta: s.nombre }))]} activo={sistemaId} onChange={setSistemaId} />
             <input className="input" type="search" placeholder="Buscar volumen…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
           </>
         )}
@@ -46,10 +42,9 @@ export default function SelectorVolumen({ actual, onClose, onElegir, onQuitar })
             <ul className="space-y-2">
               {items.map(v => (
                 <li key={v.id}>
-                  <button onClick={() => onElegir(v)} className={`w-full rounded-2xl border p-3 text-left hover:border-teal-500 ${v.id === actual ? 'border-teal-600 bg-teal-50' : 'border-slate-200'}`}>
-                    <div className="font-medium">{nombreVolumen(v)}</div>
-                    <ul className="mt-0.5 text-xs text-slate-500">{v.lineas.map((l, i) => <li key={i}>{describirLinea(l)}</li>)}</ul>
-                    <div className="mt-1 text-xs font-medium text-teal-800">{v.seriesTotales} series</div>
+                  <button onClick={() => onElegir(v)} title={v.lineas.map(describirLinea).join('\n')} className={`flex h-11 w-full items-center justify-between gap-3 rounded-lg border px-3 text-left transition hover:border-teal-400 ${v.id === actual ? 'border-teal-500 bg-teal-50' : 'border-slate-200 bg-white'}`}>
+                    <span className="min-w-0 truncate text-[13px] font-medium"><span className="font-mono">{nombreVolumen(v)}</span>{v.nombre && <span className="ml-2 font-mono text-xs text-slate-500">{formatLineas(v.lineas)}</span>}</span>
+                    <span className="insignia shrink-0 bg-teal-50 text-teal-700">{v.seriesTotales} series</span>
                   </button>
                 </li>
               ))}

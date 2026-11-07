@@ -40,3 +40,13 @@ export function enlaceWhatsApp(telefono, texto) {
   if (n.length === 9) n = '34' + n
   return `https://wa.me/${n}?text=${encodeURIComponent(texto)}`
 }
+
+// Foto de perfil: recorte cuadrado centrado, 192 px, WebP. Devuelve un texto (data URL) de pocos KB.
+export async function fotoDePerfil(archivo, lado = 192, calidad = 0.82) {
+  const bmp = await createImageBitmap(archivo)
+  const m = Math.min(bmp.width, bmp.height)
+  const lienzo = document.createElement('canvas')
+  lienzo.width = lienzo.height = lado
+  lienzo.getContext('2d').drawImage(bmp, (bmp.width - m) / 2, (bmp.height - m) / 2, m, m, 0, 0, lado, lado)
+  return lienzo.toDataURL('image/webp', calidad)
+}

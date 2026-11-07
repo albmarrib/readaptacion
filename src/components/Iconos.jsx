@@ -8,6 +8,12 @@ export const IconoAvisos = p => <svg {...base} {...p}><path d="M18 8a6 6 0 0 0-1
 export const IconoEntrenadores = p => <svg {...base} {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
 export const IconoRutina = p => <svg {...base} {...p}><rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="m9 14 2 2 4-4" /></svg>
 export const IconoEvolucion = p => <svg {...base} {...p}><path d="M3 3v18h18" /><path d="m7 15 4-4 3 3 5-6" /></svg>
+export const IconoOjo = p => <svg {...base} {...p}><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+export const IconoOjoTachado = p => <svg {...base} {...p}><path d="M9.9 4.2A10 10 0 0 1 12 4c6.4 0 10 7 10 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2 11s3.6 7 10 7a9.7 9.7 0 0 0 4.4-1" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /><path d="m3 3 18 18" /></svg>
+export const IconoPanel = p => <svg {...base} {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>
+export const IconoCamara = p => <svg {...base} {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3.5" /></svg>
+export const IconoSalir = p => <svg {...base} {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></svg>
+export const IconoLapiz = p => <svg {...base} {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
 export const IconoChevronIzq = p => <svg {...base} {...p}><path d="m15 18-6-6 6-6" /></svg>
 
 // Marca de la app: cuadrado con una mancuerna. variante "claro" para fondos oscuros.
@@ -41,7 +47,8 @@ export function EncabezadoPagina({ icono: Icono, color = 'teal', titulo, subtitu
 
 // Iniciales de color para identificar a una persona de un vistazo
 const PALETA = ['bg-teal-500', 'bg-sky-500', 'bg-indigo-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500', 'bg-emerald-500', 'bg-cyan-600']
-export function Avatar({ nombre = '', tamano = 32 }) {
+export function Avatar({ nombre = '', tamano = 32, foto }) {
+  if (foto) return <img src={foto} alt={nombre} style={{ width: tamano, height: tamano }} className="shrink-0 rounded-full object-cover ring-1 ring-black/5" />
   const iniciales = nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase() || '?'
   const color = PALETA[[...nombre].reduce((s, c) => s + c.charCodeAt(0), 0) % PALETA.length]
   return <span style={{ width: tamano, height: tamano, fontSize: tamano * 0.38 }} className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${color}`}>{iniciales}</span>

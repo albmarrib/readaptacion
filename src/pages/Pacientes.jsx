@@ -4,7 +4,7 @@ import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestor
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { normalizar } from '../lib/util'
-import { Avatar, EncabezadoPagina, IconoPacientes } from '../components/Iconos'
+import { Avatar, EncabezadoPagina, IconoOjo, IconoOjoTachado, IconoPacientes } from '../components/Iconos'
 
 const ESTADOS = { invitado: 'Sin acceso', activo: 'Activo', archivado: 'Archivado' }
 const COLOR = { invitado: 'bg-amber-50 text-amber-700 ring-amber-200', activo: 'bg-teal-50 text-teal-700 ring-teal-200', archivado: 'bg-slate-100 text-slate-500 ring-slate-200' }
@@ -43,7 +43,10 @@ export default function Pacientes() {
     <div className="space-y-4">
       <EncabezadoPagina icono={IconoPacientes} color="teal" titulo={esAdmin ? 'Pacientes' : 'Mis pacientes'} subtitulo={pacientes ? `${filtrados.length} ${filtrados.length === 1 ? 'paciente' : 'pacientes'}` : ''}>
         <input className="input w-52" type="search" placeholder="Buscar paciente…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
-        <label className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={verArchivados} onChange={e => setVerArchivados(e.target.checked)} /> Archivados</label>
+        <button type="button" onClick={() => setVerArchivados(v => !v)} aria-pressed={verArchivados} title={verArchivados ? 'Ocultar pacientes archivados' : 'Mostrar pacientes archivados'}
+          className={`flex h-8 w-8 items-center justify-center rounded-md border transition ${verArchivados ? 'border-teal-400 bg-teal-50 text-teal-700' : 'border-slate-300/90 bg-white text-slate-500 hover:border-teal-400 hover:text-teal-700'}`}>
+          {verArchivados ? <IconoOjo width={17} height={17} /> : <IconoOjoTachado width={17} height={17} />}
+        </button>
         <Link to="/pacientes/nuevo" className="btn">+ Nuevo paciente</Link>
       </EncabezadoPagina>
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
@@ -69,7 +72,7 @@ export default function Pacientes() {
                   <tr key={p.id} onClick={() => navigate(`/pacientes/${p.id}`)} className="cursor-pointer transition hover:bg-teal-50/50">
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
-                        <Avatar nombre={p.nombre} />
+                        <Avatar nombre={p.nombre} foto={p.foto} />
                         <div className="min-w-0">
                           <Link to={`/pacientes/${p.id}`} className="font-medium text-slate-900 hover:text-teal-700">{p.nombre}</Link>
                           <div className="truncate text-xs text-slate-500">{p.email || 'Sin correo'}</div>

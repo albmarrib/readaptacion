@@ -365,7 +365,7 @@ export default function RutinaEditor() {
 
       {/* Barra de acciones */}
       {editable && (
-        <div className="fixed inset-x-0 bottom-[3.1rem] z-20 border-t border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur md:bottom-0 md:left-52">
+        <div className="fixed inset-x-0 bottom-[3.1rem] z-20 border-t border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur md:bottom-0 md:left-[var(--lateral,14rem)]">
           <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
             <div className="text-sm text-slate-500">{sucio ? 'Cambios sin guardar' : 'Todo guardado'}</div>
             <div className="flex gap-2">
