@@ -1,13 +1,15 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
-const admin = require('firebase-admin')
+const { initializeApp } = require('firebase-admin/app')
+const { getAuth } = require('firebase-admin/auth')
+const { getFirestore } = require('firebase-admin/firestore')
 
-admin.initializeApp()
+initializeApp()
 const REGION = 'europe-west1'
 
 // Devuelve el perfil del usuario que llama si está activo y es administrador o entrenador.
 async function personalActivo(req) {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Inicia sesión.')
-  const yo = await admin.firestore().doc(`usuarios/${req.auth.uid}`).get()
+  const yo = await getFirestore().doc(`usuarios/${req.auth.uid}`).get()
   const d = yo.data()
   if (!yo.exists || d.activo !== true || !['admin', 'entrenador'].includes(d.rol)) {
     throw new HttpsError('permission-denied', 'No tienes permiso para hacer esto.')
@@ -19,10 +21,10 @@ async function personalActivo(req) {
 // El acceso real se decide por usuarios/{uid}; sin perfil la cuenta no entra a nada.
 async function cuentaPorCorreo(email, nombre) {
   try {
-    return await admin.auth().getUserByEmail(email)
+    return await getAuth().getUserByEmail(email)
   } catch (e) {
     if (e.code !== 'auth/user-not-found') throw e
-    return admin.auth().createUser({ email, emailVerified: true, displayName: nombre })
+    return getAuth().createUser({ email, emailVerified: true, displayName: nombre })
   }
 }
 
@@ -31,7 +33,7 @@ async function fichaAutorizada(req) {
   const yo = await personalActivo(req)
   const pacienteId = String(req.data?.pacienteId ?? '')
   if (!pacienteId) throw new HttpsError('invalid-argument', 'Falta el paciente.')
-  const ref = admin.firestore().doc(`pacientes/${pacienteId}`)
+  const ref = getFirestore().doc(`pacientes/${pacienteId}`)
   const snap = await ref.get()
   if (!snap.exists) throw new HttpsError('not-found', 'No se encuentra el paciente.')
   if (yo.rol !== 'admin' && snap.data().entrenadorId !== req.auth.uid) {
@@ -52,7 +54,7 @@ exports.crearEntrenador = onCall({ region: REGION }, async (req) => {
   if (nombre.length < 2 || nombre.length > 120) throw new HttpsError('invalid-argument', 'Escribe el nombre del entrenador.')
 
   const user = await cuentaPorCorreo(email, nombre)
-  const ref = admin.firestore().doc(`usuarios/${user.uid}`)
+  const ref = getFirestore().doc(`usuarios/${user.uid}`)
   if ((await ref.get()).exists) throw new HttpsError('already-exists', 'Ya existe un usuario con ese correo.')
   await ref.set({ rol: 'entrenador', nombre, email, activo: true, puedeEditarCatalogo })
   return { uid: user.uid }
@@ -68,12 +70,12 @@ exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
   if (!ficha.consentimiento) throw new HttpsError('failed-precondition', 'Falta registrar el consentimiento del paciente en la ficha.')
 
   const user = await cuentaPorCorreo(email, ficha.nombre)
-  const uRef = admin.firestore().doc(`usuarios/${user.uid}`)
+  const uRef = getFirestore().doc(`usuarios/${user.uid}`)
   const existente = await uRef.get()
   if (existente.exists && !(existente.data().rol === 'paciente' && existente.data().pacienteId === pacienteId)) {
     throw new HttpsError('already-exists', 'Ese correo ya pertenece a otro usuario de la app.')
   }
-  const lote = admin.firestore().batch()
+  const lote = getFirestore().batch()
   lote.set(uRef, { rol: 'paciente', nombre: ficha.nombre, email, activo: true, pacienteId })
   lote.update(ref, { uid: user.uid, estado: 'activo' })
   await lote.commit()
@@ -84,7 +86,7 @@ exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
 // su perfil de acceso y su cuenta.
 exports.eliminarPaciente = onCall({ region: REGION }, async (req) => {
   const { ref, pacienteId, ficha } = await fichaAutorizada(req)
-  const db = admin.firestore()
+  const db = getFirestore()
 
   // Solo se borra la cuenta si de verdad es la de este paciente (no se fía del campo uid de la ficha)
   if (ficha.uid) {
@@ -92,7 +94,7 @@ exports.eliminarPaciente = onCall({ region: REGION }, async (req) => {
     const u = await uRef.get()
     if (u.exists && u.data().rol === 'paciente' && u.data().pacienteId === pacienteId) {
       await uRef.delete()
-      try { await admin.auth().deleteUser(ficha.uid) } catch (e) { if (e.code !== 'auth/user-not-found') throw e }
+      try { await getAuth().deleteUser(ficha.uid) } catch (e) { if (e.code !== 'auth/user-not-found') throw e }
     }
   }
   const avisos = await db.collection('avisos').where('pacienteId', '==', pacienteId).get()
