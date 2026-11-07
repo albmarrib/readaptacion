@@ -48,7 +48,7 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
           <div className="flex gap-2 overflow-x-auto pb-1">
             {gruposDia.map(id => (
               <button key={id} onClick={() => setGrupoId(id)}
-                className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${id === grupoId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
+                className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${id === grupoId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>
                 {tituloGrupo(grupos.find(g => g.id === id)?.nombre)}
               </button>
             ))}
@@ -78,7 +78,7 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
         </ul>
         {filtrados.length > visibles && <button className="btn-sec w-full" onClick={() => setVisibles(v => v + POR_PAGINA)}>Ver más</button>}
 
-        <div className="sticky bottom-0 -mx-5 -mb-4 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3">
+        <div className="sticky bottom-0 -mx-4 -mb-4 flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-2.5">
           <span className="text-sm text-slate-600">{marcados.size} seleccionado{marcados.size === 1 ? '' : 's'}</span>
           <button className="btn" disabled={!marcados.size} onClick={() => onAnadir([...marcados.values()])}>Añadir al día</button>
         </div>

@@ -131,7 +131,7 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
       {!puedeAnotar && !soloLectura && <p className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
       {rutina.notaGeneral && <p className="rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm leading-relaxed text-teal-900"><b className="font-semibold">Nota de tu entrenador:</b> {rutina.notaGeneral}</p>}
 
-      <div className="sticky top-[3.6rem] z-10 -mx-4 bg-fondo/95 px-4 py-2 backdrop-blur">
+      <div className="sticky top-12 z-10 md:top-0 -mx-4 bg-fondo/95 px-4 py-2 backdrop-blur">
         <div className="flex gap-2 overflow-x-auto pb-0.5">
           {rutina.dias.map((x, i) => (
             <button key={x.numero} onClick={() => setDia(i)} aria-pressed={i === dia}

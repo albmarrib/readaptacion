@@ -21,19 +21,19 @@ export default function AccesoPaciente({ paciente, onActualizado }) {
   }
 
   return (
-    <section className="tarjeta space-y-3">
-      <h2 className="font-semibold">Acceso a la app</h2>
+    <section className="tarjeta space-y-2.5">
+      <h2 className="text-sm font-semibold">Acceso a la app</h2>
       {tieneAcceso ? (
         <>
-          <p className="text-sm text-teal-800">✓ {paciente.nombre} tiene acceso con el correo <b>{paciente.email}</b>.</p>
+          <p className="text-xs text-teal-800">✓ {paciente.nombre} tiene acceso con el correo <b>{paciente.email}</b>.</p>
           <div className="flex flex-wrap gap-2">
-            <a className="btn-sec" href={enlaceWhatsApp(paciente.telefono, mensaje)} target="_blank" rel="noreferrer">Reenviar aviso por WhatsApp</a>
-            <button className="btn-sec" onClick={() => navigator.clipboard?.writeText(mensaje)}>Copiar mensaje</button>
+            <a className="btn-sec btn-xs" href={enlaceWhatsApp(paciente.telefono, mensaje)} target="_blank" rel="noreferrer">Reenviar aviso por WhatsApp</a>
+            <button className="btn-sec btn-xs" onClick={() => navigator.clipboard?.writeText(mensaje)}>Copiar mensaje</button>
           </div>
         </>
       ) : (
         <>
-          <p className="text-sm text-slate-600">Para que el paciente vea su rutina y anote sus pesos, necesita acceso. Hace falta su correo, guardado en la ficha. La primera vez que entre, el propio paciente tendrá que leer y aceptar el consentimiento de protección de datos.</p>
+          <p className="text-xs text-slate-600">Para que vea su rutina y anote sus pesos necesita acceso (hace falta su correo guardado). Al entrar por primera vez aceptará el consentimiento.</p>
           <button className="btn" onClick={darAcceso} disabled={ocupado || !paciente.email}>{ocupado ? 'Dando acceso…' : 'Dar acceso a la app'}</button>
           {!paciente.email && <p className="text-xs text-amber-700">Falta el correo (guarda la ficha después de añadirlo).</p>}
         </>

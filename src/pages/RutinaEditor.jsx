@@ -240,7 +240,7 @@ export default function RutinaEditor() {
       <div className="flex flex-wrap items-center gap-3">
         <Link to={`/pacientes/${pid}`} className="text-slate-500 hover:text-slate-800" aria-label="Volver" onClick={e => { if (sucio && !window.confirm('Hay cambios sin guardar. ¿Salir sin guardar?')) e.preventDefault() }}>←</Link>
         <div>
-          <h1 className="text-xl font-semibold">{nueva ? 'Nueva rutina' : `Rutina ${meta.numero}`} · {paciente.nombre}</h1>
+          <h1 className="titulo-pagina">{nueva ? 'Nueva rutina' : `Rutina ${meta.numero}`} · {paciente.nombre}</h1>
           {!nueva && <p className="text-sm text-slate-500">Temporada {meta.temporada}{meta.fechaInicio ? ` · del ${fmt(meta.fechaInicio)} al ${fmt(meta.fechaFin)}` : ''}</p>}
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${COLOR[meta.estado]}`}>{ESTADOS[meta.estado]}</span>
@@ -249,8 +249,8 @@ export default function RutinaEditor() {
       {!editable && <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-600">Esta rutina ya no es un borrador y no se puede modificar. Abajo tienes el seguimiento.</p>}
 
       {/* Ajustes generales */}
-      <section className="tarjeta space-y-3">
-        <h2 className="font-semibold">Ajustes</h2>
+      <section className="tarjeta">
+        <h2 className="tarjeta-titulo">Ajustes</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <label><span className="etiqueta">Temporada</span><input type="number" className="input" disabled={!editable} value={meta.temporada} onChange={e => cambiarMeta({ temporada: e.target.value })} /></label>
           <label><span className="etiqueta">Duración (semanas)</span><input type="number" min="1" max="52" className="input" disabled={!editable} value={meta.semanas} onChange={e => cambiarMeta({ semanas: e.target.value })} /></label>
@@ -261,22 +261,22 @@ export default function RutinaEditor() {
           </label>
           <label><span className="etiqueta">Frecuencia (opcional)</span><input type="number" min="0" max="99" className="input" disabled={!editable} value={meta.frecuencia} onChange={e => cambiarMeta({ frecuencia: e.target.value })} /></label>
         </div>
-        <label className="block"><span className="etiqueta">Nota general (opcional)</span><textarea rows={2} className="input" disabled={!editable} value={meta.notaGeneral} onChange={e => cambiarMeta({ notaGeneral: e.target.value })} /></label>
+        <label className="block"><span className="etiqueta">Nota general (opcional)</span><textarea rows={1} className="input" disabled={!editable} value={meta.notaGeneral} onChange={e => cambiarMeta({ notaGeneral: e.target.value })} /></label>
       </section>
 
       {/* Pestañas de días */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {dias.map((d, i) => (
           <button key={i} onClick={() => setDiaActivo(i)}
-            className={`shrink-0 rounded-2xl border px-4 py-2 text-left ${i === diaActivo ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
-            <div className="text-sm font-semibold">Día {i + 1}</div>
+            className={`shrink-0 rounded-lg border px-3 py-1.5 text-left ${i === diaActivo ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
+            <div className="text-sm font-semibold leading-tight">Día {i + 1}</div>
             <div className={`text-xs ${i === diaActivo ? 'text-teal-100' : 'text-slate-500'}`}>{seriesDia[i]} series</div>
           </button>
         ))}
       </div>
 
       {/* Día activo */}
-      <section className="tarjeta space-y-4">
+      <section className="tarjeta space-y-3">
         <div>
           <h2 className="font-semibold">Día {diaActivo + 1}{dia.gruposIds.length > 0 && <span className="font-normal text-slate-600"> · {tituloDia(dia.gruposIds, grupos)}</span>}</h2>
           <p className="mt-1 text-sm text-slate-500">Grupos musculares del día:</p>
@@ -285,7 +285,7 @@ export default function RutinaEditor() {
               const sel = dia.gruposIds.includes(g.id)
               return (
                 <button key={g.id} disabled={!editable} onClick={() => alternarGrupo(g.id)}
-                  className={`rounded-full border px-3 py-1.5 text-sm ${sel ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'} disabled:opacity-60`}>
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium ${sel ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'} disabled:opacity-60`}>
                   {tituloGrupo(g.nombre)}
                 </button>
               )
@@ -293,9 +293,9 @@ export default function RutinaEditor() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl bg-teal-50 px-4 py-3 text-teal-900">
+        <div className="flex items-center justify-between rounded-lg bg-teal-50 px-3 py-2 text-teal-900">
           <span className="text-sm font-medium">Esfuerzo del día</span>
-          <span className="text-lg font-bold">{seriesDia[diaActivo]} series</span>
+          <span className="text-base font-bold">{seriesDia[diaActivo]} series</span>
         </div>
 
         {dia.ejercicios.length === 0 && <p className="py-4 text-center text-sm text-slate-500">{dia.gruposIds.length ? 'Todavía no hay ejercicios en este día.' : 'Elige primero los grupos musculares del día.'}</p>}
@@ -304,7 +304,7 @@ export default function RutinaEditor() {
           {dia.ejercicios.map((e, i) => {
             const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
             return (
-              <li key={e.clave} className="rounded-2xl border border-slate-200 p-3">
+              <li key={e.clave} className="rounded-lg border border-slate-200 p-2.5">
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">{i + 1}</span>
                   <div className="min-w-0 flex-1">
@@ -320,7 +320,7 @@ export default function RutinaEditor() {
                   )}
                 </div>
 
-                <div className="mt-2 rounded-xl bg-slate-50 p-3">
+                <div className="mt-2 rounded-lg bg-slate-50 p-2.5">
                   {e.lineas ? (
                     <>
                       <div className="flex items-start justify-between gap-2">
@@ -364,7 +364,7 @@ export default function RutinaEditor() {
 
       {/* Barra de acciones */}
       {editable && (
-        <div className="fixed inset-x-0 bottom-[3.25rem] z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:bottom-0">
+        <div className="fixed inset-x-0 bottom-[3.1rem] z-20 border-t border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur md:bottom-0 md:left-52">
           <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
             <div className="text-sm text-slate-500">{sucio ? 'Cambios sin guardar' : 'Todo guardado'}</div>
             <div className="flex gap-2">

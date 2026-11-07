@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
-/* Estilo "limpio y médico": blanco, verde azulado suave, mucho espacio y letra clara */
+/* Estilo "limpio y médico", compacto: pensado para trabajar en ordenador.
+   La vista del paciente (móvil) usa sus propios tamaños grandes. */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-fondo: #f3f6f6;
+  --color-fondo: #f4f6f8;
 }
 
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
-  body { background: var(--color-fondo); color: #0f172a; font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
+  body { background: var(--color-fondo); color: #0f172a; font-size: 0.875rem; line-height: 1.35rem; font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
   h1, h2, h3 { letter-spacing: -0.01em; }
   :focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
 }
 
 @layer components {
-  .btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 font-semibold text-white shadow-sm shadow-teal-900/10 transition hover:bg-teal-800 active:bg-teal-900 disabled:pointer-events-none disabled:opacity-50; }
-  .btn-sec { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-50; }
-  .btn-peligro { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 font-medium text-red-700 transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50; }
-  .input { @apply min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-slate-900 shadow-sm shadow-slate-900/5 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-4 focus:ring-teal-600/15 disabled:bg-slate-100 disabled:text-slate-500; }
-  .etiqueta { @apply mb-1.5 block text-sm font-medium text-slate-700; }
-  .tarjeta { @apply rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)] sm:p-5; }
-  .insignia { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+  .btn { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-teal-700 px-3.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-800 active:bg-teal-900 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-sec { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-peligro { @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-xs { @apply !h-8 !px-2.5 !text-xs; }
+  .input { @apply min-h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-100 disabled:text-slate-500; }
+  .etiqueta { @apply mb-1 block text-xs font-medium text-slate-600; }
+  .tarjeta { @apply rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]; }
+  .tarjeta-titulo { @apply mb-3 text-sm font-semibold text-slate-900; }
+  .insignia { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+  .titulo-pagina { @apply text-lg font-semibold tracking-tight text-slate-900; }
 }

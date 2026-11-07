@@ -33,7 +33,7 @@ export default function SelectorVolumen({ actual, onClose, onElegir, onQuitar })
             <div className="flex gap-2 overflow-x-auto pb-1">
               {[{ id: 'todos', nombre: 'Todos' }, ...sistemas].map(s => (
                 <button key={s.id} onClick={() => setSistemaId(s.id)}
-                  className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium ${s.id === sistemaId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>{s.nombre}</button>
+                  className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${s.id === sistemaId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700'}`}>{s.nombre}</button>
               ))}
             </div>
             <input className="input" type="search" placeholder="Buscar volumen…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />

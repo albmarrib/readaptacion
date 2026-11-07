@@ -62,7 +62,7 @@ export default function Catalogo() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-semibold">Catálogo de ejercicios</h1>
+        <h1 className="titulo-pagina">Catálogo de ejercicios</h1>
         {puedeEditarCatalogo && (
           <div className="ml-auto flex gap-2">
             <button className="btn-sec" onClick={() => setEditorGrupo({})}>+ Grupo</button>
@@ -76,7 +76,7 @@ export default function Catalogo() {
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {grupos.map(g => (
           <button key={g.id} onClick={() => setGrupoId(g.id)}
-            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium ${g.id === grupoId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
+            className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${g.id === grupoId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
             {g.nombre}
           </button>
         ))}
@@ -91,17 +91,17 @@ export default function Catalogo() {
         {cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}${busqueda ? ' encontrados' : ''}`}
       </p>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
         {filtrados.slice(0, visibles).map(e => {
           const [titulo, ...resto] = lineas(e.nombre)
           return (
             <li key={e.id}>
-              <button onClick={() => setDetalle(e)} className="tarjeta flex w-full items-center gap-3 text-left hover:border-teal-500">
+              <button onClick={() => setDetalle(e)} className="tarjeta flex w-full items-center gap-3 !p-2.5 text-left hover:border-teal-500">
                 {e.fotos?.[0]
-                  ? <Foto ruta={e.fotos[0]} className="h-20 w-24 shrink-0 rounded-xl" />
-                  : <div className="flex h-20 w-24 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">sin foto</div>}
+                  ? <Foto ruta={e.fotos[0]} className="h-14 w-[4.5rem] shrink-0 rounded-lg" />
+                  : <div className="flex h-14 w-[4.5rem] shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[11px] text-slate-400">sin foto</div>}
                 <div className="min-w-0">
-                  <div className="font-medium leading-snug">{titulo}</div>
+                  <div className="text-sm font-medium leading-snug">{titulo}</div>
                   {resto.length > 0 && <div className="line-clamp-2 text-xs text-slate-500">{resto.join(' · ')}</div>}
                   <div className="mt-1 text-xs text-slate-400">{e.fotos?.length ?? 0} foto{e.fotos?.length === 1 ? '' : 's'}{e.videos?.length ? ` · ${e.videos.length} vídeo${e.videos.length === 1 ? '' : 's'}` : ''}</div>
                 </div>

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { normalizar } from '../lib/util'
 
-const ESTADOS = { invitado: 'Sin acceso aún', activo: 'Activo', archivado: 'Archivado' }
-const COLOR = { invitado: 'bg-amber-100 text-amber-800', activo: 'bg-teal-100 text-teal-800', archivado: 'bg-slate-200 text-slate-600' }
+const ESTADOS = { invitado: 'Sin acceso', activo: 'Activo', archivado: 'Archivado' }
+const COLOR = { invitado: 'bg-amber-50 text-amber-700 ring-amber-200', activo: 'bg-teal-50 text-teal-700 ring-teal-200', archivado: 'bg-slate-100 text-slate-500 ring-slate-200' }
 
 export default function Pacientes() {
   const { perfil, esAdmin } = useAuth()
+  const navigate = useNavigate()
   const [pacientes, setPacientes] = useState(null)
   const [entrenadores, setEntrenadores] = useState({})
   const [busqueda, setBusqueda] = useState('')
@@ -39,18 +40,16 @@ export default function Pacientes() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-semibold">{esAdmin ? 'Todos los pacientes' : 'Mis pacientes'}</h1>
-        <Link to="/pacientes/nuevo" className="btn ml-auto">+ Nuevo paciente</Link>
-      </div>
-      {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-
       <div className="flex flex-wrap items-center gap-3">
-        <input className="input sm:max-w-sm" type="search" placeholder="Buscar por nombre, correo o teléfono…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input type="checkbox" checked={verArchivados} onChange={e => setVerArchivados(e.target.checked)} /> Ver archivados
-        </label>
+        <h1 className="titulo-pagina">{esAdmin ? 'Pacientes' : 'Mis pacientes'}</h1>
+        {pacientes && <span className="text-sm text-slate-500">{filtrados.length} {filtrados.length === 1 ? 'paciente' : 'pacientes'}</span>}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <input className="input w-56" type="search" placeholder="Buscar…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+          <label className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={verArchivados} onChange={e => setVerArchivados(e.target.checked)} /> Archivados</label>
+          <Link to="/pacientes/nuevo" className="btn">+ Nuevo paciente</Link>
+        </div>
       </div>
+      {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       {pacientes === null ? <p className="text-slate-500">Cargando…</p>
         : filtrados.length === 0 ? (
@@ -58,22 +57,31 @@ export default function Pacientes() {
             {pacientes.length === 0 ? 'Todavía no hay pacientes. Crea el primero con «Nuevo paciente».' : 'Ningún paciente coincide con la búsqueda.'}
           </div>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {filtrados.map(p => (
-              <li key={p.id}>
-                <Link to={`/pacientes/${p.id}`} className="tarjeta block hover:border-teal-500">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">{p.nombre}</div>
-                      <div className="truncate text-sm text-slate-500">{p.email || 'Sin correo'}{p.telefono ? ` · ${p.telefono}` : ''}</div>
-                      {esAdmin && <div className="mt-1 text-xs text-slate-400">Entrenador: {entrenadores[p.entrenadorId] ?? '—'}</div>}
-                    </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${COLOR[p.estado] ?? COLOR.invitado}`}>{ESTADOS[p.estado] ?? p.estado}</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <table className="w-full text-left">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-2.5">Paciente</th>
+                  <th className="hidden px-4 py-2.5 md:table-cell">Teléfono</th>
+                  {esAdmin && <th className="hidden px-4 py-2.5 lg:table-cell">Entrenador</th>}
+                  <th className="px-4 py-2.5">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtrados.map(p => (
+                  <tr key={p.id} onClick={() => navigate(`/pacientes/${p.id}`)} className="cursor-pointer hover:bg-slate-50">
+                    <td className="px-4 py-2.5">
+                      <Link to={`/pacientes/${p.id}`} className="font-medium text-slate-900 hover:text-teal-700">{p.nombre}</Link>
+                      <div className="text-xs text-slate-500">{p.email || 'Sin correo'}</div>
+                    </td>
+                    <td className="hidden px-4 py-2.5 text-slate-600 md:table-cell">{p.telefono || '—'}</td>
+                    {esAdmin && <td className="hidden px-4 py-2.5 text-slate-600 lg:table-cell">{entrenadores[p.entrenadorId] ?? '—'}</td>}
+                    <td className="px-4 py-2.5"><span className={`insignia ring-1 ring-inset ${COLOR[p.estado] ?? COLOR.invitado}`}>{ESTADOS[p.estado] ?? p.estado}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
     </div>
   )

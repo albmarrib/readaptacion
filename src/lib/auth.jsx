@@ -4,6 +4,7 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db, firebaseConfigurado } from './firebase'
 
 const Ctx = createContext(null)
+export const AuthContext = Ctx
 export const useAuth = () => useContext(Ctx)
 
 // estado: cargando | fuera (sin sesión) | sinPerfil (cuenta no dada de alta) | inactivo | ok

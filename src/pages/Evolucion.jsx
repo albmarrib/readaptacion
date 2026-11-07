@@ -56,7 +56,7 @@ export default function Evolucion() {
       <div className="flex items-center gap-3">
         <Link to={`/pacientes/${pid}`} className="text-slate-500 hover:text-slate-800" aria-label="Volver">←</Link>
         <div>
-          <h1 className="text-xl font-semibold">Evolución de pesos</h1>
+          <h1 className="titulo-pagina">Evolución de pesos</h1>
           <p className="text-sm text-slate-500">{paciente.nombre}</p>
         </div>
       </div>
@@ -69,13 +69,13 @@ export default function Evolucion() {
           {lista.length === 0 ? (
             <div className="tarjeta text-center text-slate-500">Todavía no hay pesos anotados. Cuando el paciente anote pesos en sus rutinas, aquí verás cómo evolucionan.</div>
           ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
               {lista.map(e => {
                 const [titulo] = e.nombre.split('\n')
                 const ult = [...e.entradas].reverse().find(x => maximo(x.pesos) != null)
                 return (
                   <li key={e.id}>
-                    <button onClick={() => setElegido(e.id)} className="tarjeta block w-full text-left hover:border-teal-500">
+                    <button onClick={() => setElegido(e.id)} className="tarjeta block w-full !p-3 text-left hover:border-teal-500">
                       <div className="font-medium leading-snug">{titulo}</div>
                       <div className="mt-1 text-xs text-slate-500">{e.entradas.length} rutina{e.entradas.length === 1 ? '' : 's'} · último máximo: <b>{maximo(ult.pesos)} kg</b> (rutina {ult.rutina})</div>
                     </button>

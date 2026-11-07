@@ -19,8 +19,8 @@ const VACIO = {
   contactoEmergencia: { nombre: '', telefono: '' },
 }
 
-function Campo({ etiqueta, children, ayuda }) {
-  return <label className="block"><span className="etiqueta">{etiqueta}</span>{children}{ayuda && <span className="mt-1 block text-xs text-slate-500">{ayuda}</span>}</label>
+function Campo({ etiqueta, children, clase = '' }) {
+  return <label className={`block ${clase}`}><span className="etiqueta">{etiqueta}</span>{children}</label>
 }
 
 export default function PacienteForm() {
@@ -91,88 +91,85 @@ export default function PacienteForm() {
 
   if (cargando) return <p className="text-slate-500">Cargando…</p>
 
+  const proteccion = !nuevo && (
+    <section className="tarjeta">
+      <h2 className="tarjeta-titulo">Protección de datos</h2>
+      {consentimientoVigente(consentimiento)
+        ? <p className="text-xs text-teal-800">✓ Consentimiento aceptado por el paciente el {consentimiento.fecha?.toDate?.().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
+        : <p className="text-xs text-amber-800">El paciente aún no ha aceptado el consentimiento (lo hará al entrar por primera vez). Hasta entonces, evita anotar datos de salud.</p>}
+    </section>
+  )
+
   return (
-    <form onSubmit={guardar} className="space-y-5">
-      <div className="flex items-center gap-3">
-        <Link to="/pacientes" className="text-slate-500 hover:text-slate-800" aria-label="Volver">←</Link>
-        <h1 className="text-xl font-semibold">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
-      </div>
-
-      {!nuevo && <RutinasPaciente pacienteId={id} />}
-      {!nuevo && <AccesoPaciente paciente={{ ...f, id }} onActualizado={parche => setF(x => ({ ...x, ...parche }))} />}
-
-      <section className="tarjeta space-y-4">
-        <h2 className="font-semibold">Datos básicos</h2>
-        <Campo etiqueta="Nombre y apellidos *"><input className="input" required {...input('nombre')} /></Campo>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Correo electrónico" ayuda="Lo necesitará para entrar a la app."><input type="email" className="input" autoComplete="off" disabled={!!f.uid} {...input('email')} /></Campo>
-          <Campo etiqueta="Teléfono" ayuda="Se usa para abrir WhatsApp."><input type="tel" className="input" {...input('telefono')} /></Campo>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Estado">
-            <select className="input" {...input('estado')}>
-              <option value="invitado">Sin acceso aún</option><option value="activo">Activo</option><option value="archivado">Archivado</option>
-            </select>
-          </Campo>
-          {esAdmin && (
-            <Campo etiqueta="Entrenador responsable">
-              <select className="input" {...input('entrenadorId')}>
-                {entrenadores.map(u => <option key={u.uid} value={u.uid}>{u.nombre}</option>)}
-              </select>
-            </Campo>
-          )}
-        </div>
-      </section>
-
-      <section className="tarjeta space-y-4">
-        <div>
-          <h2 className="font-semibold">Datos opcionales</h2>
-          <p className="text-sm text-slate-500">Rellena solo lo que necesites. Son datos de salud: trátalos con cuidado.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Fecha de nacimiento"><input type="date" className="input" {...input('fechaNacimiento')} /></Campo>
-          <Campo etiqueta="Sexo">
-            <select className="input" {...input('sexo')}><option value="">—</option><option value="mujer">Mujer</option><option value="hombre">Hombre</option><option value="otro">Otro</option></select>
-          </Campo>
-          <Campo etiqueta="Altura (cm)"><input type="number" min="50" max="250" className="input" {...input('alturaCm')} /></Campo>
-          <Campo etiqueta="Peso (kg)"><input type="number" min="20" max="400" step="0.1" className="input" {...input('pesoKg')} /></Campo>
-          <Campo etiqueta="Ocupación"><input className="input" {...input('ocupacion')} /></Campo>
-          <Campo etiqueta="Nivel de actividad">
-            <select className="input" {...input('nivelActividad')}><option value="">—</option>{NIVELES.map(n => <option key={n} value={n}>{n[0].toUpperCase() + n.slice(1)}</option>)}</select>
-          </Campo>
-        </div>
-        <Campo etiqueta="Deporte o actividad que practica"><input className="input" {...input('deporte')} /></Campo>
-        <Campo etiqueta="Objetivos"><textarea rows={2} className="input" {...input('objetivos')} /></Campo>
-        <Campo etiqueta="Lesiones"><textarea rows={2} className="input" {...input('lesiones')} /></Campo>
-        <Campo etiqueta="Patologías"><textarea rows={2} className="input" {...input('patologias')} /></Campo>
-        <Campo etiqueta="Cirugías"><textarea rows={2} className="input" {...input('cirugias')} /></Campo>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Medicación"><textarea rows={2} className="input" {...input('medicacion')} /></Campo>
-          <Campo etiqueta="Alergias"><textarea rows={2} className="input" {...input('alergias')} /></Campo>
-        </div>
-        <Campo etiqueta="Derivado por (médico o fisioterapeuta)"><input className="input" {...input('derivadoPor')} /></Campo>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Contacto de emergencia: nombre"><input className="input" value={f.contactoEmergencia.nombre} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, nombre: e.target.value })} /></Campo>
-          <Campo etiqueta="Contacto de emergencia: teléfono"><input type="tel" className="input" value={f.contactoEmergencia.telefono} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, telefono: e.target.value })} /></Campo>
-        </div>
-        <Campo etiqueta="Notas del entrenador"><textarea rows={3} className="input" {...input('notas')} /></Campo>
-      </section>
-
-      {!nuevo && (
-        <section className="tarjeta space-y-1">
-          <h2 className="font-semibold">Protección de datos</h2>
-          {consentimientoVigente(consentimiento)
-            ? <p className="text-sm text-teal-800">✓ El paciente aceptó el consentimiento el {consentimiento.fecha?.toDate?.().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
-            : <p className="text-sm text-amber-800">El paciente aún no ha aceptado el consentimiento. Lo hará él mismo la primera vez que entre a la app. Hasta entonces, evita anotar datos de salud en la ficha.</p>}
-        </section>
-      )}
-
-      {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {!nuevo ? <button type="button" className="btn-peligro" onClick={eliminar} disabled={guardando}>Eliminar ficha</button> : <span />}
-        <div className="flex gap-2">
+    <form id="ficha" onSubmit={guardar} className="space-y-4">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Link to="/pacientes" className="text-slate-400 hover:text-slate-700" aria-label="Volver">←</Link>
+        <h1 className="titulo-pagina">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
+        <div className="ml-auto flex items-center gap-2">
+          {!nuevo && <button type="button" className="btn-peligro" onClick={eliminar} disabled={guardando}>Eliminar</button>}
           <Link to="/pacientes" className="btn-sec">Cancelar</Link>
           <button className="btn" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+        </div>
+      </div>
+      {error && <p role="alert" className="rounded-lg bg-red-50 p-2.5 text-sm text-red-700">{error}</p>}
+
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <section className="tarjeta">
+            <h2 className="tarjeta-titulo">Datos personales</h2>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4">
+              <Campo clase="col-span-2" etiqueta="Nombre y apellidos *"><input className="input" required {...input('nombre')} /></Campo>
+              <Campo etiqueta="Teléfono"><input type="tel" className="input" {...input('telefono')} /></Campo>
+              <Campo etiqueta="Estado">
+                <select className="input" {...input('estado')}>
+                  <option value="invitado">Sin acceso aún</option><option value="activo">Activo</option><option value="archivado">Archivado</option>
+                </select>
+              </Campo>
+              <Campo clase="col-span-2" etiqueta="Correo electrónico"><input type="email" className="input" autoComplete="off" disabled={!!f.uid} {...input('email')} /></Campo>
+              <Campo etiqueta="Fecha de nacimiento"><input type="date" className="input" {...input('fechaNacimiento')} /></Campo>
+              <Campo etiqueta="Sexo">
+                <select className="input" {...input('sexo')}><option value="">—</option><option value="mujer">Mujer</option><option value="hombre">Hombre</option><option value="otro">Otro</option></select>
+              </Campo>
+              <Campo etiqueta="Altura (cm)"><input type="number" min="50" max="250" className="input" {...input('alturaCm')} /></Campo>
+              <Campo etiqueta="Peso (kg)"><input type="number" min="20" max="400" step="0.1" className="input" {...input('pesoKg')} /></Campo>
+              <Campo etiqueta="Nivel de actividad">
+                <select className="input" {...input('nivelActividad')}><option value="">—</option>{NIVELES.map(n => <option key={n} value={n}>{n[0].toUpperCase() + n.slice(1)}</option>)}</select>
+              </Campo>
+              <Campo etiqueta="Ocupación"><input className="input" {...input('ocupacion')} /></Campo>
+              <Campo clase="col-span-2" etiqueta="Deporte o actividad"><input className="input" {...input('deporte')} /></Campo>
+              <Campo clase="col-span-2" etiqueta="Derivado por (médico / fisio)"><input className="input" {...input('derivadoPor')} /></Campo>
+              {esAdmin && (
+                <Campo clase="col-span-2" etiqueta="Entrenador responsable">
+                  <select className="input" {...input('entrenadorId')}>{entrenadores.map(u => <option key={u.uid} value={u.uid}>{u.nombre}</option>)}</select>
+                </Campo>
+              )}
+            </div>
+          </section>
+
+          <section className="tarjeta">
+            <h2 className="tarjeta-titulo">Salud y objetivos <span className="font-normal text-slate-400">· opcional</span></h2>
+            <div className="grid gap-x-3 gap-y-2.5 sm:grid-cols-2">
+              <Campo etiqueta="Objetivos"><textarea rows={2} className="input" {...input('objetivos')} /></Campo>
+              <Campo etiqueta="Lesiones"><textarea rows={2} className="input" {...input('lesiones')} /></Campo>
+              <Campo etiqueta="Patologías"><textarea rows={2} className="input" {...input('patologias')} /></Campo>
+              <Campo etiqueta="Cirugías"><textarea rows={2} className="input" {...input('cirugias')} /></Campo>
+              <Campo etiqueta="Medicación"><textarea rows={2} className="input" {...input('medicacion')} /></Campo>
+              <Campo etiqueta="Alergias"><textarea rows={2} className="input" {...input('alergias')} /></Campo>
+              <Campo etiqueta="Contacto de emergencia: nombre"><input className="input" value={f.contactoEmergencia.nombre} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, nombre: e.target.value })} /></Campo>
+              <Campo etiqueta="Contacto de emergencia: teléfono"><input type="tel" className="input" value={f.contactoEmergencia.telefono} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, telefono: e.target.value })} /></Campo>
+              <Campo clase="sm:col-span-2" etiqueta="Notas del entrenador"><textarea rows={2} className="input" {...input('notas')} /></Campo>
+            </div>
+          </section>
+        </div>
+
+        <div className="space-y-4">
+          {nuevo
+            ? <section className="tarjeta text-xs text-slate-500">Guarda la ficha para poder crear rutinas y dar acceso a la app.</section>
+            : <>
+              <RutinasPaciente pacienteId={id} />
+              <AccesoPaciente paciente={{ ...f, id }} onActualizado={parche => setF(x => ({ ...x, ...parche }))} />
+              {proteccion}
+            </>}
         </div>
       </div>
     </form>

@@ -20,39 +20,44 @@ export default function Layout() {
     ]
     : [['/mi-rutina', 'Mi rutina', IconoRutina]]
 
-  const Insignia = ({ n }) => n > 0 && <span className="absolute -right-2 -top-1.5 min-w-5 rounded-full bg-red-600 px-1.5 py-0.5 text-center text-[11px] font-bold leading-none text-white ring-2 ring-white">{n}</span>
+  const Insignia = ({ n }) => n > 0 && <span className="absolute -right-2 -top-1.5 min-w-4 rounded-full bg-red-600 px-1 py-0.5 text-center text-[10px] font-bold leading-none text-white ring-2 ring-white">{n}</span>
 
-  const escritorio = ([a, t, Icono, n]) => (
-    <NavLink key={a} to={a} className={({ isActive }) => `flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition ${isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-100'}`}>
-      <span className="relative"><Icono width={20} height={20} /><Insignia n={n} /></span>{t}
+  const lateral = ([a, t, Icono, n]) => (
+    <NavLink key={a} to={a} className={({ isActive }) => `flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition ${isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
+      <span className="relative"><Icono width={18} height={18} /><Insignia n={n} /></span>{t}
     </NavLink>
   )
   const movil = ([a, t, Icono, n]) => (
-    <NavLink key={a} to={a} className={({ isActive }) => `flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] font-medium ${isActive ? 'text-teal-700' : 'text-slate-500'}`}>
-      <span className="relative"><Icono /><Insignia n={n} /></span>
+    <NavLink key={a} to={a} className={({ isActive }) => `flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-[11px] font-medium ${isActive ? 'text-teal-700' : 'text-slate-500'}`}>
+      <span className="relative"><Icono width={20} height={20} /><Insignia n={n} /></span>
       <span className="truncate">{t}</span>
     </NavLink>
   )
 
   return (
-    <div className="min-h-dvh bg-fondo text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2.5">
-          <div className="flex items-center gap-2.5"><Logo /><span className="text-lg font-bold tracking-tight text-slate-900">Readaptación</span></div>
-          <nav className="ml-4 hidden gap-1 sm:flex">{enlaces.map(escritorio)}</nav>
-          <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-right leading-tight sm:block">
-              <div className="text-sm font-semibold">{perfil?.nombre}</div>
-              <div className="text-xs text-slate-500">{ROL[perfil?.rol]}</div>
-            </div>
-            <button onClick={salir} className="btn-sec !min-h-9 !px-3 !py-1.5 text-sm">Salir</button>
-          </div>
+    <div className="min-h-dvh bg-fondo text-slate-900 md:flex">
+      {/* Menú lateral (ordenador y tablet) */}
+      <aside className="hidden w-52 shrink-0 flex-col border-r border-slate-200 bg-white md:sticky md:top-0 md:flex md:h-dvh">
+        <div className="flex items-center gap-2.5 px-4 py-4"><Logo tamano={28} /><span className="text-base font-bold tracking-tight">Readaptación</span></div>
+        <nav className="flex flex-1 flex-col gap-0.5 px-2.5">{enlaces.map(lateral)}</nav>
+        <div className="border-t border-slate-200 p-3">
+          <div className="truncate text-sm font-medium">{perfil?.nombre}</div>
+          <div className="mb-2 text-xs text-slate-500">{ROL[perfil?.rol]}</div>
+          <button onClick={salir} className="btn-sec btn-xs w-full">Salir</button>
         </div>
-      </header>
+      </aside>
 
-      <main className="mx-auto max-w-5xl px-4 pb-28 pt-6 sm:pb-12 sm:pt-8"><Outlet /></main>
+      <div className="min-w-0 flex-1">
+        {/* Cabecera (móvil) */}
+        <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:hidden">
+          <Logo tamano={26} /><span className="font-bold tracking-tight">Readaptación</span>
+          <button onClick={salir} className="btn-sec btn-xs ml-auto">Salir</button>
+        </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-slate-200/80 bg-white/95 px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur sm:hidden">
+        <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 md:px-8 md:pb-10 md:pt-6"><Outlet /></main>
+      </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-slate-200 bg-white/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur md:hidden">
         {enlaces.map(movil)}
       </nav>
     </div>

@@ -26,16 +26,16 @@ export default function Entrenadores() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <h1 className="text-xl font-semibold">Entrenadores</h1>
+        <h1 className="titulo-pagina">Entrenadores</h1>
         <button className="btn ml-auto" onClick={() => setAlta(true)}>+ Nuevo entrenador</button>
       </div>
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       {usuarios === null ? <p className="text-slate-500">Cargando…</p> : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {usuarios.map(u => {
             const yo = u.uid === perfil.uid
             return (
-              <li key={u.uid} className="tarjeta flex flex-wrap items-center gap-x-4 gap-y-2">
+              <li key={u.uid} className="tarjeta flex flex-wrap items-center gap-x-4 gap-y-2 !p-3">
                 <div className="min-w-0 flex-1">
                   <div className="font-medium">{u.nombre} {u.rol === 'admin' && <span className="ml-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800">Administrador</span>}</div>
                   <div className="truncate text-sm text-slate-500">{u.email}</div>
