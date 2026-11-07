@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { comprimirImagen, normalizar, slug } from '../lib/util'
 import Foto from '../components/Foto'
 import Modal from '../components/Modal'
+import { EncabezadoPagina, IconoCatalogo } from '../components/Iconos'
 
 const POR_PAGINA = 60
 
@@ -61,22 +62,19 @@ export default function Catalogo() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="titulo-pagina">Catálogo de ejercicios</h1>
-        {puedeEditarCatalogo && (
-          <div className="ml-auto flex gap-2">
-            <button className="btn-sec" onClick={() => setEditorGrupo({})}>+ Grupo</button>
-            <button className="btn" onClick={() => setEditor({})} disabled={!grupos.length}>+ Ejercicio</button>
-          </div>
-        )}
-      </div>
+      <EncabezadoPagina icono={IconoCatalogo} color="sky" titulo="Catálogo de ejercicios" subtitulo={grupo ? `${grupo.nombre} · ${lista.length} ejercicios` : ''}>
+        {puedeEditarCatalogo && <>
+          <button className="btn-sec" onClick={() => setEditorGrupo({})}>+ Grupo</button>
+          <button className="btn" onClick={() => setEditor({})} disabled={!grupos.length}>+ Ejercicio</button>
+        </>}
+      </EncabezadoPagina>
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {grupos.map(g => (
           <button key={g.id} onClick={() => setGrupoId(g.id)}
-            className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${g.id === grupoId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
+            className={`chip ${g.id === grupoId ? 'chip-on' : 'chip-off'}`}>
             {g.nombre}
           </button>
         ))}

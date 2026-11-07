@@ -8,6 +8,7 @@ import { describirLinea, formatLineas, seriesTotales, tituloDia, tituloGrupo } f
 import SelectorEjercicios from '../components/SelectorEjercicios'
 import SelectorVolumen from '../components/SelectorVolumen'
 import SeguimientoRutina from '../components/SeguimientoRutina'
+import Volver from '../components/Volver'
 
 const ESTADOS = { borrador: 'Borrador', activa: 'Activa', pendiente: 'Pendiente de revisión', cerrada: 'Cerrada' }
 const COLOR = { borrador: 'bg-slate-200 text-slate-700', activa: 'bg-teal-100 text-teal-800', pendiente: 'bg-amber-100 text-amber-800', cerrada: 'bg-slate-300 text-slate-700' }
@@ -238,7 +239,7 @@ export default function RutinaEditor() {
   return (
     <div className="space-y-4 pb-24">
       <div className="flex flex-wrap items-center gap-3">
-        <Link to={`/pacientes/${pid}`} className="text-slate-500 hover:text-slate-800" aria-label="Volver" onClick={e => { if (sucio && !window.confirm('Hay cambios sin guardar. ¿Salir sin guardar?')) e.preventDefault() }}>←</Link>
+        <Volver to={`/pacientes/${pid}`} texto={paciente.nombre.split(' ')[0]} onClick={e => { if (sucio && !window.confirm('Hay cambios sin guardar. ¿Salir sin guardar?')) e.preventDefault() }} />
         <div>
           <h1 className="titulo-pagina">{nueva ? 'Nueva rutina' : `Rutina ${meta.numero}`} · {paciente.nombre}</h1>
           {!nueva && <p className="text-sm text-slate-500">Temporada {meta.temporada}{meta.fechaInicio ? ` · del ${fmt(meta.fechaInicio)} al ${fmt(meta.fechaFin)}` : ''}</p>}

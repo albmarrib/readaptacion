@@ -4,6 +4,7 @@ import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestor
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { normalizar } from '../lib/util'
+import { Avatar, EncabezadoPagina, IconoPacientes } from '../components/Iconos'
 
 const ESTADOS = { invitado: 'Sin acceso', activo: 'Activo', archivado: 'Archivado' }
 const COLOR = { invitado: 'bg-amber-50 text-amber-700 ring-amber-200', activo: 'bg-teal-50 text-teal-700 ring-teal-200', archivado: 'bg-slate-100 text-slate-500 ring-slate-200' }
@@ -40,15 +41,11 @@ export default function Pacientes() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="titulo-pagina">{esAdmin ? 'Pacientes' : 'Mis pacientes'}</h1>
-        {pacientes && <span className="text-sm text-slate-500">{filtrados.length} {filtrados.length === 1 ? 'paciente' : 'pacientes'}</span>}
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <input className="input w-56" type="search" placeholder="Buscar…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
-          <label className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={verArchivados} onChange={e => setVerArchivados(e.target.checked)} /> Archivados</label>
-          <Link to="/pacientes/nuevo" className="btn">+ Nuevo paciente</Link>
-        </div>
-      </div>
+      <EncabezadoPagina icono={IconoPacientes} color="teal" titulo={esAdmin ? 'Pacientes' : 'Mis pacientes'} subtitulo={pacientes ? `${filtrados.length} ${filtrados.length === 1 ? 'paciente' : 'pacientes'}` : ''}>
+        <input className="input w-52" type="search" placeholder="Buscar paciente…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+        <label className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={verArchivados} onChange={e => setVerArchivados(e.target.checked)} /> Archivados</label>
+        <Link to="/pacientes/nuevo" className="btn">+ Nuevo paciente</Link>
+      </EncabezadoPagina>
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       {pacientes === null ? <p className="text-slate-500">Cargando…</p>
@@ -59,9 +56,9 @@ export default function Pacientes() {
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <table className="w-full text-left">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-teal-100 bg-gradient-to-r from-teal-50 to-sky-50 text-[11px] font-semibold uppercase tracking-wide text-teal-800">
                 <tr>
-                  <th className="px-4 py-2.5">Paciente</th>
+                  <th className="px-4 py-2">Paciente</th>
                   <th className="hidden px-4 py-2.5 md:table-cell">Teléfono</th>
                   {esAdmin && <th className="hidden px-4 py-2.5 lg:table-cell">Entrenador</th>}
                   <th className="px-4 py-2.5">Estado</th>
@@ -69,14 +66,19 @@ export default function Pacientes() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtrados.map(p => (
-                  <tr key={p.id} onClick={() => navigate(`/pacientes/${p.id}`)} className="cursor-pointer hover:bg-slate-50">
-                    <td className="px-4 py-2.5">
-                      <Link to={`/pacientes/${p.id}`} className="font-medium text-slate-900 hover:text-teal-700">{p.nombre}</Link>
-                      <div className="text-xs text-slate-500">{p.email || 'Sin correo'}</div>
+                  <tr key={p.id} onClick={() => navigate(`/pacientes/${p.id}`)} className="cursor-pointer transition hover:bg-teal-50/50">
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <Avatar nombre={p.nombre} />
+                        <div className="min-w-0">
+                          <Link to={`/pacientes/${p.id}`} className="font-medium text-slate-900 hover:text-teal-700">{p.nombre}</Link>
+                          <div className="truncate text-xs text-slate-500">{p.email || 'Sin correo'}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="hidden px-4 py-2.5 text-slate-600 md:table-cell">{p.telefono || '—'}</td>
-                    {esAdmin && <td className="hidden px-4 py-2.5 text-slate-600 lg:table-cell">{entrenadores[p.entrenadorId] ?? '—'}</td>}
-                    <td className="px-4 py-2.5"><span className={`insignia ring-1 ring-inset ${COLOR[p.estado] ?? COLOR.invitado}`}>{ESTADOS[p.estado] ?? p.estado}</span></td>
+                    <td className="hidden px-4 py-2 text-slate-600 md:table-cell">{p.telefono || '—'}</td>
+                    {esAdmin && <td className="hidden px-4 py-2 text-slate-600 lg:table-cell">{entrenadores[p.entrenadorId] ?? '—'}</td>}
+                    <td className="px-4 py-2"><span className={`insignia ring-1 ring-inset ${COLOR[p.estado] ?? COLOR.invitado}`}>{ESTADOS[p.estado] ?? p.estado}</span></td>
                   </tr>
                 ))}
               </tbody>

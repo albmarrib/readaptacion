@@ -4,6 +4,7 @@ import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { normalizar } from '../lib/util'
 import { formatLinea } from '../lib/volumen'
+import Volver from '../components/Volver'
 
 const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
 const maximo = pesos => { const v = Object.values(pesos ?? {}).filter(Number.isFinite); return v.length ? Math.max(...v) : null }
@@ -54,7 +55,7 @@ export default function Evolucion() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Link to={`/pacientes/${pid}`} className="text-slate-500 hover:text-slate-800" aria-label="Volver">←</Link>
+        <Volver to={`/pacientes/${pid}`} texto={paciente.nombre.split(' ')[0]} />
         <div>
           <h1 className="titulo-pagina">Evolución de pesos</h1>
           <p className="text-sm text-slate-500">{paciente.nombre}</p>
@@ -96,7 +97,7 @@ function Detalle({ ejercicio, onVolver }) {
 
   return (
     <div className="space-y-4">
-      <button className="text-sm text-teal-700 underline" onClick={onVolver}>← Todos los ejercicios</button>
+      <button className="btn-sec btn-xs" onClick={onVolver}>‹ Todos los ejercicios</button>
       <div>
         <h2 className="text-lg font-semibold">{titulo}</h2>
         {resto.length > 0 && <p className="text-sm text-slate-500">{resto.join(' · ')}</p>}

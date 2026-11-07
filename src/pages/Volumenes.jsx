@@ -3,6 +3,7 @@ import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
 import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
 import EditorVolumen from '../components/EditorVolumen'
+import { EncabezadoPagina, IconoVolumenes } from '../components/Iconos'
 
 export default function Volumenes() {
   const sistemas = useSistemas()
@@ -23,18 +24,16 @@ export default function Volumenes() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="titulo-pagina">Volúmenes</h1>
-        <button className="btn ml-auto" onClick={() => setEditor({})}>+ Nuevo volumen</button>
-      </div>
-      <p className="text-sm text-slate-500">Un volumen es la prescripción de series y repeticiones (p. ej. <span className="font-mono">3*10</span>). Se guardan aquí para reutilizarlos en las rutinas.</p>
+      <EncabezadoPagina icono={IconoVolumenes} color="violet" titulo="Volúmenes" subtitulo="Series y repeticiones reutilizables en las rutinas (p. ej. 3*10)">
+        <button className="btn" onClick={() => setEditor({})}>+ Nuevo volumen</button>
+      </EncabezadoPagina>
 
       {volumenes.length > 0 && (
         <>
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {[{ id: 'todos', nombre: 'Todos' }, ...sistemas].map(s => (
               <button key={s.id} onClick={() => setSistemaId(s.id)}
-                className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium ${s.id === sistemaId ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}>
+                className={`chip ${s.id === sistemaId ? 'chip-on' : 'chip-off'}`}>
                 {s.nombre}
               </button>
             ))}

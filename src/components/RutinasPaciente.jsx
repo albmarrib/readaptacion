@@ -18,7 +18,7 @@ export default function RutinasPaciente({ pacienteId }) {
   return (
     <section className="tarjeta">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">Rutinas</h2>
+        <h2 className="tarjeta-titulo !mb-0 [--acento:#0ea5e9]">Rutinas</h2>
         <Link to={`/pacientes/${pacienteId}/rutinas/nueva`} className="btn btn-xs">+ Nueva</Link>
       </div>
       {rutinas?.some(x => x.estado !== 'borrador') && (

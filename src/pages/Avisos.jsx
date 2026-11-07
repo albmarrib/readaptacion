@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { useAvisos } from '../lib/datos'
+import { EncabezadoPagina, IconoAvisos } from '../components/Iconos'
 
 const fmt = t => t?.toDate?.().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -32,10 +33,9 @@ export default function Avisos() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="titulo-pagina">Avisos</h1>
-        {sinLeer > 0 && <button className="btn-sec ml-auto" onClick={marcarTodos}>Marcar todos como leídos</button>}
-      </div>
+      <EncabezadoPagina icono={IconoAvisos} color="amber" titulo="Avisos" subtitulo={sinLeer ? `${sinLeer} sin leer` : 'Todo al día'}>
+        {sinLeer > 0 && <button className="btn-sec" onClick={marcarTodos}>Marcar todos como leídos</button>}
+      </EncabezadoPagina>
       {avisos.length === 0 ? <div className="tarjeta text-center text-slate-500">No tienes avisos. Cuando una rutina de tus pacientes llegue a su fin, aparecerá aquí.</div> : (
         <ul className="space-y-3">
           {avisos.map(a => {

@@ -9,6 +9,8 @@ import { app } from '../lib/firebase'
 import RutinasPaciente from '../components/RutinasPaciente'
 import AccesoPaciente from '../components/AccesoPaciente'
 import { consentimientoVigente } from '../lib/consentimiento'
+import Volver from '../components/Volver'
+import { Avatar } from '../components/Iconos'
 
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
 
@@ -93,7 +95,7 @@ export default function PacienteForm() {
 
   const proteccion = !nuevo && (
     <section className="tarjeta">
-      <h2 className="tarjeta-titulo">Protección de datos</h2>
+      <h2 className="tarjeta-titulo [--acento:#f59e0b]">Protección de datos</h2>
       {consentimientoVigente(consentimiento)
         ? <p className="text-xs text-teal-800">✓ Consentimiento aceptado por el paciente el {consentimiento.fecha?.toDate?.().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
         : <p className="text-xs text-amber-800">El paciente aún no ha aceptado el consentimiento (lo hará al entrar por primera vez). Hasta entonces, evita anotar datos de salud.</p>}
@@ -103,7 +105,8 @@ export default function PacienteForm() {
   return (
     <form id="ficha" onSubmit={guardar} className="space-y-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Link to="/pacientes" className="text-slate-400 hover:text-slate-700" aria-label="Volver">←</Link>
+        <Volver to="/pacientes" texto="Pacientes" />
+        {!nuevo && <Avatar nombre={f.nombre} tamano={34} />}
         <h1 className="titulo-pagina">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
         <div className="ml-auto flex items-center gap-2">
           {!nuevo && <button type="button" className="btn-peligro" onClick={eliminar} disabled={guardando}>Eliminar</button>}
@@ -116,7 +119,7 @@ export default function PacienteForm() {
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <section className="tarjeta">
-            <h2 className="tarjeta-titulo">Datos personales</h2>
+            <h2 className="tarjeta-titulo [--acento:#14b8a6]">Datos personales</h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4">
               <Campo clase="col-span-2" etiqueta="Nombre y apellidos *"><input className="input" required {...input('nombre')} /></Campo>
               <Campo etiqueta="Teléfono"><input type="tel" className="input" {...input('telefono')} /></Campo>
@@ -147,17 +150,17 @@ export default function PacienteForm() {
           </section>
 
           <section className="tarjeta">
-            <h2 className="tarjeta-titulo">Salud y objetivos <span className="font-normal text-slate-400">· opcional</span></h2>
+            <h2 className="tarjeta-titulo [--acento:#f43f5e]">Salud y objetivos <span className="font-normal text-slate-400">· opcional</span></h2>
             <div className="grid gap-x-3 gap-y-2.5 sm:grid-cols-2">
-              <Campo etiqueta="Objetivos"><textarea rows={2} className="input" {...input('objetivos')} /></Campo>
-              <Campo etiqueta="Lesiones"><textarea rows={2} className="input" {...input('lesiones')} /></Campo>
-              <Campo etiqueta="Patologías"><textarea rows={2} className="input" {...input('patologias')} /></Campo>
-              <Campo etiqueta="Cirugías"><textarea rows={2} className="input" {...input('cirugias')} /></Campo>
-              <Campo etiqueta="Medicación"><textarea rows={2} className="input" {...input('medicacion')} /></Campo>
-              <Campo etiqueta="Alergias"><textarea rows={2} className="input" {...input('alergias')} /></Campo>
+              <Campo etiqueta="Objetivos"><textarea rows={1} className="input resize-y" {...input('objetivos')} /></Campo>
+              <Campo etiqueta="Lesiones"><textarea rows={1} className="input resize-y" {...input('lesiones')} /></Campo>
+              <Campo etiqueta="Patologías"><textarea rows={1} className="input resize-y" {...input('patologias')} /></Campo>
+              <Campo etiqueta="Cirugías"><textarea rows={1} className="input resize-y" {...input('cirugias')} /></Campo>
+              <Campo etiqueta="Medicación"><textarea rows={1} className="input resize-y" {...input('medicacion')} /></Campo>
+              <Campo etiqueta="Alergias"><textarea rows={1} className="input resize-y" {...input('alergias')} /></Campo>
               <Campo etiqueta="Contacto de emergencia: nombre"><input className="input" value={f.contactoEmergencia.nombre} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, nombre: e.target.value })} /></Campo>
               <Campo etiqueta="Contacto de emergencia: teléfono"><input type="tel" className="input" value={f.contactoEmergencia.telefono} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, telefono: e.target.value })} /></Campo>
-              <Campo clase="sm:col-span-2" etiqueta="Notas del entrenador"><textarea rows={2} className="input" {...input('notas')} /></Campo>
+              <Campo clase="sm:col-span-2" etiqueta="Notas del entrenador"><textarea rows={1} className="input resize-y" {...input('notas')} /></Campo>
             </div>
           </section>
         </div>

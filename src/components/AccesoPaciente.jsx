@@ -22,7 +22,7 @@ export default function AccesoPaciente({ paciente, onActualizado }) {
 
   return (
     <section className="tarjeta space-y-2.5">
-      <h2 className="text-sm font-semibold">Acceso a la app</h2>
+      <h2 className="tarjeta-titulo !mb-1 [--acento:#6366f1]">Acceso a la app</h2>
       {tieneAcceso ? (
         <>
           <p className="text-xs text-teal-800">✓ {paciente.nombre} tiene acceso con el correo <b>{paciente.email}</b>.</p>
