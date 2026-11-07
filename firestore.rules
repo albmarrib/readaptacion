@@ -118,6 +118,34 @@ service cloud.firestore {
           allow read, write: if personalDe(pid);
         }
       }
+
+      // Chat entre el paciente y su entrenador. Los mensajes no se editan ni se borran.
+      match /mensajes/{mid} {
+        allow read: if personalDe(pid) || soyPaciente(pid);
+        allow create: if request.resource.data.keys().hasOnly(['autorId', 'autorRol', 'texto', 'fecha'])
+          && request.resource.data.autorId == request.auth.uid
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 1000
+          && request.resource.data.fecha == request.time
+          && ((request.resource.data.autorRol == 'personal' && personalDe(pid))
+              || (request.resource.data.autorRol == 'paciente' && soyPaciente(pid)));
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- Resumen del chat (lo mantiene una Cloud Function) ----------
+    // Cada lado solo puede poner a cero sus propios no leídos.
+    match /chats/{pid} {
+      allow read: if esAdmin()
+        || (esEntrenador() && resource.data.entrenadorId == request.auth.uid)
+        || soyPaciente(pid);
+      allow update: if (personalDe(pid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['noLeidosEntrenador'])
+            && request.resource.data.noLeidosEntrenador == 0)
+        || (soyPaciente(pid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['noLeidosPaciente'])
+            && request.resource.data.noLeidosPaciente == 0);
+      allow create, delete: if false;
     }
 
     // ---------- Avisos (los crea una Cloud Function) ----------

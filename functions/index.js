@@ -3,6 +3,7 @@ const { initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
+const { onDocumentCreated } = require('firebase-functions/v2/firestore')
 
 initializeApp()
 const REGION = 'europe-west1'
@@ -99,6 +100,7 @@ exports.eliminarPaciente = onCall({ region: REGION }, async (req) => {
   }
   const avisos = await db.collection('avisos').where('pacienteId', '==', pacienteId).get()
   await Promise.all(avisos.docs.map(d => d.ref.delete()))
+  await db.doc(`chats/${pacienteId}`).delete()
   await db.recursiveDelete(ref)
   return { ok: true }
 })
@@ -124,4 +126,25 @@ exports.revisarRutinas = onSchedule({ region: REGION, schedule: 'every day 07:00
     n++
   }
   console.log(`Rutinas vencidas procesadas: ${n}`)
+})
+
+// Chat: al llegar un mensaje se actualiza el resumen de la conversación (último mensaje y no leídos
+// del otro lado). Lo hace el servidor para que ningún cliente pueda falsear los contadores.
+exports.nuevoMensaje = onDocumentCreated({ document: 'pacientes/{pid}/mensajes/{mid}', region: REGION }, async (event) => {
+  const m = event.data?.data()
+  if (!m) return
+  const db = getFirestore()
+  const pid = event.params.pid
+  const paciente = await db.doc(`pacientes/${pid}`).get()
+  if (!paciente.exists) return
+  const delPaciente = m.autorRol === 'paciente'
+  await db.doc(`chats/${pid}`).set({
+    entrenadorId: paciente.data().entrenadorId,
+    pacienteId: pid,
+    ultimoTexto: String(m.texto ?? '').slice(0, 120),
+    ultimaFecha: m.fecha,
+    ultimoAutor: m.autorRol,
+    noLeidosEntrenador: FieldValue.increment(delPaciente ? 1 : 0),
+    noLeidosPaciente: FieldValue.increment(delPaciente ? 0 : 1),
+  }, { merge: true })
 })

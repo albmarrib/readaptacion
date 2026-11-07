@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { app } from '../lib/firebase'
 import { URL_APP, enlaceWhatsApp } from '../lib/util'
+import { useChat } from '../lib/chat'
+import { IconoChat } from './Iconos'
 
 const llamar = nombre => httpsCallable(getFunctions(app, 'europe-west1'), nombre)
 
@@ -10,6 +12,7 @@ export default function AccesoPaciente({ paciente, onActualizado }) {
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
   const tieneAcceso = !!paciente.uid
+  const chat = useChat()
 
   const mensaje = `Hola ${paciente.nombre.split(' ')[0]}, ya tienes acceso a tu plan de entrenamiento en la app. Entra en ${URL_APP} con tu correo (${paciente.email}); te llegará un enlace para acceder, sin contraseña.`
 
@@ -27,6 +30,7 @@ export default function AccesoPaciente({ paciente, onActualizado }) {
         <>
           <p className="text-xs text-teal-800">✓ {paciente.nombre} tiene acceso con el correo <b>{paciente.email}</b>.</p>
           <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-xs" onClick={() => chat?.abrir(paciente.id)}><IconoChat width={14} height={14} /> Enviar mensaje</button>
             <a className="btn-sec btn-xs" href={enlaceWhatsApp(paciente.telefono, mensaje)} target="_blank" rel="noreferrer">Reenviar aviso por WhatsApp</a>
             <button className="btn-sec btn-xs" onClick={() => navigator.clipboard?.writeText(mensaje)}>Copiar mensaje</button>
           </div>

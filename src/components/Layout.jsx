@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useAvisos } from '../lib/datos'
+import { ChatProvider } from '../lib/chat'
+import ChatFlotante from './ChatFlotante'
 import { guardarFotoPerfil } from '../lib/foto'
 import EditorFoto from './EditorFoto'
 import { Avatar, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
@@ -51,6 +53,7 @@ export default function Layout() {
     : <button onClick={() => setFotoAbierta(true)} title="Cambiar mi foto" className="rounded-full ring-2 ring-transparent transition hover:ring-teal-300"><Avatar nombre={perfil?.nombre} foto={perfil?.foto} tamano={30} /></button>
 
   return (
+    <ChatProvider>
     <div className="min-h-dvh text-slate-900 md:flex" style={{ '--lateral': plegado ? '4.5rem' : '14rem' }}>
       {/* Menú lateral (ordenador y tablet), plegable */}
       <aside className={`hidden shrink-0 flex-col bg-gradient-to-b from-teal-800 via-teal-900 to-slate-900 transition-[width] duration-200 md:sticky md:top-0 md:flex md:h-dvh ${plegado ? 'w-[4.5rem]' : 'w-56'}`}>
@@ -100,6 +103,8 @@ export default function Layout() {
       </nav>
 
       {fotoAbierta && <EditorFoto nombre={perfil?.nombre} fotoActual={perfil?.foto} onClose={() => setFotoAbierta(false)} onGuardar={f => guardarFotoPerfil(perfil, f)} />}
+      <ChatFlotante />
     </div>
+    </ChatProvider>
   )
 }
