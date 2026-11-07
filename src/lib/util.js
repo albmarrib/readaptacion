@@ -30,3 +30,13 @@ export function sinVacios(obj) {
   }
   return r
 }
+
+export const URL_APP = 'https://readaptacion-app.web.app'
+
+// Enlace que abre un chat de WhatsApp con el teléfono dado (si no hay teléfono, abre WhatsApp sin destinatario).
+// Los números de 9 cifras se toman como españoles (+34).
+export function enlaceWhatsApp(telefono, texto) {
+  let n = (telefono ?? '').replace(/[^\d+]/g, '').replace(/^\+/, '').replace(/^00/, '')
+  if (n.length === 9) n = '34' + n
+  return `https://wa.me/${n}?text=${encodeURIComponent(texto)}`
+}

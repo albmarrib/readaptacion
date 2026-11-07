@@ -293,7 +293,14 @@ export default function RutinaEditor() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="font-mono text-sm font-semibold">{e.volumenNombre ? `${e.volumenNombre} · ` : ''}{formatLineas(e.lineas)}</div>
-                          <ul className="mt-0.5 text-xs text-slate-500">{e.lineas.map((l, k) => <li key={k}>{describirLinea(l)}</li>)}</ul>
+                          <ul className="mt-0.5 text-xs text-slate-500">
+                            {e.lineas.map((l, k) => (
+                              <li key={k}>{describirLinea(l)}
+                                {!editable && <b className={`ml-2 text-sm ${e.pesos?.[k] != null ? 'text-teal-800' : 'font-normal text-slate-400'}`}>{e.pesos?.[k] != null ? `${e.pesos[k]} kg` : 'sin peso'}</b>}
+                              </li>
+                            ))}
+                          </ul>
+                          {!editable && e.pesosActualizado && <p className="mt-1 text-xs text-slate-400">Pesos actualizados el {fmt(e.pesosActualizado)}</p>}
                         </div>
                         <span className="shrink-0 rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-800">{seriesTotales(e.lineas)} series</span>
                       </div>

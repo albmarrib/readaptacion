@@ -28,7 +28,8 @@ service cloud.firestore {
       return esAdmin() || (esEntrenador() && pacienteDe(pid).entrenadorId == request.auth.uid);
     }
     function soyPaciente(pid) {
-      return activo() && yo().rol == 'paciente' && yo().pacienteId == pid;
+      return activo() && yo().rol == 'paciente' && yo().pacienteId == pid
+        && pacienteDe(pid).estado != 'archivado';
     }
 
     // ---------- Usuarios ----------
@@ -73,11 +74,14 @@ service cloud.firestore {
         || (esEntrenador() && resource.data.entrenadorId == request.auth.uid);
 
       match /rutinas/{rid} {
-        allow read: if personalDe(pid) || soyPaciente(pid);
+        // El paciente no ve los borradores
+        allow read: if personalDe(pid) || (soyPaciente(pid) && resource.data.estado != 'borrador');
         allow write: if personalDe(pid);
 
         match /ejercicios/{eid} {
-          allow read: if personalDe(pid) || soyPaciente(pid);
+          allow read: if personalDe(pid)
+            || (soyPaciente(pid)
+                && get(/databases/$(database)/documents/pacientes/$(pid)/rutinas/$(rid)).data.estado != 'borrador');
           allow create, delete: if personalDe(pid);
           // El paciente solo puede modificar los pesos, y solo en una rutina activa
           allow update: if personalDe(pid)

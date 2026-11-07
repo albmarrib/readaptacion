@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
-import { describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
+import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
 import EditorVolumen from '../components/EditorVolumen'
 
 export default function Volumenes() {
@@ -19,7 +19,6 @@ export default function Volumenes() {
       .sort((a, b) => nombreVolumen(a).localeCompare(nombreVolumen(b), 'es', { numeric: true }))
   }, [volumenes, sistemaId, busqueda])
 
-  const nombreSistema = id => sistemas?.find(s => s.id === id)?.nombre ?? '—'
   if (!sistemas || !volumenes) return <p className="text-slate-500">Cargando…</p>
 
   return (
@@ -47,22 +46,28 @@ export default function Volumenes() {
       {volumenes.length === 0 ? (
         <div className="tarjeta text-center text-slate-500">Todavía no hay volúmenes. Crea el primero con «Nuevo volumen», o directamente al preparar una rutina.</div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {filtrados.map(v => (
-            <li key={v.id}>
-              <button onClick={() => setEditor({ volumen: v })} className="tarjeta block w-full text-left hover:border-teal-500">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="font-medium">{nombreVolumen(v)}</div>
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600">{nombreSistema(v.sistemaId)}</span>
-                </div>
-                {v.nombre && <div className="font-mono text-sm text-slate-600">{formatLineas(v.lineas)}</div>}
-                <ul className="mt-1 text-xs text-slate-500">{v.lineas.map((l, i) => <li key={i}>{describirLinea(l)}</li>)}</ul>
-                <div className="mt-1.5 text-xs font-medium text-teal-800">{v.seriesTotales} series en total</div>
-              </button>
-            </li>
+        <div className="space-y-6">
+          {agruparPorSistema(filtrados, sistemas).map(({ sistema, items }) => (
+            <section key={sistema.id}>
+              <h2 className="mb-2 flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                {sistema.nombre} <span className="text-xs font-normal normal-case text-slate-400">{items.length} volumen{items.length === 1 ? '' : 'es'}</span>
+              </h2>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {items.map(v => (
+                  <li key={v.id}>
+                    <button onClick={() => setEditor({ volumen: v })} className="tarjeta block w-full text-left hover:border-teal-500">
+                      <div className="font-medium">{nombreVolumen(v)}</div>
+                      {v.nombre && <div className="font-mono text-sm text-slate-600">{formatLineas(v.lineas)}</div>}
+                      <ul className="mt-1 text-xs text-slate-500">{v.lineas.map((l, i) => <li key={i}>{describirLinea(l)}</li>)}</ul>
+                      <div className="mt-1.5 text-xs font-medium text-teal-800">{v.seriesTotales} series en total</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-          {filtrados.length === 0 && <li className="tarjeta text-center text-slate-500 sm:col-span-2">Ningún volumen coincide.</li>}
-        </ul>
+          {filtrados.length === 0 && <div className="tarjeta text-center text-slate-500">Ningún volumen coincide.</div>}
+        </div>
       )}
 
       {editor && (

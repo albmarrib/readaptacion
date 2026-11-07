@@ -42,3 +42,13 @@ export const nombreVolumen = v => v?.nombre || formatLineas(v?.lineas)
 export const tituloGrupo = n => (n ? n.charAt(0) + n.slice(1).toLowerCase() : '')
 export const tituloDia = (gruposIds, grupos) =>
   gruposIds.map(id => tituloGrupo(grupos.find(g => g.id === id)?.nombre ?? id)).join(' + ')
+
+// Agrupa volúmenes por sistema de entrenamiento (en el orden de la lista de sistemas)
+export function agruparPorSistema(volumenes, sistemas) {
+  const grupos = sistemas
+    .map(s => ({ sistema: s, items: volumenes.filter(v => v.sistemaId === s.id) }))
+    .filter(g => g.items.length)
+  const huerfanos = volumenes.filter(v => !sistemas.some(s => s.id === v.sistemaId))
+  if (huerfanos.length) grupos.push({ sistema: { id: '?', nombre: 'Sin sistema' }, items: huerfanos })
+  return grupos
+}

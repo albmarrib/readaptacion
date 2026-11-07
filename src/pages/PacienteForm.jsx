@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { sinVacios } from '../lib/util'
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import { app } from '../lib/firebase'
 import RutinasPaciente from '../components/RutinasPaciente'
+import AccesoPaciente from '../components/AccesoPaciente'
 
 const VERSION_CONSENTIMIENTO = 'borrador' // se actualizará cuando exista el texto legal definitivo
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
@@ -72,9 +75,9 @@ export default function PacienteForm() {
   }
 
   const eliminar = async () => {
-    if (!window.confirm(`¿Eliminar definitivamente a ${f.nombre}?\n\nSe borra su ficha y no se puede deshacer (derecho de supresión). Si solo quieres dejar de trabajar con él o ella, usa «Archivado».`)) return
+    if (!window.confirm(`¿Eliminar definitivamente a ${f.nombre}?\n\nSe borran su ficha, todas sus rutinas y pesos, y su acceso a la app. No se puede deshacer (derecho de supresión). Si solo quieres dejar de trabajar con esta persona, usa el estado «Archivado».`)) return
     setGuardando(true)
-    try { await deleteDoc(doc(db, 'pacientes', id)); navigate('/pacientes') }
+    try { await httpsCallable(getFunctions(app, 'europe-west1'), 'eliminarPaciente')({ pacienteId: id }); navigate('/pacientes') }
     catch (err) { setError('No se pudo eliminar: ' + err.message); setGuardando(false) }
   }
 
@@ -88,12 +91,13 @@ export default function PacienteForm() {
       </div>
 
       {!nuevo && <RutinasPaciente pacienteId={id} />}
+      {!nuevo && <AccesoPaciente paciente={{ ...f, id, consentimiento }} onActualizado={parche => setF(x => ({ ...x, ...parche }))} />}
 
       <section className="tarjeta space-y-4">
         <h2 className="font-semibold">Datos básicos</h2>
         <Campo etiqueta="Nombre y apellidos *"><input className="input" required {...input('nombre')} /></Campo>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Correo electrónico" ayuda="Lo necesitará para entrar a la app."><input type="email" className="input" autoComplete="off" {...input('email')} /></Campo>
+          <Campo etiqueta="Correo electrónico" ayuda="Lo necesitará para entrar a la app."><input type="email" className="input" autoComplete="off" disabled={!!f.uid} {...input('email')} /></Campo>
           <Campo etiqueta="Teléfono" ayuda="Se usa para abrir WhatsApp."><input type="tel" className="input" {...input('telefono')} /></Campo>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
