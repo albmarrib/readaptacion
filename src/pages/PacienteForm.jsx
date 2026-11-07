@@ -64,8 +64,9 @@ export default function PacienteForm() {
       })
       datos.entrenadorId = esAdmin ? f.entrenadorId : perfil.uid
       datos.estado = f.estado || 'invitado'
-      if (nuevo) { const r = await addDoc(collection(db, 'pacientes'), datos); navigate(`/pacientes/${r.id}`, { replace: true }) }
-      else { await setDoc(doc(db, 'pacientes', id), datos); navigate('/pacientes') }
+      if (nuevo) await addDoc(collection(db, 'pacientes'), datos)
+      else await setDoc(doc(db, 'pacientes', id), datos)
+      navigate('/pacientes')
     } catch (err) { setError('No se pudo guardar: ' + err.message); setGuardando(false) }
   }
 
