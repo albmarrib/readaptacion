@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { collection, deleteField, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
@@ -26,11 +27,28 @@ export default function MiRutina() {
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
   if (!consentimientoVigente(ficha?.consentimiento)) return <PantallaConsentimiento pacienteId={pid} />
-  return <ContenidoRutina pid={pid} />
+  return <ContenidoRutina pid={pid} nombre={perfil.nombre} />
 }
 
-function ContenidoRutina({ pid }) {
-  const { perfil } = useAuth()
+// Vista previa para el entrenador: lo que ve el paciente, solo lectura
+export function VistaPreviaPaciente() {
+  const { id } = useParams()
+  const [ficha, setFicha] = useState(undefined)
+  useEffect(() => onSnapshot(doc(db, 'pacientes', id), s => setFicha(s.exists() ? s.data() : null), () => setFicha(null)), [id])
+  if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
+  if (!ficha) return <p className="rounded-xl bg-red-50 p-3 text-red-700">No se encuentra el paciente.</p>
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+        <span>👁 Vista previa: así ve la app <b>{ficha.nombre}</b>. Solo lectura.</span>
+        <Link to={`/pacientes/${id}`} className="btn-sec ml-auto !py-1.5">Volver a la ficha</Link>
+      </div>
+      <ContenidoRutina pid={id} nombre={ficha.nombre} soloLectura />
+    </div>
+  )
+}
+
+function ContenidoRutina({ pid, nombre, soloLectura = false }) {
   const [rutinas, setRutinas] = useState(null)
   const [elegida, setElegida] = useState(null)
   const [error, setError] = useState('')
@@ -46,7 +64,7 @@ function ContenidoRutina({ pid }) {
   if (!rutinas) return <p className="text-slate-500">Cargando…</p>
   if (!rutinas.length) return (
     <div className="tarjeta text-center">
-      <h1 className="text-xl font-semibold">Hola, {perfil.nombre.split(' ')[0]}</h1>
+      <h1 className="text-xl font-semibold">Hola, {nombre.split(' ')[0]}</h1>
       <p className="mt-2 text-slate-600">Tu entrenador todavía no te ha activado ninguna rutina. Cuando lo haga, aparecerá aquí.</p>
     </div>
   )
@@ -57,7 +75,7 @@ function ContenidoRutina({ pid }) {
 
   return (
     <div className="space-y-6">
-      <VistaRutina key={mostrada.id} pid={pid} rutina={mostrada} esActual={mostrada.id === actual.id} />
+      <VistaRutina key={mostrada.id} pid={pid} rutina={mostrada} esActual={mostrada.id === actual.id} soloLectura={soloLectura} />
       {anteriores.length > 0 && (
         <section className="space-y-2">
           <h2 className="font-semibold">{mostrada.id === actual.id ? 'Rutinas anteriores' : 'Otras rutinas'}</h2>
@@ -77,10 +95,10 @@ function ContenidoRutina({ pid }) {
   )
 }
 
-function VistaRutina({ pid, rutina, esActual }) {
+function VistaRutina({ pid, rutina, esActual, soloLectura }) {
   const [ejercicios, setEjercicios] = useState(null)
   const [dia, setDia] = useState(0)
-  const puedeAnotar = rutina.estado === 'activa'
+  const puedeAnotar = rutina.estado === 'activa' && !soloLectura
 
   useEffect(() => onSnapshot(collection(db, 'pacientes', pid, 'rutinas', rutina.id, 'ejercicios'),
     s => setEjercicios(s.docs.map(d => ({ id: d.id, ...d.data() }))), () => setEjercicios([])), [pid, rutina.id])
@@ -97,7 +115,7 @@ function VistaRutina({ pid, rutina, esActual }) {
           Rutina {rutina.numero} · temporada {rutina.temporada}
           {rutina.fechaInicio && <> · {fmt(rutina.fechaInicio)} – {fmt(rutina.fechaFin)}</>}
         </p>
-        {!puedeAnotar && <p className="mt-2 rounded-xl bg-slate-100 p-3 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
+        {!puedeAnotar && !soloLectura && <p className="mt-2 rounded-xl bg-slate-100 p-3 text-sm text-slate-600">{rutina.estado === 'pendiente' ? 'Esta rutina ha terminado y tu entrenador la está revisando. Ya no puedes cambiar los pesos.' : 'Rutina cerrada: solo lectura.'}</p>}
         {rutina.notaGeneral && <p className="mt-2 rounded-xl bg-teal-50 p-3 text-sm text-teal-900">{rutina.notaGeneral}</p>}
       </div>
 

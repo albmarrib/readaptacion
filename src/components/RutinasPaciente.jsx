@@ -20,6 +20,7 @@ export default function RutinasPaciente({ pacienteId }) {
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold">Rutinas</h2>
         <div className="flex gap-2">
+          {rutinas?.some(x => x.estado !== 'borrador') && <Link to={`/pacientes/${pacienteId}/vista-paciente`} className="btn-sec !py-2">Ver como paciente</Link>}
           {rutinas?.some(x => x.estado !== 'borrador') && <Link to={`/pacientes/${pacienteId}/evolucion`} className="btn-sec !py-2">Evolución</Link>}
           <Link to={`/pacientes/${pacienteId}/rutinas/nueva`} className="btn !py-2">+ Nueva rutina</Link>
         </div>
