@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
@@ -11,6 +11,7 @@ import RutinaEditor from './pages/RutinaEditor'
 import Volumenes from './pages/Volumenes'
 import Avisos from './pages/Avisos'
 import Perfil from './pages/Perfil'
+import ImpresionRutina from './pages/ImpresionRutina'
 import Evolucion from './pages/Evolucion'
 import { lazy, Suspense } from 'react'
 const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
@@ -26,6 +27,14 @@ function Protegida() {
   return <Layout />
 }
 
+// Páginas protegidas pero sin el menú y la barra de la app (p. ej. la de impresión)
+function ProtegidaSinMarco() {
+  const { estado } = useAuth()
+  if (estado === 'cargando') return <Cargando />
+  if (estado !== 'ok') return <Navigate to="/login" replace />
+  return <Outlet />
+}
+
 const Solo = ({ cond, children }) => (cond ? children : <Navigate to="/" replace />)
 
 function Inicio() {
@@ -39,6 +48,9 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       {DemoPaciente && <Route path="/demo-paciente" element={<Suspense fallback={null}><DemoPaciente /></Suspense>} />}
+      <Route element={<ProtegidaSinMarco />}>
+        <Route path="pacientes/:id/rutinas/:rid/imprimir" element={<Solo cond={esPersonal}><ImpresionRutina /></Solo>} />
+      </Route>
       <Route element={<Protegida />}>
         <Route index element={<Inicio />} />
         <Route path="catalogo" element={<Solo cond={esPersonal}><Catalogo /></Solo>} />

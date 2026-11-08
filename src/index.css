@@ -7,6 +7,15 @@
   --color-fondo: #eef3f5;
 }
 
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff !important; }
+  .no-imprimir { display: none !important; }
+  .salto-pagina { break-before: page; }
+  .evitar-corte { break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 @keyframes subir { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
 
 @layer base {

@@ -9,6 +9,7 @@ import SelectorEjercicios from '../components/SelectorEjercicios'
 import SelectorVolumen from '../components/SelectorVolumen'
 import SeguimientoRutina from '../components/SeguimientoRutina'
 import Volver from '../components/Volver'
+import { IconoPdf } from '../components/Iconos'
 
 const ESTADOS = { borrador: 'Borrador', activa: 'Activa', pendiente: 'Pendiente de revisión', cerrada: 'Cerrada' }
 const COLOR = { borrador: 'bg-slate-200 text-slate-700', activa: 'bg-teal-100 text-teal-800', pendiente: 'bg-amber-100 text-amber-800', cerrada: 'bg-slate-300 text-slate-700' }
@@ -245,6 +246,7 @@ export default function RutinaEditor() {
           {!nueva && <p className="text-sm text-slate-500">Temporada {meta.temporada}{meta.fechaInicio ? ` · del ${fmt(meta.fechaInicio)} al ${fmt(meta.fechaFin)}` : ''}</p>}
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${COLOR[meta.estado]}`}>{ESTADOS[meta.estado]}</span>
+        {!nueva && <Link to={`/pacientes/${pid}/rutinas/${rid}/imprimir`} target="_blank" className="btn-sec btn-xs ml-auto" title="Descargar la rutina en PDF"><IconoPdf width={14} height={14} /> Descargar PDF</Link>}
       </div>
 
       {!editable && <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-600">Esta rutina ya no es un borrador y no se puede modificar. Abajo tienes el seguimiento.</p>}
