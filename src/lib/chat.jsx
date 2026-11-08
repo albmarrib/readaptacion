@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { collection, doc, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from './firebase'
 import { useAuth } from './auth'
@@ -14,6 +15,15 @@ export function ChatProvider({ children }) {
   const [pid, setPid] = useState(null)        // conversación abierta (staff); el paciente tiene una sola
   const [aviso, setAviso] = useState(null)    // globo emergente de mensaje nuevo
   const anterior = useRef(null)
+  const [params, setParams] = useSearchParams()
+
+  // Venimos de una notificación: /?chat=<idPaciente> (entrenador) o /?chat=1 (paciente)
+  useEffect(() => {
+    const c = params.get('chat')
+    if (!c || !perfil) return
+    setPid(c === '1' ? null : c); setAbierto(true)
+    params.delete('chat'); setParams(params, { replace: true })
+  }, [params, perfil]) // eslint-disable-line react-hooks/exhaustive-deps
   const [latido, setLatido] = useState(0) // sube cada vez que la app vuelve a primer plano o recupera la red
 
   useEffect(() => {

@@ -51,6 +51,11 @@ service cloud.firestore {
             && request.resource.data.nombre is string
             && request.resource.data.nombre.size() > 1 && request.resource.data.nombre.size() < 121);
       allow create, delete: if false;
+
+      // Dispositivos con avisos push (uno por móvil u ordenador); cada persona gestiona los suyos
+      match /dispositivos/{did} {
+        allow read, create, update, delete: if request.auth != null && request.auth.uid == uid;
+      }
     }
 
     // ---------- Catálogo ----------

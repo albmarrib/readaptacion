@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const crypto = require('node:crypto')
 const { initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
+const { getMessaging } = require('firebase-admin/messaging')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
 const { onDocumentCreated } = require('firebase-functions/v2/firestore')
@@ -13,6 +14,26 @@ const REGION = 'europe-west1'
 const claveTemporal = () => {
   const a = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
   return Array.from(crypto.randomBytes(10), b => a[b % a.length]).join('')
+}
+
+// Aviso push a todos los dispositivos de un usuario. Nunca incluye el contenido del mensaje
+// (la pantalla bloqueada puede verla cualquiera). Si un dispositivo ya no existe, se borra.
+async function enviarPush(uid, { titulo, cuerpo, url }) {
+  if (!uid) return
+  try {
+    const snap = await getFirestore().collection(`usuarios/${uid}/dispositivos`).get()
+    if (snap.empty) return
+    const r = await getMessaging().sendEachForMulticast({
+      tokens: snap.docs.map(d => d.data().token),
+      data: { titulo, cuerpo, url },
+      webpush: { headers: { Urgency: 'high', TTL: '86400' } },
+    })
+    const caducados = []
+    r.responses.forEach((x, i) => {
+      if (!x.success && /not-registered|invalid-registration-token|invalid-argument/.test(x.error?.code ?? '')) caducados.push(snap.docs[i].ref.delete())
+    })
+    await Promise.all(caducados)
+  } catch (e) { console.error('push', uid, e.message) }
 }
 
 // Devuelve el perfil del usuario que llama si está activo y es administrador o entrenador.
@@ -134,6 +155,7 @@ exports.revisarRutinas = onSchedule({ region: REGION, schedule: 'every day 07:00
       tipo: 'rutina_vencida', fecha: FieldValue.serverTimestamp(), leido: false,
     })
     await lote.commit()
+    await enviarPush(paciente.data().entrenadorId, { titulo: 'Rutina terminada', cuerpo: `La rutina de ${paciente.data().nombre} ha terminado y requiere revisión`, url: '/avisos' })
     n++
   }
   console.log(`Rutinas vencidas procesadas: ${n}`)
@@ -158,4 +180,8 @@ exports.nuevoMensaje = onDocumentCreated({ document: 'pacientes/{pid}/mensajes/{
     noLeidosEntrenador: FieldValue.increment(delPaciente ? 1 : 0),
     noLeidosPaciente: FieldValue.increment(delPaciente ? 0 : 1),
   }, { merge: true })
+
+  const p = paciente.data()
+  if (delPaciente) await enviarPush(p.entrenadorId, { titulo: 'Mensaje nuevo', cuerpo: `${p.nombre} te ha escrito`, url: `/?chat=${pid}` })
+  else await enviarPush(p.uid, { titulo: 'Mensaje de tu entrenador', cuerpo: 'Tienes un mensaje nuevo', url: '/?chat=1' })
 })
