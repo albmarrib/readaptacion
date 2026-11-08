@@ -64,7 +64,7 @@ function Panel() {
   }, [pacientes, busqueda, chat.chats])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white md:inset-auto md:bottom-6 md:right-6 md:h-[34rem] md:w-[24rem] md:rounded-2xl md:border md:border-slate-200 md:shadow-2xl md:shadow-slate-900/20">
+    <div className="fixed inset-x-0 top-0 z-50 flex h-dvh flex-col overflow-hidden bg-white md:inset-auto md:h-[34rem] md:bottom-6 md:right-6 md:w-[24rem] md:rounded-2xl md:border md:border-slate-200 md:shadow-2xl md:shadow-slate-900/20">
       {pidActual && actual ? (
         <Conversacion pid={pidActual} nombre={actual.nombre} foto={actual.foto} onVolver={esPersonal ? () => chat.elegir(null) : null} />
       ) : (
@@ -117,11 +117,10 @@ function Conversacion({ pid, nombre, foto, onVolver }) {
   const sinLeer = chat.noLeidosDe(pid)
 
   useEffect(() => {
-    setMensajes(null)
     return onSnapshot(query(collection(db, 'pacientes', pid, 'mensajes'), orderBy('fecha', 'asc'), limitToLast(200)),
       s => setMensajes(s.docs.map(d => ({ id: d.id, ...d.data() }))),
       e => { setError('No se pudieron cargar los mensajes: ' + e.message); setMensajes([]) })
-  }, [pid])
+  }, [pid, chat.latido]) // se reinicia al volver a primer plano
 
   // Abrir la conversación (o recibir un mensaje con ella abierta) la marca como leída
   useEffect(() => {

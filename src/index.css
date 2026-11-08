@@ -20,6 +20,11 @@
   :focus-visible { outline: 2px solid #0d9488; outline-offset: 2px; }
 }
 
+/* En móvil los campos van a 16 px para que Safari no haga zoom al escribir */
+@media (max-width: 767px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
 @layer components {
   .btn { @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-gradient-to-b from-teal-600 to-teal-700 px-3 text-[13px] font-medium text-white shadow-sm shadow-teal-900/20 ring-1 ring-inset ring-teal-800/30 transition hover:from-teal-500 hover:to-teal-700 active:from-teal-700 active:to-teal-800 disabled:pointer-events-none disabled:opacity-50; }
   .btn-sec { @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-slate-300/90 bg-white px-3 text-[13px] font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50/60 hover:text-teal-800 active:bg-teal-50 disabled:pointer-events-none disabled:opacity-50; }

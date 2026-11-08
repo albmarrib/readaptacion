@@ -14,6 +14,15 @@ export function ChatProvider({ children }) {
   const [pid, setPid] = useState(null)        // conversación abierta (staff); el paciente tiene una sola
   const [aviso, setAviso] = useState(null)    // globo emergente de mensaje nuevo
   const anterior = useRef(null)
+  const [latido, setLatido] = useState(0) // sube cada vez que la app vuelve a primer plano o recupera la red
+
+  useEffect(() => {
+    const despertar = () => { if (document.visibilityState === 'visible') setLatido(n => n + 1) }
+    document.addEventListener('visibilitychange', despertar)
+    window.addEventListener('online', despertar)
+    window.addEventListener('pageshow', despertar)
+    return () => { document.removeEventListener('visibilitychange', despertar); window.removeEventListener('online', despertar); window.removeEventListener('pageshow', despertar) }
+  }, [])
 
   const noLeidos = c => (esPersonal ? c?.noLeidosEntrenador : c?.noLeidosPaciente) ?? 0
 
@@ -40,7 +49,7 @@ export function ChatProvider({ children }) {
       return onSnapshot(doc(db, 'chats', perfil.pacienteId),
         s => recibir(s.exists() ? { [perfil.pacienteId]: s.data() } : {}), error)
     }
-  }, [perfil?.uid]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [perfil?.uid, latido]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // El globo desaparece solo
   useEffect(() => {
@@ -50,14 +59,14 @@ export function ChatProvider({ children }) {
   }, [aviso])
 
   const valor = useMemo(() => ({
-    chats, abierto, pid, aviso, esPersonal,
+    chats, abierto, pid, aviso, esPersonal, latido,
     totalNoLeidos: Object.values(chats).reduce((s, c) => s + noLeidos(c), 0),
     noLeidosDe: id => noLeidos(chats[id]),
     abrir: id => { setPid(id ?? null); setAbierto(true); setAviso(null) },
     cerrar: () => setAbierto(false),
     elegir: id => setPid(id),
     quitarAviso: () => setAviso(null),
-  }), [chats, abierto, pid, aviso, esPersonal]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [chats, abierto, pid, aviso, esPersonal, latido]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>
 }
