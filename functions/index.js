@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
+const crypto = require('node:crypto')
 const { initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
@@ -7,6 +8,12 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore')
 
 initializeApp()
 const REGION = 'europe-west1'
+
+// Contraseña temporal legible (sin letras ni números que se confundan)
+const claveTemporal = () => {
+  const a = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  return Array.from(crypto.randomBytes(10), b => a[b % a.length]).join('')
+}
 
 // Devuelve el perfil del usuario que llama si está activo y es administrador o entrenador.
 async function personalActivo(req) {
@@ -76,11 +83,15 @@ exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
   if (existente.exists && !(existente.data().rol === 'paciente' && existente.data().pacienteId === pacienteId)) {
     throw new HttpsError('already-exists', 'Ese correo ya pertenece a otro usuario de la app.')
   }
+  // Contraseña temporal: se devuelve una sola vez al entrenador para que se la dé al paciente.
+  // El paciente la cambia por la suya dentro de la app. Llamar otra vez genera una nueva.
+  const clave = claveTemporal()
+  await getAuth().updateUser(user.uid, { password: clave })
   const lote = getFirestore().batch()
   lote.set(uRef, { rol: 'paciente', nombre: ficha.nombre, email, activo: true, pacienteId })
   lote.update(ref, { uid: user.uid, estado: 'activo' })
   await lote.commit()
-  return { uid: user.uid }
+  return { uid: user.uid, clave }
 })
 
 // Borra por completo a un paciente (derecho de supresión): ficha, rutinas, notas, avisos,

@@ -4,8 +4,7 @@ import { useAuth } from '../lib/auth'
 import { useAvisos } from '../lib/datos'
 import { ChatProvider } from '../lib/chat'
 import ChatFlotante from './ChatFlotante'
-import { guardarFotoPerfil } from '../lib/foto'
-import EditorFoto from './EditorFoto'
+import CuentaPaciente from './CuentaPaciente'
 import { Avatar, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
@@ -50,7 +49,7 @@ export default function Layout() {
   // Foto de perfil: el personal va a "Mi perfil"; el paciente la cambia en una ventana
   const botonAvatar = esPersonal
     ? <Link to="/perfil" title="Mi perfil" className="rounded-full ring-2 ring-transparent transition hover:ring-teal-300"><Avatar nombre={perfil?.nombre} foto={perfil?.foto} tamano={30} /></Link>
-    : <button onClick={() => setFotoAbierta(true)} title="Cambiar mi foto" className="rounded-full ring-2 ring-transparent transition hover:ring-teal-300"><Avatar nombre={perfil?.nombre} foto={perfil?.foto} tamano={30} /></button>
+    : <button onClick={() => setFotoAbierta(true)} title="Mi cuenta" className="rounded-full ring-2 ring-transparent transition hover:ring-teal-300"><Avatar nombre={perfil?.nombre} foto={perfil?.foto} tamano={30} /></button>
 
   return (
     <ChatProvider>
@@ -102,7 +101,7 @@ export default function Layout() {
         {enlaces.map(movil)}
       </nav>
 
-      {fotoAbierta && <EditorFoto nombre={perfil?.nombre} fotoActual={perfil?.foto} onClose={() => setFotoAbierta(false)} onGuardar={f => guardarFotoPerfil(perfil, f)} />}
+      {fotoAbierta && <CuentaPaciente onClose={() => setFotoAbierta(false)} />}
       <ChatFlotante />
     </div>
     </ChatProvider>

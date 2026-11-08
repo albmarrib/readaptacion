@@ -4,6 +4,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { guardarFotoPerfil } from '../lib/foto'
 import EditorFoto from '../components/EditorFoto'
+import CambiarClave from '../components/CambiarClave'
 import { Avatar, EncabezadoPagina, IconoCamara, IconoPacientes } from '../components/Iconos'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador' }
@@ -51,6 +52,12 @@ export default function Perfil() {
           <button className="btn" disabled={ocupado || nombre.trim() === perfil.nombre}>{ocupado ? 'Guardando…' : 'Guardar cambios'}</button>
         </div>
       </form>
+
+      <section className="tarjeta [--acento:#f59e0b]">
+        <h2 className="tarjeta-titulo">Contraseña</h2>
+        <p className="mb-3 text-xs text-slate-500">Opcional: si entras con Google puedes añadir una contraseña para entrar también con tu correo.</p>
+        <CambiarClave />
+      </section>
 
       {fotoAbierta && <EditorFoto nombre={perfil.nombre} fotoActual={perfil.foto} onClose={() => setFotoAbierta(false)} onGuardar={f => guardarFotoPerfil(perfil, f)} />}
     </div>

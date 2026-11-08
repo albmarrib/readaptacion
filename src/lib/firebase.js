@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { browserLocalPersistence, browserPopupRedirectResolver, indexedDBLocalPersistence, initializeAuth } from 'firebase/auth'
 import { initializeFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
@@ -14,6 +14,7 @@ const config = {
 
 export const firebaseConfigurado = Boolean(config.apiKey && config.appId)
 export const app = firebaseConfigurado ? initializeApp(config) : null
-export const auth = app ? getAuth(app) : null
+// La sesión se guarda en localStorage (más fiable en iPhone) y, si no, en IndexedDB
+export const auth = app ? initializeAuth(app, { persistence: [browserLocalPersistence, indexedDBLocalPersistence], popupRedirectResolver: browserPopupRedirectResolver }) : null
 export const db = app ? initializeFirestore(app, { experimentalAutoDetectLongPolling: true }) : null
 export const storage = app ? getStorage(app) : null
