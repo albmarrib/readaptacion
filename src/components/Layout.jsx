@@ -5,7 +5,7 @@ import { useAvisos } from '../lib/datos'
 import { ChatProvider } from '../lib/chat'
 import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
-import AvisosPush from './AvisosPush'
+import BienvenidaApp from './BienvenidaApp'
 import { Avatar, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
@@ -95,7 +95,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 md:px-8 md:pb-10 md:pt-6"><AvisosPush /><Outlet /></main>
+        <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 md:px-8 md:pb-10 md:pt-6"><BienvenidaApp /><Outlet /></main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-slate-200 bg-white/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur md:hidden">

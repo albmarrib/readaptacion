@@ -6,7 +6,6 @@ import { useAuth } from '../lib/auth'
 import { describirLinea, formatLinea } from '../lib/volumen'
 import Foto from '../components/Foto'
 import PantallaConsentimiento from '../components/PantallaConsentimiento'
-import InstalarApp from '../components/InstalarApp'
 import { consentimientoVigente } from '../lib/consentimiento'
 
 const VISIBLES = ['activa', 'pendiente', 'cerrada']
@@ -65,7 +64,6 @@ function ContenidoRutina({ pid, nombre, soloLectura = false }) {
   if (!rutinas) return <p className="text-slate-500">Cargando…</p>
   if (!rutinas.length) return (
     <div className="space-y-4">
-      {!soloLectura && <InstalarApp />}
     <div className="tarjeta text-center">
       <h1 className="text-xl font-semibold">Hola, {nombre.split(' ')[0]}</h1>
       <p className="mt-2 text-slate-600">Tu entrenador todavía no te ha activado ninguna rutina. Cuando lo haga, aparecerá aquí.</p>
@@ -79,7 +77,6 @@ function ContenidoRutina({ pid, nombre, soloLectura = false }) {
 
   return (
     <div className="space-y-4">
-      {!soloLectura && <InstalarApp />}
       <VistaRutina key={mostrada.id} pid={pid} rutina={mostrada} esActual={mostrada.id === actual.id} soloLectura={soloLectura} />
       {anteriores.length > 0 && (
         <section className="space-y-2">
