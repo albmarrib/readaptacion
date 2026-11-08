@@ -10,6 +10,8 @@ import RutinasPaciente from '../components/RutinasPaciente'
 import AccesoPaciente from '../components/AccesoPaciente'
 import { consentimientoVigente } from '../lib/consentimiento'
 import Volver from '../components/Volver'
+import { useChat } from '../lib/chat'
+import { IconoChat } from '../components/Iconos'
 import { Avatar } from '../components/Iconos'
 
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
@@ -29,6 +31,7 @@ export default function PacienteForm() {
   const { id } = useParams()
   const nuevo = !id
   const navigate = useNavigate()
+  const chat = useChat()
   const { perfil, esAdmin } = useAuth()
   const [f, setF] = useState({ ...VACIO, entrenadorId: perfil.uid })
   const [consentimiento, setConsentimiento] = useState(null) // solo lectura: lo acepta el paciente
@@ -109,6 +112,7 @@ export default function PacienteForm() {
         {!nuevo && <Avatar nombre={f.nombre} foto={f.foto} tamano={34} />}
         <h1 className="titulo-pagina">{nuevo ? 'Nuevo paciente' : f.nombre || 'Paciente'}</h1>
         <div className="ml-auto flex items-center gap-2">
+          {f.uid && <button type="button" className="btn-sec" onClick={() => chat?.abrir(id)}><IconoChat width={15} height={15} /> Mensaje</button>}
           {!nuevo && <button type="button" className="btn-peligro" onClick={eliminar} disabled={guardando}>Eliminar</button>}
           <Link to="/pacientes" className="btn-sec">Cancelar</Link>
           <button className="btn" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>

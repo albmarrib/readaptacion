@@ -83,15 +83,15 @@ exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
   if (existente.exists && !(existente.data().rol === 'paciente' && existente.data().pacienteId === pacienteId)) {
     throw new HttpsError('already-exists', 'Ese correo ya pertenece a otro usuario de la app.')
   }
-  // Contraseña temporal: se devuelve una sola vez al entrenador para que se la dé al paciente.
-  // El paciente la cambia por la suya dentro de la app. Llamar otra vez genera una nueva.
+  // La cuenta se crea con una clave aleatoria que nadie conoce: el paciente elige la suya con el correo
+  // de invitación (que envía la app) y a partir de ahí entra con su correo y su contraseña.
   const clave = claveTemporal()
   await getAuth().updateUser(user.uid, { password: clave })
   const lote = getFirestore().batch()
   lote.set(uRef, { rol: 'paciente', nombre: ficha.nombre, email, activo: true, pacienteId })
   lote.update(ref, { uid: user.uid, estado: 'activo' })
   await lote.commit()
-  return { uid: user.uid, clave }
+  return { uid: user.uid }
 })
 
 // Borra por completo a un paciente (derecho de supresión): ficha, rutinas, notas, avisos,
