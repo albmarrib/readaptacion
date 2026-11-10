@@ -7,13 +7,15 @@ import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
 import BienvenidaApp from './BienvenidaApp'
 import MarcoPaciente from './paciente/MarcoPaciente'
-import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
+import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, LogoCentro } from './Iconos'
+import { useCentro } from '../lib/centro'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
 const CLAVE = 'readaptacion.menuLateral'
 
 export default function Layout() {
   const { perfil, esAdmin, esPersonal, salir } = useAuth()
+  const centro = useCentro(perfil?.centroId)
   const avisos = useAvisos(esPersonal ? perfil.uid : null)
   const sinLeer = (avisos ?? []).filter(a => !a.leido).length
   const [plegado, setPlegado] = useState(() => { try { return localStorage.getItem(CLAVE) === '1' } catch { return false } })
@@ -61,8 +63,8 @@ export default function Layout() {
       {/* Menú lateral (ordenador y tablet), plegable */}
       <aside className={`hidden shrink-0 flex-col bg-gradient-to-b from-teal-800 via-teal-900 to-slate-900 transition-[width] duration-200 md:sticky md:top-0 md:flex md:h-dvh ${plegado ? 'w-[4.5rem]' : 'w-56'}`}>
         <div className={`flex items-center py-4 ${plegado ? 'justify-center' : 'gap-2.5 px-5'}`}>
-          <Logo tamano={plegado ? 32 : 30} claro />
-          {!plegado && <span className="text-[15px] font-bold leading-tight tracking-tight text-white">Entrenamiento<br />Personal</span>}
+          <LogoCentro centro={centro} tamano={plegado ? 34 : 34} claro />
+          {!plegado && <span className="min-w-0 text-[15px] font-bold leading-tight tracking-tight text-white">{centro?.nombre ?? <>Entrenamiento<br />Personal</>}</span>}
         </div>
         <nav className={`flex flex-1 flex-col gap-1 ${plegado ? 'px-2.5' : 'px-3'}`}>{enlaces.map(lateral)}</nav>
         <div className={`m-2.5 rounded-xl bg-white/10 ring-1 ring-inset ring-white/10 ${plegado ? 'p-1.5' : 'p-3'}`}>
@@ -85,7 +87,7 @@ export default function Layout() {
         {/* Barra superior fija en todas las pantallas: plegar menú, avisos y perfil */}
         <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-slate-200/70 bg-white/85 px-3 backdrop-blur md:px-6">
           <button onClick={alternar} title={plegado ? 'Ampliar menú' : 'Plegar menú'} aria-label="Plegar o ampliar el menú" className="hidden h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 md:flex"><IconoPanel width={18} height={18} /></button>
-          <div className="flex items-center gap-2 md:hidden"><Logo tamano={26} /><span className="font-bold tracking-tight">Entrenamiento Personal</span></div>
+          <div className="flex items-center gap-2 md:hidden"><LogoCentro centro={centro} tamano={28} /><span className="font-bold tracking-tight">{centro?.nombre ?? 'Entrenamiento Personal'}</span></div>
           <div className="ml-auto flex items-center gap-1.5">
             {esPersonal && (
               <Link to="/avisos" title={sinLeer ? `${sinLeer} avisos sin leer` : 'Avisos'} aria-label="Avisos" className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">

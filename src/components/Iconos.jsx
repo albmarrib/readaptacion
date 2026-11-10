@@ -32,6 +32,12 @@ export function Logo({ tamano = 32, claro = false }) {
   )
 }
 
+// Logo del centro (su imagen, redonda); si no tiene, el de la app
+export function LogoCentro({ centro, tamano = 32, claro = false }) {
+  if (!centro?.logo) return <Logo tamano={tamano} claro={claro} />
+  return <img src={centro.logo} alt="" width={tamano} height={tamano} style={{ width: tamano, height: tamano }} className={`shrink-0 rounded-full bg-white object-cover ${claro ? 'ring-2 ring-white/70' : 'ring-1 ring-black/10'}`} />
+}
+
 // Cabecera de página: icono de color + título (+ contenido a la derecha)
 const COLORES = {
   teal: 'bg-teal-100 text-teal-700', sky: 'bg-sky-100 text-sky-700', indigo: 'bg-indigo-100 text-indigo-700',

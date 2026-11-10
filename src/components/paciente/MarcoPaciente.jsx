@@ -4,7 +4,8 @@ import { useAuth } from '../../lib/auth'
 import { useChat } from '../../lib/chat'
 import ChatFlotante from '../ChatFlotante'
 import CuentaPaciente from '../CuentaPaciente'
-import { Avatar } from '../Iconos'
+import { Avatar, LogoCentro } from '../Iconos'
+import { useCentro } from '../../lib/centro'
 import { IAgenda, ICasa, IChat, IEvolucion, IPerfil, IPesa } from './IconosPaciente'
 
 // Marco de la app del paciente: fondo claro con un resplandor suave arriba,
@@ -12,6 +13,7 @@ import { IAgenda, ICasa, IChat, IEvolucion, IPerfil, IPesa } from './IconosPacie
 export default function MarcoPaciente() {
   const { perfil } = useAuth()
   const chat = useChat()
+  const centro = useCentro(perfil?.centroId)
   const [cuenta, setCuenta] = useState(false)
   const enlaces = [['/hoy', 'Inicio', ICasa], ['/agenda', 'Agenda', IAgenda], ['/mi-rutina', 'Rutina', IPesa], ['/mi-evolucion', 'Evolución', IEvolucion]]
 
@@ -24,6 +26,13 @@ export default function MarcoPaciente() {
         <button onClick={() => setCuenta(true)} aria-label="Mi cuenta" className="rounded-full text-tinta transition active:scale-95">
           {perfil?.foto ? <span className="block rounded-full ring-1 ring-tinta"><Avatar nombre={perfil.nombre} foto={perfil.foto} tamano={40} /></span> : <IPerfil width={42} height={42} />}
         </button>
+        {/* Marca del centro */}
+        {centro && (
+          <div className="flex min-w-0 items-center gap-2">
+            <LogoCentro centro={centro} tamano={30} />
+            <span className="truncate text-[15px] font-medium tracking-wide text-tinta">{centro.nombre}</span>
+          </div>
+        )}
         <button onClick={() => chat?.abrir()} aria-label="Mensajes" className="relative flex h-11 w-11 items-center justify-center text-tinta transition active:scale-95">
           <IChat width={30} height={30} />
           {chat?.totalNoLeidos > 0 && <span className="absolute right-0.5 top-0.5 min-w-5 rounded-full bg-rose-500 px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none text-white ring-2 ring-papel">{chat.totalNoLeidos}</span>}

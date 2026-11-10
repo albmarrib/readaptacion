@@ -4,7 +4,9 @@ import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { getDownloadURL, ref } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
 import { describirLinea, formatLinea } from '../lib/volumen'
-import { Logo } from '../components/Iconos'
+import { LogoCentro } from '../components/Iconos'
+import { useAuth } from '../lib/auth'
+import { useCentro } from '../lib/centro'
 
 const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -24,6 +26,8 @@ function FotoImpresion({ ruta, onListo }) {
 export default function ImpresionRutina() {
   const { id: pid, rid } = useParams()
   const [datos, setDatos] = useState(null)
+  const { perfil } = useAuth()
+  const centro = useCentro(perfil?.centroId)
   const [catalogo, setCatalogo] = useState({}) // ejercicioId -> fotos
   const [error, setError] = useState('')
   const [conFotos, setConFotos] = useState(true)
@@ -93,9 +97,9 @@ export default function ImpresionRutina() {
       {/* Documento A4 */}
       <div className="mx-auto my-5 max-w-[210mm] bg-white p-[12mm] text-[11px] leading-snug text-slate-900 shadow-lg print:my-0 print:max-w-none print:p-0 print:shadow-none">
         <header className="flex items-center gap-3 border-b-2 border-teal-700 pb-3">
-          <Logo tamano={40} />
+          <LogoCentro centro={centro} tamano={44} />
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-bold leading-tight text-teal-800">Entrenamiento Personal</div>
+            <div className="text-lg font-bold leading-tight text-teal-800">{centro?.nombre ?? 'Entrenamiento Personal'}</div>
             <div className="text-[11px] text-slate-500">Plan de entrenamiento personalizado</div>
           </div>
           <div className="text-right">
