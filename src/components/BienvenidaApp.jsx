@@ -11,7 +11,7 @@ const esMovil = esIOS || esAndroid
 
 // Mensaje de bienvenida: explica cómo instalar la app y por qué permitir los avisos.
 // Se adapta a iPhone, Android y ordenador, y desaparece solo cuando todo está hecho (o al cerrarlo).
-export default function BienvenidaApp() {
+export default function BienvenidaApp({ plano = false }) {
   const { perfil } = useAuth()
   const [oculto, setOculto] = useState(() => { try { return localStorage.getItem(CLAVE) === '1' } catch { return false } })
   const [evento, setEvento] = useState(null)       // Android/Chrome: permite instalar con un botón
@@ -50,7 +50,7 @@ export default function BienvenidaApp() {
   if (oculto || push === '...' || (!pasoInstalar && !pasoAvisos)) return null
 
   return (
-    <div className="relative mb-4 rounded-2xl border border-teal-200 bg-white p-4 pr-10 shadow-sm">
+    <div className={`relative mb-4 p-4 pr-10 ${plano ? 'border border-tinta/40 bg-white/70' : 'rounded-2xl border border-teal-200 bg-white shadow-sm'}`}>
       <button onClick={cerrar} aria-label="Cerrar este mensaje" className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100">✕</button>
       <h2 className="text-sm font-semibold text-slate-900">Saca el máximo a la app 👋</h2>
       <ol className="mt-2 space-y-3 text-xs leading-relaxed text-slate-700">

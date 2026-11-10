@@ -7,7 +7,10 @@ import Pacientes from './pages/Pacientes'
 import PacienteForm from './pages/PacienteForm'
 import Entrenadores from './pages/Entrenadores'
 import MiRutina, { PuertaPaciente, VistaPreviaPaciente } from './pages/MiRutina'
-import Hoy from './pages/Hoy'
+import InicioPaciente from './pages/paciente/Inicio'
+import Agenda from './pages/paciente/Agenda'
+import Rutina, { DiaRutina } from './pages/paciente/Rutina'
+import Entreno from './pages/paciente/Entreno'
 import RutinaEditor from './pages/RutinaEditor'
 import Volumenes from './pages/Volumenes'
 import Avisos from './pages/Avisos'
@@ -66,8 +69,12 @@ export default function App() {
         <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />
-        <Route path="hoy" element={<Solo cond={esPaciente}><Hoy /></Solo>} />
-        <Route path="mi-rutina" element={<Solo cond={esPaciente}><MiRutina /></Solo>} />
+        <Route path="hoy" element={<Solo cond={esPaciente}><InicioPaciente /></Solo>} />
+        <Route path="agenda" element={<Solo cond={esPaciente}><Agenda /></Solo>} />
+        <Route path="mi-rutina" element={<Solo cond={esPaciente}><Rutina /></Solo>} />
+        <Route path="mi-rutina/dia/:n" element={<Solo cond={esPaciente}><DiaRutina /></Solo>} />
+        <Route path="mi-rutina/historial" element={<Solo cond={esPaciente}><div className="px-5 pt-3"><MiRutina /></div></Solo>} />
+        <Route path="entreno/:n" element={<Solo cond={esPaciente}><Entreno /></Solo>} />
         <Route path="mi-evolucion" element={<Solo cond={esPaciente}><PuertaPaciente>{pid => <Evolucion pid={pid} modoPaciente />}</PuertaPaciente></Solo>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

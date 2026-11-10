@@ -5,6 +5,9 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --color-fondo: #eef3f5;
+  --font-paciente: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-tinta: #23283a;   /* azul tinta: botones y selección en la app del paciente */
+  --color-papel: #f5f5f3;   /* fondo de la app del paciente */
 }
 
 @media print {
@@ -35,6 +38,13 @@
 }
 
 @layer components {
+  /* ---- App del paciente: limpia, aireada, títulos finos ---- */
+  .paciente { @apply font-paciente bg-papel text-tinta; }
+  .titulo-grande { @apply text-[2.6rem] font-light leading-[1.05] tracking-tight text-tinta; }
+  .boton-pildora { @apply flex h-14 w-full items-center justify-center rounded-full bg-tinta text-[17px] font-medium tracking-wide text-white shadow-lg shadow-slate-900/20 transition active:scale-[0.99] disabled:opacity-50; }
+  .boton-pildora-borde { @apply inline-flex h-11 items-center justify-center gap-2 rounded-full border border-tinta/70 px-5 text-[15px] font-medium text-tinta transition active:scale-95; }
+  .bloque-titulo { @apply flex w-full items-center justify-between border-y border-tinta/70 px-5 py-4 text-left text-[15px] font-normal uppercase tracking-[0.12em] text-tinta; }
+
   .btn { @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-gradient-to-b from-teal-600 to-teal-700 px-3 text-[13px] font-medium text-white shadow-sm shadow-teal-900/20 ring-1 ring-inset ring-teal-800/30 transition hover:from-teal-500 hover:to-teal-700 active:from-teal-700 active:to-teal-800 disabled:pointer-events-none disabled:opacity-50; }
   .btn-sec { @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-slate-300/90 bg-white px-3 text-[13px] font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:border-teal-400 hover:bg-teal-50/60 hover:text-teal-800 active:bg-teal-50 disabled:pointer-events-none disabled:opacity-50; }
   .btn-peligro { @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-red-200 bg-white px-3 text-[13px] font-medium text-red-600 transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50; }

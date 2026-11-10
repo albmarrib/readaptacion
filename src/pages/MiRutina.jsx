@@ -21,12 +21,14 @@ export function PuertaPaciente({ children }) {
   const [ficha, setFicha] = useState(undefined) // undefined = cargando
   const [error, setError] = useState('')
 
+  const demo = import.meta.env.DEV && pid === 'demo'
   useEffect(() => {
-    if (!pid) return
+    if (!pid || demo) return
     return onSnapshot(doc(db, 'pacientes', pid), s => setFicha(s.exists() ? s.data() : null),
       e => setError('No se pudo cargar tu ficha: ' + e.message))
   }, [pid])
 
+  if (demo) return children(pid, { nombre: perfil.nombre })
   if (!pid) return <p className="tarjeta text-slate-600">Tu cuenta aún no está enlazada a una ficha. Contacta con tu entrenador.</p>
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
@@ -204,7 +206,7 @@ function FinEntreno({ dia, onCerrar }) {
 
 const catalogo = new Map() // ejercicioId -> datos del catálogo (fotos y vídeos)
 
-function useCatalogo(ejercicioId) {
+export function useCatalogo(ejercicioId) {
   const [cat, setCat] = useState(() => catalogo.get(ejercicioId) ?? null)
   useEffect(() => {
     if (cat || !ejercicioId) return

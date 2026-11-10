@@ -51,3 +51,24 @@ export async function marcarLineaDia({ pid, rid, dia, delDia, sesion, ejercicioI
   const todas = delDia.length > 0 && delDia.every(x => (x.lineas ?? []).every((_, k) => hechos[claveLinea(x.id, k)]))
   await marcarLinea({ pid, rid, dia, clave, hecho, completada: todas })
 }
+
+// Marca (o desmarca) de una vez todas las series de un ejercicio en la sesión de hoy
+export async function marcarEjercicio({ pid, rid, dia, delDia, sesion, ejercicio, hecho }) {
+  const hoy = new Date()
+  const hechos = { ...(sesion?.hechos ?? {}) }
+  const parche = {}
+  ;(ejercicio.lineas ?? []).forEach((_, k) => { const c = claveLinea(ejercicio.id, k); hechos[c] = hecho; parche[c] = hecho })
+  const todas = delDia.length > 0 && delDia.every(x => (x.lineas ?? []).every((_, k) => hechos[claveLinea(x.id, k)]))
+  await setDoc(ref(pid, rid, idSesion(hoy, dia)), { dia, fecha: claveFecha(hoy), hechos: parche, completada: todas, actualizado: serverTimestamp() }, { merge: true })
+}
+
+// ¿Está hecho un ejercicio en una sesión? (todas sus series marcadas)
+export const ejercicioHecho = (sesion, e) => (e.lineas ?? []).length > 0 && (e.lineas ?? []).every((_, k) => sesion?.hechos?.[claveLinea(e.id, k)])
+
+// Estado de un día de entreno en una fecha: completado, en curso o pendiente
+export function estadoEntreno(sesiones, fecha, dia) {
+  const s = (sesiones ?? []).find(x => x.id === idSesion(fecha, dia))
+  if (s?.completada) return 'completado'
+  if (s && Object.values(s.hechos ?? {}).some(Boolean)) return 'en curso'
+  return 'pendiente'
+}

@@ -6,6 +6,7 @@ import { ChatProvider } from '../lib/chat'
 import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
 import BienvenidaApp from './BienvenidaApp'
+import MarcoPaciente from './paciente/MarcoPaciente'
 import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
@@ -18,6 +19,8 @@ export default function Layout() {
   const [plegado, setPlegado] = useState(() => { try { return localStorage.getItem(CLAVE) === '1' } catch { return false } })
   const [fotoAbierta, setFotoAbierta] = useState(false)
   const alternar = () => setPlegado(p => { const n = !p; try { localStorage.setItem(CLAVE, n ? '1' : '0') } catch { /* sin almacenamiento */ } return n })
+
+  if (!esPersonal) return <ChatProvider><MarcoPaciente /></ChatProvider>
 
   const enlaces = esPersonal
     ? [

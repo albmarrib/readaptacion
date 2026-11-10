@@ -11,7 +11,7 @@ const dia = f => f?.toDate?.().toLocaleDateString('es-ES', { weekday: 'long', da
 const mismoDia = (a, b) => a && b && a.toDateString() === b.toDateString()
 
 // Globo flotante de chat + panel de conversaciones + aviso emergente de mensaje nuevo
-export default function ChatFlotante() {
+export default function ChatFlotante({ sinBoton = false }) {
   const { esPersonal, esPaciente } = useAuth()
   const chat = useChat()
   if (!chat || (!esPersonal && !esPaciente)) return null
@@ -26,7 +26,7 @@ export default function ChatFlotante() {
         </button>
       )}
 
-      {!abierto && (
+      {!abierto && !sinBoton && (
         <button onClick={() => chat.abrir(esPersonal ? chat.pid ?? undefined : undefined)} aria-label="Abrir mensajes" title="Mensajes"
           className="fixed bottom-[4.75rem] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-lg shadow-teal-900/30 ring-4 ring-white/60 transition hover:scale-105 md:bottom-16 md:right-6">
           <IconoChat width={22} height={22} />
