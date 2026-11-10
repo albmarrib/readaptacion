@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icono.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Readaptación',
-        short_name: 'Readaptación',
+        name: 'Entrenamiento Personal',
+        short_name: 'Entrenamiento',
         lang: 'es',
         start_url: '/',
         display: 'standalone',

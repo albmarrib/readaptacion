@@ -73,7 +73,7 @@ export default function Login() {
       <div className="tarjeta w-full max-w-sm space-y-5 !p-7 shadow-xl shadow-teal-900/5">
         <div className="flex flex-col items-center text-center">
           <Logo tamano={56} />
-          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Readaptación</h1>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Entrenamiento Personal</h1>
           <p className="mt-1 text-sm text-slate-500">Tu plan de entrenamiento, siempre contigo</p>
         </div>
 

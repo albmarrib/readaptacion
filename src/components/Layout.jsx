@@ -59,7 +59,7 @@ export default function Layout() {
       <aside className={`hidden shrink-0 flex-col bg-gradient-to-b from-teal-800 via-teal-900 to-slate-900 transition-[width] duration-200 md:sticky md:top-0 md:flex md:h-dvh ${plegado ? 'w-[4.5rem]' : 'w-56'}`}>
         <div className={`flex items-center py-4 ${plegado ? 'justify-center' : 'gap-2.5 px-5'}`}>
           <Logo tamano={plegado ? 32 : 30} claro />
-          {!plegado && <span className="text-[15px] font-bold tracking-tight text-white">Readaptación</span>}
+          {!plegado && <span className="text-[15px] font-bold leading-tight tracking-tight text-white">Entrenamiento<br />Personal</span>}
         </div>
         <nav className={`flex flex-1 flex-col gap-1 ${plegado ? 'px-2.5' : 'px-3'}`}>{enlaces.map(lateral)}</nav>
         <div className={`m-2.5 rounded-xl bg-white/10 ring-1 ring-inset ring-white/10 ${plegado ? 'p-1.5' : 'p-3'}`}>
@@ -82,7 +82,7 @@ export default function Layout() {
         {/* Barra superior fija en todas las pantallas: plegar menú, avisos y perfil */}
         <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-slate-200/70 bg-white/85 px-3 backdrop-blur md:px-6">
           <button onClick={alternar} title={plegado ? 'Ampliar menú' : 'Plegar menú'} aria-label="Plegar o ampliar el menú" className="hidden h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 md:flex"><IconoPanel width={18} height={18} /></button>
-          <div className="flex items-center gap-2 md:hidden"><Logo tamano={26} /><span className="font-bold tracking-tight">Readaptación</span></div>
+          <div className="flex items-center gap-2 md:hidden"><Logo tamano={26} /><span className="font-bold tracking-tight">Entrenamiento Personal</span></div>
           <div className="ml-auto flex items-center gap-1.5">
             {esPersonal && (
               <Link to="/avisos" title={sinLeer ? `${sinLeer} avisos sin leer` : 'Avisos'} aria-label="Avisos" className="relative flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">

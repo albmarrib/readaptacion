@@ -8,7 +8,7 @@ self.addEventListener('push', event => {
   let p = {}
   try { p = event.data ? event.data.json() : {} } catch { p = {} }
   const d = { ...(p.data || {}), ...(p.notification || {}) }
-  const titulo = d.titulo || d.title || 'Readaptación'
+  const titulo = d.titulo || d.title || 'Entrenamiento Personal'
   // Siempre se muestra algo: iOS exige que cada aviso recibido sea visible
   event.waitUntil(self.registration.showNotification(titulo, {
     body: d.cuerpo || d.body || '',

@@ -15,12 +15,14 @@ import { IconoChat } from '../components/Iconos'
 import { Avatar } from '../components/Iconos'
 
 const NIVELES = ['sedentario', 'moderado', 'activo', 'deportista']
+// Campos que ya no se usan: al guardar la ficha se borran (no guardar datos de salud que no hacen falta)
+const RETIRADOS = ['cirugias', 'alergias', 'contactoEmergencia']
 
 const VACIO = {
   nombre: '', email: '', telefono: '', estado: 'invitado', notas: '', entrenadorId: '',
   fechaNacimiento: '', sexo: '', alturaCm: '', pesoKg: '', ocupacion: '', nivelActividad: '', deporte: '',
-  lesiones: '', patologias: '', cirugias: '', medicacion: '', alergias: '', objetivos: '', derivadoPor: '',
-  contactoEmergencia: { nombre: '', telefono: '' },
+  lesiones: '', patologias: '', medicacion: '', objetivos: '', derivadoPor: '',
+  antecedentesFamiliares: '', calidadSueno: '', alcohol: '', fumador: '',
 }
 
 function Campo({ etiqueta, children, clase = '' }) {
@@ -48,7 +50,9 @@ export default function PacienteForm() {
     getDoc(doc(db, 'pacientes', id)).then(s => {
       if (!s.exists()) { setError('No se encuentra este paciente.'); return }
       const d = s.data()
-      setF({ ...VACIO, ...d, contactoEmergencia: { ...VACIO.contactoEmergencia, ...d.contactoEmergencia } })
+      const resto = { ...d }
+      RETIRADOS.forEach(k => delete resto[k])
+      setF({ ...VACIO, ...resto })
       setConsentimiento(d.consentimiento ?? null)
     }).catch(e => setError('No se pudo cargar el paciente: ' + e.message)).finally(() => setCargando(false))
   }, [id, nuevo])
@@ -81,6 +85,7 @@ export default function PacienteForm() {
           const vacio = limpio === '' || limpio === undefined || limpio === null || (typeof limpio === 'object' && !Object.keys(limpio).length)
           parche[k] = vacio ? deleteField() : limpio
         }
+        RETIRADOS.forEach(k => { parche[k] = deleteField() })
         await updateDoc(doc(db, 'pacientes', id), parche)
       }
       navigate('/pacientes')
@@ -144,7 +149,7 @@ export default function PacienteForm() {
               </Campo>
               <Campo etiqueta="Ocupación"><input className="input" {...input('ocupacion')} /></Campo>
               <Campo clase="col-span-2" etiqueta="Deporte o actividad"><input className="input" {...input('deporte')} /></Campo>
-              <Campo clase="col-span-2" etiqueta="Derivado por (médico / fisio)"><input className="input" {...input('derivadoPor')} /></Campo>
+              <Campo clase="col-span-2" etiqueta="Referencia"><input className="input" {...input('derivadoPor')} /></Campo>
               {esAdmin && (
                 <Campo clase="col-span-2" etiqueta="Entrenador responsable">
                   <select className="input" {...input('entrenadorId')}>{entrenadores.map(u => <option key={u.uid} value={u.uid}>{u.nombre}</option>)}</select>
@@ -159,11 +164,19 @@ export default function PacienteForm() {
               <Campo etiqueta="Objetivos"><textarea rows={1} className="input resize-y" {...input('objetivos')} /></Campo>
               <Campo etiqueta="Lesiones"><textarea rows={1} className="input resize-y" {...input('lesiones')} /></Campo>
               <Campo etiqueta="Patologías"><textarea rows={1} className="input resize-y" {...input('patologias')} /></Campo>
-              <Campo etiqueta="Cirugías"><textarea rows={1} className="input resize-y" {...input('cirugias')} /></Campo>
               <Campo etiqueta="Medicación"><textarea rows={1} className="input resize-y" {...input('medicacion')} /></Campo>
-              <Campo etiqueta="Alergias"><textarea rows={1} className="input resize-y" {...input('alergias')} /></Campo>
-              <Campo etiqueta="Contacto de emergencia: nombre"><input className="input" value={f.contactoEmergencia.nombre} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, nombre: e.target.value })} /></Campo>
-              <Campo etiqueta="Contacto de emergencia: teléfono"><input type="tel" className="input" value={f.contactoEmergencia.telefono} onChange={e => set('contactoEmergencia', { ...f.contactoEmergencia, telefono: e.target.value })} /></Campo>
+              <Campo etiqueta="Antecedentes familiares"><textarea rows={1} className="input resize-y" {...input('antecedentesFamiliares')} /></Campo>
+              <div className="grid grid-cols-3 gap-x-3 sm:col-span-2">
+                <Campo etiqueta="Calidad del sueño">
+                  <select className="input" {...input('calidadSueno')}><option value="">—</option><option value="buena">Buena</option><option value="regular">Regular</option><option value="mala">Mala</option></select>
+                </Campo>
+                <Campo etiqueta="Alcohol">
+                  <select className="input" {...input('alcohol')}><option value="">—</option><option value="no">No</option><option value="ocasional">Ocasional</option><option value="habitual">Habitual</option></select>
+                </Campo>
+                <Campo etiqueta="Fumador">
+                  <select className="input" {...input('fumador')}><option value="">—</option><option value="no">No</option><option value="exfumador">Exfumador</option><option value="si">Sí</option></select>
+                </Campo>
+              </div>
               <Campo clase="sm:col-span-2" etiqueta="Notas del entrenador"><textarea rows={1} className="input resize-y" {...input('notas')} /></Campo>
             </div>
           </section>

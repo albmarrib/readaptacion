@@ -1,4 +1,6 @@
-# Readaptación — Especificación v1.2
+# Readaptación — Especificación v1.3
+
+Nombre visible de la app: **Entrenamiento Personal** (cambio del 10-nov-2026; el proyecto y el código mantienen el nombre interno «readaptacion»).
 
 Estado: acordada con el cliente (7-nov-2026). Todas las decisiones que antes se marcaban como supuesto las ha confirmado el cliente el 7-nov-2026.
 
@@ -42,7 +44,7 @@ Varios entrenadores, cada uno con sus pacientes. Un paciente pertenece a un entr
 Un **volumen** es la prescripción de series y repeticiones de un ejercicio. Se compone de una o más **líneas**. Cada línea se escribe `S*R`:
 
 - `S` = número de series de esa línea (1–99).
-- `R` = repeticiones de cada serie. Puede ser **un tramo** (`20`) o **varios tramos separados por `+`** (`10+8`). El `+` indica una **micropausa**: se hacen las repeticiones del primer tramo, se descansa un momento y se hacen las del siguiente. Cada tramo: 1–99.
+- `R` = repeticiones de cada serie. Puede ser **un tramo** (`20`) o **varios tramos separados por `+`** (`10+8`). El `+` indica una **micropausa**: se hacen las repeticiones del primer tramo, se descansa un momento y se hacen las del siguiente. Cada tramo es un número de repeticiones (1–99) **o una abreviatura** de letras que el paciente ya conoce (hasta 8 caracteres), p. ej. `SG` (serie gigante): `2*10 1*8+4 3*SG`. Las abreviaturas no afectan al cálculo: las series totales siguen siendo la suma de las `S` (aquí 6).
 - Repeticiones por serie = suma de los tramos.
 
 Ejemplo (press de banca con mancuernas): `1*20  2*10+8  3*8+6`
@@ -139,7 +141,7 @@ sistemasEntrenamiento/{id}
 volumenes/{id}
   nombre?: string
   sistemaId
-  lineas: [{ series: 1-99, tramos: [1-99, ...] }]   // "2*10+8" = {series:2, tramos:[10,8]}
+  lineas: [{ series: 1-99, tramos: [1-99 | "ABREV", ...] }]   // "2*10+8" = {series:2, tramos:[10,8]}; "3*SG" = {series:3, tramos:["SG"]}
   seriesTotales: number              // calculado: suma de series
   observaciones: string
 
@@ -153,11 +155,14 @@ pacientes/{id}
   fechaNacimiento?, sexo?, alturaCm?, pesoKg?
   ocupacion?, nivelActividad?        // sedentario / moderado / activo / deportista
   deporte?                           // deporte o actividad que practica
-  lesiones?, patologias?, cirugias?  // texto libre
-  medicacion?, alergias?
+  lesiones?, patologias?, medicacion?  // texto libre
+  antecedentesFamiliares?            // texto libre
+  calidadSueno?                      // buena / regular / mala
+  alcohol?                           // no / ocasional / habitual
+  fumador?                           // no / exfumador / si
   objetivos?
-  derivadoPor?                       // médico / fisioterapeuta que lo deriva
-  contactoEmergencia?: { nombre, telefono }
+  derivadoPor?                       // se muestra como «Referencia»
+  // Retirados el 10-nov-2026 (se borran al guardar la ficha): cirugias, alergias, contactoEmergencia
 
 pacientes/{id}/rutinas/{rid}
   numero, temporada, semanas (def. 5)

@@ -56,9 +56,9 @@ export default function EditorVolumen({ volumen, sistemas, onClose, onGuardado, 
       <form onSubmit={guardar} className="space-y-4">
         <div>
           <label className="etiqueta" htmlFor="v-lineas">Series y repeticiones</label>
-          <input id="v-lineas" className="input font-mono" value={texto} onChange={e => setTexto(e.target.value)} placeholder="1*20  2*10+8  3*8+6" autoFocus autoComplete="off" />
+          <input id="v-lineas" className="input font-mono" value={texto} onChange={e => setTexto(e.target.value)} placeholder="2*10  1*8+4  3*SG" autoFocus autoComplete="off" />
           <p className="mt-1 text-xs text-slate-500">
-            Cada línea es <b>series*repeticiones</b>. El <b>+</b> es una micropausa: <span className="font-mono">2*10+8</span> son 2 series de 10 repeticiones, pausa y 8 más. Separa las líneas con espacios.
+            Cada línea es <b>series*repeticiones</b>. El <b>+</b> es una micropausa: <span className="font-mono">2*10+8</span> son 2 series de 10 repeticiones, pausa y 8 más. Tras el <b>*</b> también vale una abreviatura que el paciente conozca, como <span className="font-mono">3*SG</span> (serie gigante). Separa las líneas con espacios.
           </p>
           {analisis?.error && <p className="mt-2 text-sm text-red-600">{analisis.error}</p>}
           {analisis?.lineas && (

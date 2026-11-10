@@ -95,7 +95,7 @@ export default function ImpresionRutina() {
         <header className="flex items-center gap-3 border-b-2 border-teal-700 pb-3">
           <Logo tamano={40} />
           <div className="min-w-0 flex-1">
-            <div className="text-lg font-bold leading-tight text-teal-800">Readaptación</div>
+            <div className="text-lg font-bold leading-tight text-teal-800">Entrenamiento Personal</div>
             <div className="text-[11px] text-slate-500">Plan de entrenamiento personalizado</div>
           </div>
           <div className="text-right">

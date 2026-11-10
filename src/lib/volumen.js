@@ -1,9 +1,14 @@
 // Notación de volumen "S*R" (ESPECIFICACION.md, 4.2)
-//   S = series de la línea (1-99)
-//   R = repeticiones por serie: un tramo ("20") o varios con micropausa ("10+8"); cada tramo 1-99
-//   Ejemplo: "1*20  2*10+8  3*8+6"  ->  [{series:1,tramos:[20]}, {series:2,tramos:[10,8]}, {series:3,tramos:[8,6]}]
+//   S = series de la línea (1-99). Siempre un número: es lo que se suma para el esfuerzo.
+//   R = lo que se hace en cada serie: uno o varios tramos separados por "+" (micropausa).
+//       Cada tramo es un número de repeticiones (1-99) o una abreviatura que el paciente ya
+//       conoce, por ejemplo SG (serie gigante), F (fallo), AMRAP. Hasta 8 caracteres.
+//   Ejemplo: "2*10  1*8+4  3*SG"  ->  [{series:2,tramos:[10]}, {series:1,tramos:[8,4]}, {series:3,tramos:['SG']}]
+//   Series totales: 2+1+3 = 6 (las abreviaturas no afectan al cálculo).
 
-const LINEA = /^(\d{1,2})[*xX×](\d{1,2}(?:\+\d{1,2})*)$/
+const LINEA = /^(\d{1,2})[*×](.+)$/
+const NUMERO = /^\d{1,2}$/
+const ABREVIATURA = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9]{0,7}$/
 
 // Convierte el texto escrito por el entrenador en líneas. Devuelve { lineas } o { error }.
 export function parseLineas(texto) {
@@ -11,12 +16,20 @@ export function parseLineas(texto) {
   if (!partes.length) return { error: 'Escribe al menos una línea, por ejemplo 3*10' }
   const lineas = []
   for (const p of partes) {
-    const m = LINEA.exec(p)
-    if (!m) return { error: `«${p}» no es válido. Usa series*repeticiones, por ejemplo 3*10 o 2*10+8` }
+    // Se admite también "x" como separador (3x10), salvo que vaya seguida de letras (3xSG se lee igual)
+    const m = LINEA.exec(p) ?? /^(\d{1,2})[xX](.+)$/.exec(p)
+    if (!m) return { error: `«${p}» no es válido. Usa series*repeticiones, por ejemplo 3*10, 2*10+8 o 3*SG` }
     const series = Number(m[1])
-    const tramos = m[2].split('+').map(Number)
     if (series < 1 || series > 99) return { error: `En «${p}» las series deben estar entre 1 y 99` }
-    if (tramos.some(t => t < 1 || t > 99)) return { error: `En «${p}» cada tramo de repeticiones debe estar entre 1 y 99` }
+    const tramos = []
+    for (const t of m[2].split('+')) {
+      if (NUMERO.test(t)) {
+        const n = Number(t)
+        if (n < 1 || n > 99) return { error: `En «${p}» cada tramo de repeticiones debe estar entre 1 y 99` }
+        tramos.push(n)
+      } else if (ABREVIATURA.test(t)) tramos.push(t.toUpperCase())
+      else return { error: `En «${p}», «${t}» no es válido: usa un número (1-99) o una abreviatura de letras (p. ej. SG)` }
+    }
     lineas.push({ series, tramos })
   }
   return { lineas }
@@ -28,11 +41,12 @@ export const formatLineas = ls => (ls ?? []).map(formatLinea).join('  ')
 // Series totales del volumen = suma de las series de todas sus líneas
 export const seriesTotales = ls => (ls ?? []).reduce((s, l) => s + l.series, 0)
 
-export const repsPorSerie = l => l.tramos.reduce((s, t) => s + t, 0)
+// Repeticiones por serie: solo cuentan los tramos numéricos
+export const repsPorSerie = l => l.tramos.reduce((s, t) => s + (typeof t === 'number' ? t : 0), 0)
 
-const reps = n => `${n} ${n === 1 ? 'repetición' : 'repeticiones'}`
+const reps = n => (typeof n === 'number' ? `${n} ${n === 1 ? 'repetición' : 'repeticiones'}` : n)
 
-// "2 series · 10 repeticiones, pausa, 8 repeticiones"
+// "2 series · 10 repeticiones, pausa, 8 repeticiones"  ·  "3 series · SG"
 export const describirLinea = l =>
   `${l.series} ${l.series === 1 ? 'serie' : 'series'} · ${l.tramos.map(reps).join(', pausa, ')}`
 
