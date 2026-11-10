@@ -127,6 +127,9 @@ El `centroId` de una persona solo lo asigna una Cloud Function. Los documentos n
 (grupos, sistemas) usan el id `{centroId}_{slug}`. Primer centro: **Osteorubi** (`osteorubi`), con
 todos los datos existentes (`scripts/migrar-centros.cjs`). Cada centro tiene su propio catálogo;
 los de Osteorubi son solo suyos. Vídeos de ejercicios: solo enlaces (YouTube, Vimeo…).
+Un centro solo puede subir o borrar fotos de sus propios ejercicios. Para cargar ejercicios en otro
+centro (p. ej. el **centro de demo** con una muestra de Osteorubi): `scripts/copiar-catalogo.cjs`, que copia
+grupos, ejercicios con sus fotos (a carpeta propia), sistemas y volúmenes.
 
 Pruebas en local: `firebase emulators:start --project demo-readaptacion` (requiere Java) y
 `VITE_EMULADOR=1 npx vite`. Con el emulador la app usa un proyecto "demo-" y no puede tocar los datos reales.

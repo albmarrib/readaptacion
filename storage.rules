@@ -18,14 +18,20 @@ service firebase.storage {
         || (perfil().rol == 'entrenador' && perfil().puedeEditarCatalogo == true));
     }
 
+    // El ejercicio es de mi centro (o aún no existe: las fotos se suben antes de guardarlo)
+    function ejercicioMio(ejercicio) {
+      return !firestore.exists(/databases/(default)/documents/ejercicios/$(ejercicio))
+        || firestore.get(/databases/(default)/documents/ejercicios/$(ejercicio)).data.centroId == perfil().centroId;
+    }
+
     match /ejercicios/{ejercicio}/{archivo} {
       // Leer solo exige sesión iniciada (así no se consulta Firestore en cada foto: es mucho más rápido).
-      // Son fotos genéricas del catálogo; escribir y borrar sí exige permiso de catálogo.
+      // Son fotos genéricas del catálogo; escribir y borrar exige permiso de catálogo en el centro del ejercicio.
       allow read: if request.auth != null;
-      allow write: if puedeCatalogo()
+      allow create, update: if puedeCatalogo() && ejercicioMio(ejercicio)
         && request.resource.contentType.matches('image/.*')
         && request.resource.size < 5 * 1024 * 1024;
-      allow delete: if puedeCatalogo();
+      allow delete: if puedeCatalogo() && ejercicioMio(ejercicio);
     }
 
     match /{allPaths=**} {
