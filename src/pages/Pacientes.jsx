@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth'
 import { normalizar } from '../lib/util'
 import { Avatar, EncabezadoPagina, IconoOjo, IconoOjoTachado, IconoPacientes } from '../components/Iconos'
 
-const ESTADOS = { invitado: 'Sin acceso', activo: 'Activo', archivado: 'Archivado' }
+const ESTADOS = { invitado: 'Pendiente', activo: 'Activo', archivado: 'Archivado' }
 const COLOR = { invitado: 'bg-amber-50 text-amber-700 ring-amber-200', activo: 'bg-teal-50 text-teal-700 ring-teal-200', archivado: 'bg-slate-100 text-slate-500 ring-slate-200' }
 
 export default function Pacientes() {

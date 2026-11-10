@@ -134,7 +134,7 @@ export default function PacienteForm() {
               <Campo etiqueta="Teléfono"><input type="tel" className="input" {...input('telefono')} /></Campo>
               <Campo etiqueta="Estado">
                 <select className="input" {...input('estado')}>
-                  <option value="invitado">Sin acceso aún</option><option value="activo">Activo</option><option value="archivado">Archivado</option>
+                  <option value="invitado">Pendiente</option><option value="activo">Activo</option><option value="archivado">Archivado</option>
                 </select>
               </Campo>
               <Campo clase="col-span-2" etiqueta="Correo electrónico"><input type="email" className="input" autoComplete="off" disabled={!!f.uid} {...input('email')} /></Campo>
