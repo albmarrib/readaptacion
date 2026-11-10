@@ -9,6 +9,7 @@ import SelectorEjercicios from '../components/SelectorEjercicios'
 import SelectorVolumen from '../components/SelectorVolumen'
 import SeguimientoRutina from '../components/SeguimientoRutina'
 import Volver from '../components/Volver'
+import { DIAS_SEMANA, repartoPorDefecto } from '../lib/plan'
 import { IconoPdf } from '../components/Iconos'
 
 const ESTADOS = { borrador: 'Borrador', activa: 'Activa', pendiente: 'Pendiente de revisión', cerrada: 'Cerrada' }
@@ -60,6 +61,7 @@ export default function RutinaEditor() {
       const todos = ejs.docs.map(x => ({ clave: x.id, ...x.data() }))
       setDias(d.dias.map(dia => ({
         gruposIds: dia.gruposIds ?? [],
+        diaSemana: dia.diaSemana ?? null,
         ejercicios: todos.filter(e => e.dia === dia.numero).sort((a, b) => a.orden - b.orden),
       })))
       setGuardados(todos.map(e => e.clave))
@@ -144,7 +146,7 @@ export default function RutinaEditor() {
       const rutinaRef = nueva ? doc(collection(db, 'pacientes', pid, 'rutinas')) : doc(db, 'pacientes', pid, 'rutinas', rid)
       const datos = {
         numero, temporada, semanas, estado: activar ? 'activa' : meta.estado,
-        dias: dias.map((d, i) => ({ numero: i + 1, gruposIds: d.gruposIds, titulo: tituloDia(d.gruposIds, grupos) })),
+        dias: dias.map((d, i) => ({ numero: i + 1, gruposIds: d.gruposIds, titulo: tituloDia(d.gruposIds, grupos), diaSemana: d.diaSemana ?? repartoPorDefecto(dias.length)[i] ?? null })),
         creadaPor: perfil.uid,
       }
       if (meta.frecuencia !== '') datos.frecuencia = Number(meta.frecuencia)
@@ -201,7 +203,7 @@ export default function RutinaEditor() {
       const nuevaRef = doc(collection(db, 'pacientes', pid, 'rutinas'))
       const datos = {
         numero, temporada: new Date().getFullYear(), semanas: Number(meta.semanas), estado: 'borrador', creadaPor: perfil.uid,
-        dias: dias.map((d, i) => ({ numero: i + 1, gruposIds: d.gruposIds, titulo: tituloDia(d.gruposIds, grupos) })),
+        dias: dias.map((d, i) => ({ numero: i + 1, gruposIds: d.gruposIds, titulo: tituloDia(d.gruposIds, grupos), diaSemana: d.diaSemana ?? repartoPorDefecto(dias.length)[i] ?? null })),
       }
       if (meta.frecuencia !== '') datos.frecuencia = Number(meta.frecuencia)
       if (meta.notaGeneral.trim()) datos.notaGeneral = meta.notaGeneral.trim()
@@ -264,7 +266,25 @@ export default function RutinaEditor() {
           </label>
           <label><span className="etiqueta">Frecuencia (opcional)</span><input type="number" min="0" max="99" className="input" disabled={!editable} value={meta.frecuencia} onChange={e => cambiarMeta({ frecuencia: e.target.value })} /></label>
         </div>
-        <label className="block"><span className="etiqueta">Nota general (opcional)</span><textarea rows={1} className="input" disabled={!editable} value={meta.notaGeneral} onChange={e => cambiarMeta({ notaGeneral: e.target.value })} /></label>
+        <div className="mt-3">
+          <span className="etiqueta">Qué día de la semana toca cada día</span>
+          <div className="flex flex-wrap gap-2">
+            {dias.map((d, i) => {
+              const valor = d.diaSemana ?? repartoPorDefecto(dias.length)[i] ?? ''
+              return (
+                <label key={i} className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 text-xs ring-1 ring-slate-200">
+                  <span className="font-semibold text-slate-700">Día {i + 1}</span>
+                  <select className="input !min-h-7 !w-auto !py-0 text-xs" disabled={!editable} value={valor}
+                    onChange={e => { const v = Number(e.target.value) || null; setDias(ds => ds.map((x, j) => (j === i ? { ...x, diaSemana: v } : x))); setSucio(true) }}>
+                    {DIAS_SEMANA.map((n, k) => <option key={n} value={k + 1}>{n}</option>)}
+                  </select>
+                </label>
+              )
+            })}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500">Se usa para el calendario del paciente. Si no lo cambias, se reparten solos.</p>
+        </div>
+        <label className="mt-3 block"><span className="etiqueta">Nota general (opcional)</span><textarea rows={1} className="input" disabled={!editable} value={meta.notaGeneral} onChange={e => cambiarMeta({ notaGeneral: e.target.value })} /></label>
       </section>
 
       {/* Pestañas de días */}

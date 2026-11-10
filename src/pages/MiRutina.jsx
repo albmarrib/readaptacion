@@ -7,11 +7,15 @@ import { describirLinea, formatLinea } from '../lib/volumen'
 import Foto from '../components/Foto'
 import PantallaConsentimiento from '../components/PantallaConsentimiento'
 import { consentimientoVigente } from '../lib/consentimiento'
+import Descanso from '../components/Descanso'
+import { claveLinea, marcarLineaDia, sesionDeHoy, terminarSesion, useSesiones } from '../lib/sesiones'
 
 const VISIBLES = ['activa', 'pendiente', 'cerrada']
 const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
 
-export default function MiRutina() {
+// Comprueba la ficha y el consentimiento antes de mostrar nada al paciente.
+// children es una función que recibe el id de su ficha.
+export function PuertaPaciente({ children }) {
   const { perfil } = useAuth()
   const pid = perfil.pacienteId
   const [ficha, setFicha] = useState(undefined) // undefined = cargando
@@ -27,7 +31,12 @@ export default function MiRutina() {
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
   if (!consentimientoVigente(ficha?.consentimiento)) return <PantallaConsentimiento pacienteId={pid} />
-  return <ContenidoRutina pid={pid} nombre={perfil.nombre} />
+  return children(pid, ficha)
+}
+
+export default function MiRutina() {
+  const { perfil } = useAuth()
+  return <PuertaPaciente>{pid => <ContenidoRutina pid={pid} nombre={perfil.nombre} />}</PuertaPaciente>
 }
 
 // Vista previa para el entrenador: lo que ve el paciente, solo lectura
@@ -158,11 +167,37 @@ function VistaRutina({ pid, rutina, esActual, soloLectura }) {
       )}
 
       {indiceAbierto >= 0 && (
-        <DetalleEjercicio pid={pid} rid={rutina.id} ejercicio={delDia[indiceAbierto]} numero={indiceAbierto + 1} total={delDia.length} puedeAnotar={puedeAnotar}
-          onCerrar={() => setAbierto(null)}
-          onAnterior={indiceAbierto > 0 ? () => setAbierto(delDia[indiceAbierto - 1].id) : null}
-          onSiguiente={indiceAbierto < delDia.length - 1 ? () => setAbierto(delDia[indiceAbierto + 1].id) : null} />
+        <SesionEjercicios key={abierto} pid={pid} rutina={rutina} delDia={delDia} diaNumero={d.numero} inicial={indiceAbierto} puedeAnotar={puedeAnotar} onCerrar={() => setAbierto(null)} />
       )}
+    </div>
+  )
+}
+
+// Entreno de un día: recorre sus ejercicios (Anterior / Siguiente) y guarda lo hecho en la sesión de hoy
+export function SesionEjercicios({ pid, rutina, delDia, diaNumero, inicial = 0, puedeAnotar, onCerrar }) {
+  const [i, setI] = useState(inicial)
+  const [terminado, setTerminado] = useState(false)
+  const sesiones = useSesiones(puedeAnotar ? pid : null, rutina.id)
+  const sesion = sesionDeHoy(sesiones, diaNumero)
+  const e = delDia[i]
+  if (terminado) return <FinEntreno dia={rutina.dias.find(x => x.numero === diaNumero)} onCerrar={onCerrar} />
+  if (!e) return null
+  const marcar = (linea, hecho) => marcarLineaDia({ pid, rid: rutina.id, dia: diaNumero, delDia, sesion, ejercicioId: e.id, linea, hecho }).catch(() => {})
+  const terminar = async () => { if (puedeAnotar) await terminarSesion({ pid, rid: rutina.id, dia: diaNumero }).catch(() => {}); setTerminado(true) }
+  return (
+    <DetalleEjercicio pid={pid} rid={rutina.id} ejercicio={e} numero={i + 1} total={delDia.length} puedeAnotar={puedeAnotar}
+      sesion={puedeAnotar ? sesion : null} onMarcar={puedeAnotar ? marcar : null} onTerminar={puedeAnotar ? terminar : null}
+      onCerrar={onCerrar} onAnterior={i > 0 ? () => setI(i - 1) : null} onSiguiente={i < delDia.length - 1 ? () => setI(i + 1) : null} />
+  )
+}
+
+function FinEntreno({ dia, onCerrar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-teal-700 to-teal-500 p-6 text-center text-white">
+      <div className="text-6xl">🎉</div>
+      <h2 className="mt-4 text-2xl font-bold">¡Entrenamiento completado!</h2>
+      <p className="mt-2 text-teal-50">{dia?.titulo ? `Día ${dia.numero} · ${dia.titulo}` : `Día ${dia?.numero ?? ''}`} hecho. ¡Buen trabajo!</p>
+      <button onClick={onCerrar} className="mt-8 h-12 rounded-full bg-white px-8 text-base font-bold text-teal-800 shadow-lg active:scale-95">Volver</button>
     </div>
   )
 }
@@ -216,9 +251,10 @@ export function FilaEjercicio({ ejercicio: e, numero, puedeAnotar, onAbrir }) {
 }
 
 // Ficha completa del ejercicio: fotos pequeñas (se amplían al tocar), vídeos, y un peso por línea
-export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeAnotar, onCerrar, onAnterior, onSiguiente }) {
+export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeAnotar, sesion, onMarcar, onTerminar, onCerrar, onAnterior, onSiguiente }) {
   const cat = useCatalogo(e.ejercicioId)
   const [ampliada, setAmpliada] = useState(null)
+  const [descanso, setDescanso] = useState(false)
   const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
 
   useEffect(() => {
@@ -233,7 +269,8 @@ export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeA
       <div className="flex min-h-0 w-full flex-1 flex-col bg-fondo sm:max-h-[92dvh] sm:max-w-lg sm:flex-none sm:overflow-hidden sm:rounded-3xl">
         <div className="flex items-center gap-2 bg-gradient-to-r from-teal-700 to-teal-600 px-3 py-3 text-white">
           <button onClick={onCerrar} aria-label="Volver a la lista" className="flex h-9 items-center gap-1 rounded-full bg-white/15 pl-2 pr-3 text-sm font-medium"><span className="text-lg leading-none">‹</span> Lista</button>
-          <span className="ml-auto text-xs font-medium text-teal-100">Ejercicio {numero} de {total}</span>
+          <span className="flex-1 text-center text-xs font-medium text-teal-100">{numero} de {total}</span>
+          {onMarcar && <button onClick={() => setDescanso(true)} className="flex h-9 items-center gap-1.5 rounded-full bg-white/15 px-3 text-sm font-medium"><span aria-hidden="true">⏱</span> Descanso</button>}
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
@@ -271,6 +308,13 @@ export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeA
                   <div className="mt-0.5 text-sm leading-snug text-slate-600">{describirLinea(l)}</div>
                 </div>
                 <CampoPeso pid={pid} rid={rid} ejercicio={e} indice={i} puedeAnotar={puedeAnotar} />
+                {onMarcar && (() => {
+                  const hecho = !!sesion?.hechos?.[claveLinea(e.id, i)]
+                  return (
+                    <button onClick={() => onMarcar(i, !hecho)} aria-pressed={hecho} aria-label={hecho ? 'Marcar como no hecha' : 'Marcar serie como hecha'}
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl font-bold transition active:scale-90 ${hecho ? 'bg-emerald-500 text-white shadow-md shadow-emerald-900/20' : 'border-2 border-slate-300 text-slate-300'}`}>✓</button>
+                  )
+                })()}
               </li>
             ))}
           </ul>
@@ -279,10 +323,11 @@ export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeA
 
         <div className="flex gap-2 border-t border-slate-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button className="btn-sec !h-11 flex-1" onClick={onAnterior ?? undefined} disabled={!onAnterior}>‹ Anterior</button>
-          {onSiguiente ? <button className="btn !h-11 flex-1" onClick={onSiguiente}>Siguiente ›</button> : <button className="btn !h-11 flex-1" onClick={onCerrar}>Terminar</button>}
+          {onSiguiente ? <button className="btn !h-11 flex-1" onClick={onSiguiente}>Siguiente ›</button> : <button className="btn !h-11 flex-1" onClick={onTerminar ?? onCerrar}>{onTerminar ? 'Terminar entreno' : 'Terminar'}</button>}
         </div>
       </div>
 
+      {descanso && <Descanso onCerrar={() => setDescanso(false)} />}
       {ampliada && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-3" onClick={() => setAmpliada(null)}>
           <Foto ruta={ampliada} className="h-full max-h-[85dvh] w-full max-w-3xl !bg-transparent" />

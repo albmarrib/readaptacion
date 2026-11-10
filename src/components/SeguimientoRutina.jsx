@@ -4,6 +4,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, serverTimestam
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { enlaceWhatsApp } from '../lib/util'
+import { useSesiones } from '../lib/sesiones'
 
 const fmt = t => t?.toDate?.().toLocaleString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
@@ -16,6 +17,7 @@ export default function SeguimientoRutina({ paciente, rutina, rid, onCerrada, on
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
   const pid = paciente.id
+  const sesiones = useSesiones(pid, rid)
   const base = collection(db, 'pacientes', pid, 'rutinas', rid, 'notas')
 
   useEffect(() => onSnapshot(base,
@@ -59,6 +61,28 @@ export default function SeguimientoRutina({ paciente, rutina, rid, onCerrada, on
         <Link className="btn-sec" to={`/pacientes/${pid}/evolucion`}>Ver evolución de pesos</Link>
         <button className="btn-sec" onClick={onDuplicar} disabled={duplicando}>{duplicando ? 'Duplicando…' : 'Duplicar como nueva rutina'}</button>
         {rutina.estado !== 'cerrada' && <button className="btn" onClick={cerrar} disabled={ocupado}>Cerrar rutina</button>}
+      </div>
+
+      <div>
+        <h3 className="etiqueta">Entrenamientos hechos</h3>
+        {sesiones === null ? <p className="text-xs text-slate-400">Cargando…</p> : (() => {
+          const hechos = sesiones.filter(s => s.completada).length
+          const previstos = (Number(rutina.semanas) || 0) * (rutina.dias?.length || 0)
+          return (
+            <>
+              <p className="text-sm"><b className="text-teal-800">{hechos}</b> de {previstos || '—'} previstos{sesiones.length > hechos ? <span className="text-slate-500"> · {sesiones.length - hechos} a medias</span> : ''}</p>
+              {sesiones.length > 0 && (
+                <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                  {sesiones.slice(0, 24).map(s => (
+                    <li key={s.id} className={`insignia ring-1 ring-inset ${s.completada ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-amber-50 text-amber-700 ring-amber-200'}`}>
+                      {new Date(s.fecha + 'T12:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · Día {s.dia}{s.completada ? ' ✓' : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       <div>

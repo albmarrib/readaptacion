@@ -122,6 +122,20 @@ service cloud.firestore {
         match /notas/{nid} {
           allow read, write: if personalDe(pid);
         }
+
+        // Entrenamientos hechos por el paciente (una sesión por día de entreno y fecha).
+        // Solo el paciente la escribe, solo en una rutina activa y solo con estos campos.
+        match /sesiones/{sid} {
+          allow read: if personalDe(pid) || soyPaciente(pid);
+          allow create, update: if soyPaciente(pid)
+            && get(/databases/$(database)/documents/pacientes/$(pid)/rutinas/$(rid)).data.estado == 'activa'
+            && request.resource.data.keys().hasOnly(['dia', 'fecha', 'hechos', 'completada', 'actualizado'])
+            && request.resource.data.dia is int
+            && request.resource.data.fecha is string && request.resource.data.fecha.size() == 10
+            && request.resource.data.hechos is map
+            && request.resource.data.completada is bool;
+          allow delete: if personalDe(pid);
+        }
       }
 
       // Chat entre el paciente y su entrenador. Los mensajes no se editan ni se borran.

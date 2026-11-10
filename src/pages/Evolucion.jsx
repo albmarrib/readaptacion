@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { normalizar } from '../lib/util'
 import { formatLinea } from '../lib/volumen'
@@ -10,8 +10,10 @@ const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDate
 const maximo = pesos => { const v = Object.values(pesos ?? {}).filter(Number.isFinite); return v.length ? Math.max(...v) : null }
 
 // Evolución de los pesos de un paciente: cada ejercicio a lo largo de sus rutinas
-export default function Evolucion() {
-  const { id: pid } = useParams()
+// modoPaciente: el propio paciente ve su evolución (sin botón de volver a la ficha)
+export default function Evolucion({ pid: pidPaciente, modoPaciente = false }) {
+  const { id } = useParams()
+  const pid = pidPaciente ?? id
   const [paciente, setPaciente] = useState(null)
   const [ejercicios, setEjercicios] = useState(null) // ejercicioId -> { nombre, entradas: [...] }
   const [elegido, setElegido] = useState(null)
@@ -23,7 +25,9 @@ export default function Evolucion() {
     ;(async () => {
       const p = await getDoc(doc(db, 'pacientes', pid))
       if (!p.exists()) throw new Error('No se encuentra el paciente.')
-      const rutinas = (await getDocs(collection(db, 'pacientes', pid, 'rutinas'))).docs
+      // El paciente solo puede leer rutinas ya activadas: hay que pedirlas filtradas
+      const base = collection(db, 'pacientes', pid, 'rutinas')
+      const rutinas = (await getDocs(modoPaciente ? query(base, where('estado', 'in', ['activa', 'pendiente', 'cerrada'])) : base)).docs
         .map(d => ({ id: d.id, ...d.data() })).filter(r => r.estado !== 'borrador').sort((a, b) => a.numero - b.numero)
       const mapa = new Map()
       for (const r of rutinas) {
@@ -38,7 +42,7 @@ export default function Evolucion() {
       setPaciente(p.data()); setEjercicios([...mapa.values()])
     })().catch(e => vivo && setError(e.message))
     return () => { vivo = false }
-  }, [pid])
+  }, [pid, modoPaciente])
 
   const lista = useMemo(() => {
     const q = normalizar(busqueda.trim())
@@ -55,10 +59,10 @@ export default function Evolucion() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Volver to={`/pacientes/${pid}`} texto={paciente.nombre.split(' ')[0]} />
+        {!modoPaciente && <Volver to={`/pacientes/${pid}`} texto={paciente.nombre.split(' ')[0]} />}
         <div>
-          <h1 className="titulo-pagina">Evolución de pesos</h1>
-          <p className="text-sm text-slate-500">{paciente.nombre}</p>
+          <h1 className={modoPaciente ? 'text-xl font-bold tracking-tight' : 'titulo-pagina'}>{modoPaciente ? 'Tu evolución' : 'Evolución de pesos'}</h1>
+          <p className="text-sm text-slate-500">{modoPaciente ? 'Cómo han ido subiendo tus pesos en cada ejercicio' : paciente.nombre}</p>
         </div>
       </div>
 
@@ -68,7 +72,7 @@ export default function Evolucion() {
         <>
           <input className="input" type="search" placeholder="Buscar ejercicio…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
           {lista.length === 0 ? (
-            <div className="tarjeta text-center text-slate-500">Todavía no hay pesos anotados. Cuando el paciente anote pesos en sus rutinas, aquí verás cómo evolucionan.</div>
+            <div className="tarjeta text-center text-slate-500">{modoPaciente ? 'Cuando anotes pesos en tus entrenos, aquí verás cómo evolucionan.' : 'Todavía no hay pesos anotados. Cuando el paciente anote pesos en sus rutinas, aquí verás cómo evolucionan.'}</div>
           ) : (
             <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
               {lista.map(e => {

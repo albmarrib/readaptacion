@@ -169,7 +169,8 @@ pacientes/{id}/rutinas/{rid}
   estado, fechaInicio?, fechaFin?
   frecuencia?: 0-99
   notaGeneral?: string
-  dias: [{ numero, gruposIds: [..], titulo }]        // diasPorSemana = dias.length
+  dias: [{ numero, gruposIds: [..], titulo, diaSemana? }]  // diasPorSemana = dias.length; diaSemana 1 (lunes) - 7 (domingo)
+                                     // si falta, se reparte solo (3 días: lunes, miércoles, viernes)
   creadaPor
 
 pacientes/{id}/rutinas/{rid}/ejercicios/{eid}
@@ -182,6 +183,11 @@ pacientes/{id}/rutinas/{rid}/ejercicios/{eid}
   observaciones
   pesos: { "0": number, "1": number } // clave = índice de línea
   pesosActualizado: timestamp
+
+pacientes/{id}/rutinas/{rid}/sesiones/{AAAA-MM-DD_dN}   // entrenamientos hechos (10-nov-2026)
+  dia, fecha: 'AAAA-MM-DD'
+  hechos: { '<idEjercicioRutina>_<línea>': true }  // series marcadas con ✓
+  completada: bool, actualizado
 
 pacientes/{id}/rutinas/{rid}/notas/{nid}
   autorId, texto, fecha

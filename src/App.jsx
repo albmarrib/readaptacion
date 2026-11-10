@@ -6,7 +6,8 @@ import Catalogo from './pages/Catalogo'
 import Pacientes from './pages/Pacientes'
 import PacienteForm from './pages/PacienteForm'
 import Entrenadores from './pages/Entrenadores'
-import MiRutina, { VistaPreviaPaciente } from './pages/MiRutina'
+import MiRutina, { PuertaPaciente, VistaPreviaPaciente } from './pages/MiRutina'
+import Hoy from './pages/Hoy'
 import RutinaEditor from './pages/RutinaEditor'
 import Volumenes from './pages/Volumenes'
 import Avisos from './pages/Avisos'
@@ -39,7 +40,7 @@ const Solo = ({ cond, children }) => (cond ? children : <Navigate to="/" replace
 
 function Inicio() {
   const { esPersonal } = useAuth()
-  return <Navigate to={esPersonal ? '/pacientes' : '/mi-rutina'} replace />
+  return <Navigate to={esPersonal ? '/pacientes' : '/hoy'} replace />
 }
 
 export default function App() {
@@ -65,7 +66,9 @@ export default function App() {
         <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />
+        <Route path="hoy" element={<Solo cond={esPaciente}><Hoy /></Solo>} />
         <Route path="mi-rutina" element={<Solo cond={esPaciente}><MiRutina /></Solo>} />
+        <Route path="mi-evolucion" element={<Solo cond={esPaciente}><PuertaPaciente>{pid => <Evolucion pid={pid} modoPaciente />}</PuertaPaciente></Solo>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

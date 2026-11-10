@@ -6,7 +6,7 @@ import { ChatProvider } from '../lib/chat'
 import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
 import BienvenidaApp from './BienvenidaApp'
-import { Avatar, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
+import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, Logo } from './Iconos'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
 const CLAVE = 'readaptacion.menuLateral'
@@ -27,7 +27,7 @@ export default function Layout() {
       ['/avisos', 'Avisos', IconoAvisos, sinLeer],
       ...(esAdmin ? [['/entrenadores', 'Equipo', IconoEntrenadores]] : []),
     ]
-    : [['/mi-rutina', 'Mi rutina', IconoRutina]]
+    : [['/hoy', 'Hoy', IconoCasa], ['/mi-rutina', 'Rutina', IconoRutina], ['/mi-evolucion', 'Evolución', IconoEvolucion]]
 
   const Insignia = ({ n, borde = 'ring-white' }) => n > 0 && <span className={`absolute -right-2 -top-1.5 min-w-4 rounded-full bg-rose-500 px-1 py-0.5 text-center text-[10px] font-bold leading-none text-white ring-2 ${borde}`}>{n}</span>
 
