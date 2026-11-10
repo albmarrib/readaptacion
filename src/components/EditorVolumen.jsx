@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { addDoc, collection, deleteDoc, doc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { slug } from '../lib/util'
+import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import { describirLinea, formatLineas, parseLineas, seriesTotales } from '../lib/volumen'
 import Modal from './Modal'
 
@@ -30,12 +31,12 @@ export default function EditorVolumen({ volumen, sistemas, onClose, onGuardado, 
       if (sid === NUEVO) {
         const n = sistemaNuevo.trim()
         if (!n) throw new Error('Escribe el nombre del sistema de entrenamiento.')
-        sid = slug(n)
-        if (!sid) throw new Error('El nombre del sistema no es válido.')
-        const existente = sistemas.find(s => s.id === sid)
-        if (!existente) await setDoc(doc(db, 'sistemasEntrenamiento', sid), { nombre: n })
+        if (!slug(n)) throw new Error('El nombre del sistema no es válido.')
+        const existente = sistemas.find(s => s.id === idDeCentro(slug(n)) || slug(s.nombre) === slug(n))
+        sid = existente?.id ?? idDeCentro(slug(n))
+        if (!existente) await setDoc(doc(db, 'sistemasEntrenamiento', sid), { nombre: n, centroId: centroActual() })
       }
-      const datos = { sistemaId: sid, lineas: r.lineas, seriesTotales: seriesTotales(r.lineas), observaciones: observaciones.trim() }
+      const datos = { sistemaId: sid, lineas: r.lineas, seriesTotales: seriesTotales(r.lineas), observaciones: observaciones.trim(), centroId: volumen?.centroId ?? centroActual() }
       if (nombre.trim()) datos.nombre = nombre.trim()
       let id = volumen?.id
       if (nuevo) id = (await addDoc(collection(db, 'volumenes'), datos)).id

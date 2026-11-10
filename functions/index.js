@@ -66,7 +66,9 @@ async function fichaAutorizada(req) {
   const ref = getFirestore().doc(`pacientes/${pacienteId}`)
   const snap = await ref.get()
   if (!snap.exists) throw new HttpsError('not-found', 'No se encuentra el paciente.')
-  if (yo.rol !== 'admin' && snap.data().entrenadorId !== req.auth.uid) {
+  // El administrador solo puede con los de su centro; el entrenador, solo con los suyos
+  const permitido = yo.rol === 'admin' ? snap.data().centroId === yo.centroId : snap.data().entrenadorId === req.auth.uid
+  if (!yo.centroId || !permitido) {
     throw new HttpsError('permission-denied', 'Este paciente no es tuyo.')
   }
   return { ref, pacienteId, ficha: snap.data() }
@@ -86,7 +88,8 @@ exports.crearEntrenador = onCall({ region: REGION }, async (req) => {
   const user = await cuentaPorCorreo(email, nombre)
   const ref = getFirestore().doc(`usuarios/${user.uid}`)
   if ((await ref.get()).exists) throw new HttpsError('already-exists', 'Ya existe un usuario con ese correo.')
-  await ref.set({ rol: 'entrenador', nombre, email, activo: true, puedeEditarCatalogo })
+  if (!yo.centroId) throw new HttpsError('failed-precondition', 'Tu usuario no tiene centro asignado.')
+  await ref.set({ rol: 'entrenador', nombre, email, activo: true, puedeEditarCatalogo, centroId: yo.centroId })
   return { uid: user.uid }
 })
 
@@ -109,7 +112,7 @@ exports.invitarPaciente = onCall({ region: REGION }, async (req) => {
   const clave = claveTemporal()
   await getAuth().updateUser(user.uid, { password: clave })
   const lote = getFirestore().batch()
-  lote.set(uRef, { rol: 'paciente', nombre: ficha.nombre, email, activo: true, pacienteId })
+  lote.set(uRef, { rol: 'paciente', nombre: ficha.nombre, email, activo: true, pacienteId, centroId: ficha.centroId })
   lote.update(ref, { uid: user.uid, estado: 'activo' })
   await lote.commit()
   return { uid: user.uid }
@@ -151,7 +154,7 @@ exports.revisarRutinas = onSchedule({ region: REGION, schedule: 'every day 07:00
     const lote = db.batch()
     lote.update(r.ref, { estado: 'pendiente' })
     lote.set(db.doc(`avisos/${r.id}`), {
-      entrenadorId: paciente.data().entrenadorId, pacienteId: pacienteRef.id, rutinaId: r.id,
+      entrenadorId: paciente.data().entrenadorId, pacienteId: pacienteRef.id, rutinaId: r.id, centroId: paciente.data().centroId,
       tipo: 'rutina_vencida', fecha: FieldValue.serverTimestamp(), leido: false,
     })
     await lote.commit()
@@ -174,6 +177,7 @@ exports.nuevoMensaje = onDocumentCreated({ document: 'pacientes/{pid}/mensajes/{
   await db.doc(`chats/${pid}`).set({
     entrenadorId: paciente.data().entrenadorId,
     pacienteId: pid,
+    centroId: paciente.data().centroId,
     ultimoTexto: String(m.texto ?? '').slice(0, 120),
     ultimaFecha: m.fecha,
     ultimoAutor: m.autorRol,

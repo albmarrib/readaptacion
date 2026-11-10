@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from './firebase'
+import { deCentro } from './centro'
 
-// Escucha una colección entera (solo para colecciones pequeñas). null = cargando.
+// Escucha una colección entera del centro (solo para colecciones pequeñas). null = cargando.
 export function useColeccion(nombre) {
   const [datos, setDatos] = useState(null)
-  useEffect(() => onSnapshot(collection(db, nombre),
+  useEffect(() => onSnapshot(deCentro(nombre),
     s => setDatos(s.docs.map(d => ({ id: d.id, ...d.data() }))),
     e => { console.error(nombre, e); setDatos([]) }), [nombre])
   return datos

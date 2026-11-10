@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db, firebaseConfigurado } from './firebase'
+import { fijarCentro } from './centro'
 
 const Ctx = createContext(null)
 export const AuthContext = Ctx
@@ -19,11 +20,12 @@ export function AuthProvider({ children }) {
     const baja = onAuthStateChanged(auth, u => {
       cancelar()
       setUsuario(u)
-      if (!u) { setPerfil(null); setEstado('fuera'); return }
+      if (!u) { fijarCentro(null); setPerfil(null); setEstado('fuera'); return }
       setEstado('cargando')
       cancelar = onSnapshot(doc(db, 'usuarios', u.uid),
         s => {
           const p = s.exists() ? { uid: u.uid, ...s.data() } : null
+          fijarCentro(p?.centroId)
           setPerfil(p)
           setEstado(!p ? 'sinPerfil' : p.activo ? 'ok' : 'inactivo')
         },

@@ -1,4 +1,4 @@
-# Readaptación — Especificación v1.3
+# Readaptación — Especificación v1.4
 
 Nombre visible de la app: **Entrenamiento Personal** (cambio del 10-nov-2026; el proyecto y el código mantienen el nombre interno «readaptacion»).
 
@@ -119,10 +119,26 @@ Da de alta entrenadores y marca si pueden editar el catálogo.
 
 ## 6. Modelo de datos (Firestore)
 
+**Preparada para SaaS (v1.4, 11-nov-2026).** Cada cliente es un **centro**. Todos los documentos de
+`usuarios`, `pacientes`, `ejercicios`, `gruposMusculares`, `volumenes`, `sistemasEntrenamiento`,
+`avisos` y `chats` llevan `centroId`; las subcolecciones de un paciente heredan el de su ficha.
+Las reglas impiden ver o tocar datos de otro centro; el administrador lo es solo de su centro.
+El `centroId` de una persona solo lo asigna una Cloud Function. Los documentos nuevos con nombre fijo
+(grupos, sistemas) usan el id `{centroId}_{slug}`. Primer centro: **Osteorubi** (`osteorubi`), con
+todos los datos existentes (`scripts/migrar-centros.cjs`). Cada centro tiene su propio catálogo;
+los de Osteorubi son solo suyos. Vídeos de ejercicios: solo enlaces (YouTube, Vimeo…).
+
+Pruebas en local: `firebase emulators:start --project demo-readaptacion` (requiere Java) y
+`VITE_EMULADOR=1 npx vite`. Con el emulador la app usa un proyecto "demo-" y no puede tocar los datos reales.
+
 ```
+centros/{cid}                       // lo crea/cambia solo una Cloud Function o un script
+  nombre, logo, estado: "activo" | "suspendido", creado
+
 usuarios/{uid}
   rol: "admin" | "entrenador" | "paciente"
   nombre, email, activo
+  centroId
   puedeEditarCatalogo: bool          // solo entrenadores
   pacienteId?: string                // solo rol paciente
 

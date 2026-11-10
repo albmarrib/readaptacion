@@ -49,7 +49,7 @@ function Panel() {
   useEffect(() => {
     if (!esPersonal) return
     const base = collection(db, 'pacientes')
-    const q = perfil.rol === 'admin' ? base : query(base, where('entrenadorId', '==', perfil.uid))
+    const q = perfil.rol === 'admin' ? query(base, where('centroId', '==', perfil.centroId)) : query(base, where('entrenadorId', '==', perfil.uid))
     return onSnapshot(q, s => setPacientes(s.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.estado === 'activo' && p.uid)), () => setPacientes([]))
   }, [esPersonal, perfil.rol, perfil.uid])
 

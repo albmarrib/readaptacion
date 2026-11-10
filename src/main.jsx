@@ -10,8 +10,8 @@ import { AuthProvider, AuthContext } from './lib/auth.jsx'
 const DEMO = import.meta.env.DEV && import.meta.env.VITE_DEMO === '1'
 const DEMO_PACIENTE = import.meta.env.VITE_DEMO_ROL === 'paciente'
 const sesionDemo = DEMO_PACIENTE
-  ? { usuario: { uid: 'demo' }, perfil: { uid: 'demo', rol: 'paciente', nombre: 'Ana García', activo: true, pacienteId: 'demo' }, estado: 'ok', esAdmin: false, esEntrenador: false, esPaciente: true, esPersonal: false, puedeEditarCatalogo: false, salir: () => {} }
-  : { usuario: { uid: 'demo' }, perfil: { uid: 'demo', rol: 'admin', nombre: 'Albert Martínez', activo: true }, estado: 'ok', esAdmin: true, esEntrenador: false, esPaciente: false, esPersonal: true, puedeEditarCatalogo: true, salir: () => {} }
+  ? { usuario: { uid: 'demo' }, perfil: { uid: 'demo', rol: 'paciente', nombre: 'Ana García', activo: true, pacienteId: 'demo', centroId: 'osteorubi' }, estado: 'ok', esAdmin: false, esEntrenador: false, esPaciente: true, esPersonal: false, puedeEditarCatalogo: false, salir: () => {} }
+  : { usuario: { uid: 'demo' }, perfil: { uid: 'demo', rol: 'admin', nombre: 'Albert Martínez', activo: true, centroId: 'osteorubi' }, estado: 'ok', esAdmin: true, esEntrenador: false, esPaciente: false, esPersonal: true, puedeEditarCatalogo: true, salir: () => {} }
 const Proveedor = ({ children }) => (DEMO ? <AuthContext.Provider value={sesionDemo}>{children}</AuthContext.Provider> : <AuthProvider>{children}</AuthProvider>)
 
 createRoot(document.getElementById('root')).render(

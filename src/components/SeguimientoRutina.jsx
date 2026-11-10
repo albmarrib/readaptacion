@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import { useAuth } from '../lib/auth'
 import { enlaceWhatsApp } from '../lib/util'
 import { useSesiones } from '../lib/sesiones'
@@ -27,7 +28,7 @@ export default function SeguimientoRutina({ paciente, rutina, rid, onCerrada, on
   // El administrador puede ver quién escribió cada nota; el resto ve "Tú" u "Otro entrenador"
   useEffect(() => {
     if (!esAdmin) return
-    getDocs(collection(db, 'usuarios')).then(s => setNombres(Object.fromEntries(s.docs.map(d => [d.id, d.data().nombre]))))
+    getDocs(deCentro('usuarios')).then(s => setNombres(Object.fromEntries(s.docs.map(d => [d.id, d.data().nombre]))))
   }, [esAdmin])
   const autor = id => (id === perfil.uid ? 'Tú' : nombres[id] ?? 'Otro entrenador')
 

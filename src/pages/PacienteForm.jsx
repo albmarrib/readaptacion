@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { addDoc, collection, deleteField, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteField, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { sinVacios } from '../lib/util'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-import { app } from '../lib/firebase'
+import { httpsCallable } from 'firebase/functions'
+import { funciones } from '../lib/firebase'
 import RutinasPaciente from '../components/RutinasPaciente'
 import AccesoPaciente from '../components/AccesoPaciente'
 import { consentimientoVigente } from '../lib/consentimiento'
@@ -59,7 +59,7 @@ export default function PacienteForm() {
 
   useEffect(() => {
     if (!esAdmin) return
-    getDocs(collection(db, 'usuarios')).then(s => setEntrenadores(
+    getDocs(query(collection(db, 'usuarios'), where('centroId', '==', perfil.centroId))).then(s => setEntrenadores(
       s.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.rol !== 'paciente' && u.activo).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))))
   }, [esAdmin])
 
@@ -75,8 +75,8 @@ export default function PacienteForm() {
         entrenadorId: esAdmin ? f.entrenadorId : perfil.uid, estado: f.estado || 'invitado',
       }
       // El acceso (uid) y el consentimiento no se tocan desde este formulario
-      delete campos.uid; delete campos.consentimiento; delete campos.id; delete campos.foto
-      if (nuevo) await addDoc(collection(db, 'pacientes'), sinVacios(campos))
+      delete campos.uid; delete campos.consentimiento; delete campos.id; delete campos.foto; delete campos.centroId
+      if (nuevo) await addDoc(collection(db, 'pacientes'), { ...sinVacios(campos), centroId: perfil.centroId })
       else {
         // Los campos que se dejan vacíos se borran; el resto se actualiza (sin pisar lo que el paciente haya cambiado)
         const parche = {}
@@ -95,7 +95,7 @@ export default function PacienteForm() {
   const eliminar = async () => {
     if (!window.confirm(`¿Eliminar definitivamente a ${f.nombre}?\n\nSe borran su ficha, todas sus rutinas y pesos, y su acceso a la app. No se puede deshacer (derecho de supresión). Si solo quieres dejar de trabajar con esta persona, usa el estado «Archivado».`)) return
     setGuardando(true)
-    try { await httpsCallable(getFunctions(app, 'europe-west1'), 'eliminarPaciente')({ pacienteId: id }); navigate('/pacientes') }
+    try { await httpsCallable(funciones, 'eliminarPaciente')({ pacienteId: id }); navigate('/pacientes') }
     catch (err) { setError('No se pudo eliminar: ' + err.message); setGuardando(false) }
   }
 

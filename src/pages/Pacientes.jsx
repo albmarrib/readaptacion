@@ -20,15 +20,15 @@ export default function Pacientes() {
 
   useEffect(() => {
     const base = collection(db, 'pacientes')
-    const q = esAdmin ? base : query(base, where('entrenadorId', '==', perfil.uid))
+    const q = esAdmin ? query(base, where('centroId', '==', perfil.centroId)) : query(base, where('entrenadorId', '==', perfil.uid))
     return onSnapshot(q,
       s => setPacientes(s.docs.map(d => ({ id: d.id, ...d.data() }))),
       e => setError('No se pudieron cargar los pacientes: ' + e.message))
-  }, [esAdmin, perfil.uid])
+  }, [esAdmin, perfil.uid, perfil.centroId])
 
   useEffect(() => {
     if (!esAdmin) return
-    getDocs(collection(db, 'usuarios')).then(s => setEntrenadores(Object.fromEntries(s.docs.map(d => [d.id, d.data().nombre]))))
+    getDocs(query(collection(db, 'usuarios'), where('centroId', '==', perfil.centroId))).then(s => setEntrenadores(Object.fromEntries(s.docs.map(d => [d.id, d.data().nombre]))))
   }, [esAdmin])
 
   const filtrados = useMemo(() => {

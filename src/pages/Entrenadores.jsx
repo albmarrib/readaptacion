@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { collection, doc, onSnapshot, updateDoc } from 'firebase/firestore'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-import { app, db } from '../lib/firebase'
+import { httpsCallable } from 'firebase/functions'
+import { db, funciones } from '../lib/firebase'
+import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import { useAuth } from '../lib/auth'
 import Modal from '../components/Modal'
 import { Link } from 'react-router-dom'
 import { Avatar, EncabezadoPagina, IconoEntrenadores, IconoLapiz } from '../components/Iconos'
 
-const crearEntrenador = () => httpsCallable(getFunctions(app, 'europe-west1'), 'crearEntrenador')
+const crearEntrenador = () => httpsCallable(funciones, 'crearEntrenador')
 
 export default function Entrenadores() {
   const { perfil } = useAuth()
@@ -16,7 +17,7 @@ export default function Entrenadores() {
   const [edicion, setEdicion] = useState(null)
   const [error, setError] = useState('')
 
-  useEffect(() => onSnapshot(collection(db, 'usuarios'),
+  useEffect(() => onSnapshot(deCentro('usuarios'),
     s => setUsuarios(s.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.rol !== 'paciente').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))),
     e => setError('No se pudo cargar la lista: ' + e.message)), [])
 

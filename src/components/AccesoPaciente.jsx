@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { sendPasswordResetEmail } from 'firebase/auth'
-import { getFunctions, httpsCallable } from 'firebase/functions'
-import { app, auth } from '../lib/firebase'
+import { httpsCallable } from 'firebase/functions'
+import { auth, funciones } from '../lib/firebase'
 import { URL_APP } from '../lib/util'
 
-const invitar = () => httpsCallable(getFunctions(app, 'europe-west1'), 'invitarPaciente')
+const invitar = () => httpsCallable(funciones, 'invitarPaciente')
 
 // Acceso del paciente a la app: un solo botón.
 // Se crea su acceso y se le envía un correo para que elija su contraseña.

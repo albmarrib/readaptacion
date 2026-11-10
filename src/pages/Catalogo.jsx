@@ -4,6 +4,7 @@ import { deleteObject, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { comprimirImagen, normalizar, slug } from '../lib/util'
+import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import Foto from '../components/Foto'
 import Modal from '../components/Modal'
 import { EncabezadoPagina, IconoCatalogo } from '../components/Iconos'
@@ -28,7 +29,7 @@ export default function Catalogo() {
   const [editorGrupo, setEditorGrupo] = useState(null) // { grupo?: ..} | null
   const [error, setError] = useState('')
 
-  useEffect(() => onSnapshot(collection(db, 'gruposMusculares'),
+  useEffect(() => onSnapshot(deCentro('gruposMusculares'),
     s => setGrupos(s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.orden - b.orden)),
     e => setError('No se pudo cargar el catálogo: ' + e.message)), [])
 
@@ -38,7 +39,7 @@ export default function Catalogo() {
     if (!forzar && porGrupo[gid]) return porGrupo[gid]
     setCargando(true)
     try {
-      const s = await getDocs(query(collection(db, 'ejercicios'), where('grupoId', '==', gid)))
+      const s = await getDocs(deCentro('ejercicios', where('grupoId', '==', gid)))
       const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.orden - b.orden)
       setPorGrupo(p => ({ ...p, [gid]: lista }))
       return lista
@@ -194,6 +195,7 @@ function EditorEjercicio({ ejercicio, grupos, grupoInicial, obtenerGrupo, onClos
         nombre: nombre.trim(), grupoId, grupoNombre: g.nombre,
         fotos: [...fotos, ...subidas], videos, orden,
         origen: ejercicio?.origen ?? 'creado en la app',
+        centroId: ejercicio?.centroId ?? centroActual(),
       })
       await Promise.all(quitadas.map(f => deleteObject(ref(storage, f)).catch(() => {})))
       await onGuardado(ejercicio?.grupoId, grupoId)
@@ -291,15 +293,15 @@ function EditorGrupo({ grupo, grupos, onClose, onHecho, onBorrado }) {
     setOcupado(true); setError('')
     try {
       if (nuevo) {
-        const id = slug(n)
+        const id = idDeCentro(slug(n))
         if (!id) throw new Error('El nombre no es válido.')
-        if (grupos.some(g => g.id === id)) throw new Error('Ya existe un grupo con ese nombre.')
-        await setDoc(doc(db, 'gruposMusculares', id), { nombre: n, orden: Math.max(0, ...grupos.map(g => g.orden ?? 0)) + 1 })
+        if (grupos.some(g => g.id === id || slug(g.nombre) === slug(n))) throw new Error('Ya existe un grupo con ese nombre.')
+        await setDoc(doc(db, 'gruposMusculares', id), { nombre: n, orden: Math.max(0, ...grupos.map(g => g.orden ?? 0)) + 1, centroId: centroActual() })
         onHecho(id)
       } else {
-        await setDoc(doc(db, 'gruposMusculares', grupo.id), { nombre: n, orden: grupo.orden })
+        await setDoc(doc(db, 'gruposMusculares', grupo.id), { nombre: n, orden: grupo.orden, centroId: grupo.centroId ?? centroActual() })
         // El nombre del grupo también está copiado en cada ejercicio
-        const ejs = await getDocs(query(collection(db, 'ejercicios'), where('grupoId', '==', grupo.id)))
+        const ejs = await getDocs(deCentro('ejercicios', where('grupoId', '==', grupo.id)))
         for (let i = 0; i < ejs.docs.length; i += 400) {
           const lote = writeBatch(db)
           ejs.docs.slice(i, i + 400).forEach(d => lote.update(d.ref, { grupoNombre: n }))
@@ -313,7 +315,7 @@ function EditorGrupo({ grupo, grupos, onClose, onHecho, onBorrado }) {
   const borrar = async () => {
     setOcupado(true); setError('')
     try {
-      const hay = await getDocs(query(collection(db, 'ejercicios'), where('grupoId', '==', grupo.id)))
+      const hay = await getDocs(deCentro('ejercicios', where('grupoId', '==', grupo.id)))
       if (!hay.empty) throw new Error(`El grupo tiene ${hay.size} ejercicios. Muévelos o elimínalos antes de borrarlo.`)
       if (!window.confirm(`¿Eliminar el grupo «${grupo.nombre}»?`)) { setOcupado(false); return }
       await deleteDoc(doc(db, 'gruposMusculares', grupo.id))
