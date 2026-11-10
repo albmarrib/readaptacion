@@ -13,15 +13,15 @@ const fechaLarga = d => d.toLocaleDateString('es-ES', { weekday: 'long', day: 'n
 const ESTADO = { completado: 'Completado', 'en curso': 'En curso', pendiente: 'Pendiente' }
 
 export default function Inicio() {
-  return <PuertaPaciente>{pid => <PantallaInicio pid={pid} />}</PuertaPaciente>
+  return <PuertaPaciente>{(pid, ficha) => <PantallaInicio pid={pid} ficha={ficha} />}</PuertaPaciente>
 }
 
-function PantallaInicio({ pid }) {
+function PantallaInicio({ pid, ficha }) {
   const { perfil } = useAuth()
   const navigate = useNavigate()
   const { rutinas, rutina, sesiones, delDia } = usePlanPaciente(pid)
   const hoy = soloDia(new Date())
-  const nombre = perfil.nombre.split(' ')[0]
+  const nombre = (ficha?.nombre || perfil.nombre).split(' ')[0]
 
   if (!rutinas) return <p className="px-5 pt-6 font-light text-slate-500">Cargando…</p>
 
