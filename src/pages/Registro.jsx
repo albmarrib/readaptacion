@@ -27,7 +27,7 @@ export default function Registro() {
   const [error, setError] = useState('')
   const [enviado, setEnviado] = useState('')
 
-  if (estado === 'ok' || estado === 'suspendido' || estado === 'inactivo') return <Navigate to="/" replace />
+  if (estado === 'ok' || estado === 'suspendido' || estado === 'inactivo' || estado === 'bloqueadoPago') return <Navigate to="/" replace />
   const marcar = () => { try { localStorage.setItem(MARCA_REGISTRO, '1') } catch { /* sin almacenamiento */ } }
   const ejecutar = async fn => {
     setError(''); setOcupado(true)

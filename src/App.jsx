@@ -20,6 +20,7 @@ import Evolucion from './pages/Evolucion'
 import Centros from './pages/Centros'
 import Legal from './pages/Legal'
 import Suscripcion from './pages/Suscripcion'
+import { PantallaBloqueoPago } from './components/AvisoPago'
 import Registro from './pages/Registro'
 import { lazy, Suspense } from 'react'
 const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
@@ -31,6 +32,7 @@ function Cargando() {
 function Protegida() {
   const { estado } = useAuth()
   if (estado === 'cargando') return <Cargando />
+  if (estado === 'bloqueadoPago') return <PantallaBloqueoPago />
   if (estado !== 'ok') return <Navigate to="/login" replace />
   return <Layout />
 }

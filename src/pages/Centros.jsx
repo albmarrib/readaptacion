@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions'
 import { funciones } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { EncabezadoPagina, IconoCentros, LogoCentro } from '../components/Iconos'
+import { estadoPago, fechaCorta } from '../lib/pago'
 
 // Panel del superadministrador (dueño de la app): todos los centros con sus recuentos.
 // Nunca muestra datos de pacientes, solo cuántos hay.
@@ -58,6 +59,7 @@ export default function Centros() {
                     {c.plan === 'pago' && <span className="text-emerald-700"> · De pago hasta el {fecha(c.pagoHasta)}</span>}
                     {c.plan === 'impago' && <span className="text-amber-700"> · Pago pendiente</span>}
                     {c.plan === 'cancelado' && <span className="text-rose-600"> · Suscripción cancelada</span>}
+                    {(() => { const p = estadoPago(c); return p.fase !== 'ok' && <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-700">{p.fase === 'plazo' ? `Sin pagar · se bloquea el ${fechaCorta(p.limite)}` : 'Entrenadores bloqueados por no pagar'}</span> })()}
                   </div>
                 </div>
                 <dl className="flex gap-5 text-center text-sm">

@@ -3,17 +3,19 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { auth, db, firebaseConfigurado } from './firebase'
 import { fijarCentro } from './centro'
+import { estadoPago } from './pago'
 
 const Ctx = createContext(null)
 export const AuthContext = Ctx
 export const useAuth = () => useContext(Ctx)
 
-// estado: cargando | fuera (sin sesión) | sinPerfil (cuenta no dada de alta) | inactivo | ok
+// estado: cargando | fuera (sin sesión) | sinPerfil (cuenta no dada de alta) | inactivo | suspendido
+//         | bloqueadoPago (personal de un centro que no ha pagado a tiempo; los pacientes no) | ok
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [estado, setEstado] = useState(firebaseConfigurado ? 'cargando' : 'fuera')
-  const [suspendido, setSuspendido] = useState(false)
+  const [centroDoc, setCentroDoc] = useState(null)
 
   useEffect(() => {
     if (!auth) return
@@ -35,15 +37,19 @@ export function AuthProvider({ children }) {
     return () => { cancelar(); baja() }
   }, [])
 
-  // Si el centro está suspendido, nadie de ese centro puede usar la app
+  // Datos del centro: si está suspendido nadie entra; si no ha pagado a tiempo, el personal tampoco
   const centroId = perfil?.centroId
   useEffect(() => {
-    if (!centroId) { setSuspendido(false); return }
-    return onSnapshot(doc(db, 'centros', centroId), s => setSuspendido(s.data()?.estado === 'suspendido'), () => setSuspendido(false))
+    if (!centroId) { setCentroDoc(null); return }
+    return onSnapshot(doc(db, 'centros', centroId), s => setCentroDoc(s.data() ?? null), () => setCentroDoc(null))
   }, [centroId])
 
+  const suspendido = centroDoc?.estado === 'suspendido'
+  const pago = estadoPago(centroDoc)
+  const personal = perfil?.rol === 'admin' || perfil?.rol === 'entrenador'
   const valor = useMemo(() => ({
-    usuario, perfil, estado: estado === 'ok' && suspendido ? 'suspendido' : estado,
+    usuario, perfil, pago,
+    estado: estado !== 'ok' ? estado : suspendido ? 'suspendido' : personal && pago.fase === 'bloqueado' ? 'bloqueadoPago' : estado,
     esSuper: perfil?.superadmin === true,
     esAdmin: perfil?.rol === 'admin',
     esEntrenador: perfil?.rol === 'entrenador',
@@ -51,7 +57,7 @@ export function AuthProvider({ children }) {
     esPersonal: perfil?.rol === 'admin' || perfil?.rol === 'entrenador',
     puedeEditarCatalogo: perfil?.rol === 'admin' || (perfil?.rol === 'entrenador' && perfil?.puedeEditarCatalogo === true),
     salir: () => signOut(auth),
-  }), [usuario, perfil, estado, suspendido])
+  }), [usuario, perfil, estado, suspendido, pago.fase, pago.limite, personal])
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>
 }

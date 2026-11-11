@@ -49,7 +49,7 @@ export default function Login() {
       .finally(() => setOcupado(false))
   }, [])
 
-  if (estado === 'ok') return <Navigate to="/" replace />
+  if (estado === 'ok' || estado === 'bloqueadoPago') return <Navigate to="/" replace />
   // Venía de «Registra tu centro» y ya se ha identificado: vuelve al paso 2
   let registrando = false
   try { registrando = localStorage.getItem(MARCA_REGISTRO) === '1' } catch { /* sin almacenamiento */ }

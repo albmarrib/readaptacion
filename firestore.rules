@@ -27,8 +27,22 @@ service cloud.firestore {
     // El campo superadmin solo se pone a mano en la consola o con un script.
     function esSuper()      { return hayPerfil() && yo().activo == true && yo().superadmin == true; }
     function delCentro(d)   { return d.centroId == miCentro(); }
-    function esAdmin()      { return activo() && yo().rol == 'admin'; }
-    function esEntrenador() { return activo() && yo().rol == 'entrenador'; }
+    // Suscripción: al acabar la prueba o fallar el pago, el centro tiene 7 días para pagar; después,
+    // administrador y entrenadores quedan bloqueados (los pacientes siguen entrando y el
+    // administrador puede leer su centro y pagar). Centros sin plan (fundadores): nunca.
+    // Debe coincidir con src/lib/pago.js y con pagoAlDia() de functions/index.js.
+    function alDia(c) {
+      return !('plan' in c) || c.plan == 'pago'
+        || (c.plan == 'prueba' && request.time < c.pruebaHasta + duration.value(7, 'd'))
+        || (c.plan in ['impago', 'cancelado'] && 'suscripcion' in c && c.suscripcion.finPeriodo != null
+            && request.time < c.suscripcion.finPeriodo + duration.value(7, 'd'));
+    }
+    function pagoAlDia() {
+      return !exists(/databases/$(database)/documents/centros/$(miCentro()))
+        || alDia(get(/databases/$(database)/documents/centros/$(miCentro())).data);
+    }
+    function esAdmin()      { return activo() && yo().rol == 'admin' && pagoAlDia(); }
+    function esEntrenador() { return activo() && yo().rol == 'entrenador' && pagoAlDia(); }
     function puedeCatalogo() {
       return esAdmin() || (esEntrenador() && yo().puedeEditarCatalogo == true);
     }

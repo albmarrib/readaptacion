@@ -36,6 +36,17 @@ async function enviarPush(uid, { titulo, cuerpo, url }) {
   } catch (e) { console.error('push', uid, e.message) }
 }
 
+// ¿Puede trabajar el personal del centro? Igual que alDia() en firestore.rules y src/lib/pago.js:
+// 7 días de plazo al acabar la prueba o fallar el pago; centros sin plan, siempre.
+const PLAZO_PAGO = 7 * 864e5
+function pagoAlDia(c) {
+  const ahora = Date.now()
+  if (!c?.plan || c.plan === 'pago') return true
+  if (c.plan === 'prueba') return !c.pruebaHasta || ahora < c.pruebaHasta.toMillis() + PLAZO_PAGO
+  const fin = c.suscripcion?.finPeriodo
+  return ['impago', 'cancelado'].includes(c.plan) && !!fin && ahora < fin.toMillis() + PLAZO_PAGO
+}
+
 // Devuelve el perfil del usuario que llama si está activo y es administrador o entrenador.
 async function personalActivo(req) {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Inicia sesión.')
@@ -46,6 +57,7 @@ async function personalActivo(req) {
   }
   const centro = d.centroId ? await getFirestore().doc(`centros/${d.centroId}`).get() : null
   if (centro?.data()?.estado === 'suspendido') throw new HttpsError('permission-denied', 'Tu centro está suspendido.')
+  if (centro?.exists && !pagoAlDia(centro.data())) throw new HttpsError('permission-denied', 'El plazo para pagar la suscripción ha terminado. El administrador puede activarla en Suscripción.')
   return d
 }
 
