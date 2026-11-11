@@ -20,3 +20,6 @@ carga_firebase/data/fotos/
 *.log
 .DS_Store
 Thumbs.db
+
+# Copias de seguridad de la base de datos (datos de salud): nunca al repositorio
+copias/
