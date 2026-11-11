@@ -144,7 +144,9 @@ otros centros. Un centro suspendido deja a toda su gente sin acceso (reglas y fu
 correo (correo verificado); 2) escribe el nombre del centro y el suyo y acepta condiciones + contrato de encargo.
 La función `registrarCentro` crea el centro (catálogo vacío, `plan: "prueba"`, 30 días) y su perfil de
 administrador, y guarda la aceptación (versión + fecha del servidor). Una cuenta con perfil no puede registrar otro
-centro. Al terminar la prueba aún no se bloquea nada: eso llegará con Stripe.
+centro. Al terminar la prueba aún no se bloquea nada.
+
+**Suscripción (Stripe, SOLO MODO PRUEBA)**: página `/suscripcion` del administrador. `crearPagoSuscripcion` abre Stripe Checkout (precio provisional 29 €/mes + IVA; si quedan días de prueba, el primer cobro llega al terminar la prueba); `portalSuscripcion` abre el portal de Stripe (tarjeta, facturas, cancelar); `sincronizarSuscripcion` (al volver y al abrir la página) y `revisarSuscripciones` (cada día) guardan en el centro `plan` (prueba | pago | impago | cancelado) y `suscripcion`. Sin webhook. La clave es el secreto `STRIPE_SECRET_KEY` (en local, `functions/.secret.local`, fuera de git) y el servidor **rechaza claves que no sean sk_test_**. Un impago no suspende solo: lo decide el superadministrador.
 
 Pruebas en local: `firebase emulators:start --project demo-readaptacion` (requiere Java) y
 `VITE_EMULADOR=1 npx vite`. Con el emulador la app usa un proyecto "demo-" y no puede tocar los datos reales.

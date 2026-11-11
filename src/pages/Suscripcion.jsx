@@ -58,7 +58,7 @@ export default function Suscripcion() {
       <section className="tarjeta space-y-3">
         <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${color}`}>{etiqueta}</span>
         {plan === 'prueba' && <p className="text-sm">{pruebaTerminada ? 'Tu periodo de prueba terminó el' : 'Tu prueba gratuita dura hasta el'} <b>{fecha(centro.pruebaHasta)}</b>.</p>}
-        {plan === 'pago' && s && <p className="text-sm">{s.cancelaAlFinal ? 'Se cancelará el' : 'Próxima renovación:'} <b>{fecha(s.finPeriodo)}</b>.</p>}
+        {plan === 'pago' && s && <p className="text-sm">{s.cancelaAlFinal ? 'Cancelada: seguirás teniendo acceso hasta el' : s.enPrueba ? 'Suscripción activada. El primer cobro será al terminar la prueba, el' : 'Próxima renovación:'} <b>{fecha(s.finPeriodo)}</b>.</p>}
         {plan === 'impago' && <p className="text-sm">No se ha podido cobrar la última cuota. Actualiza tu forma de pago para no perder el acceso.</p>}
         {plan === 'cancelado' && <p className="text-sm">Tu suscripción está cancelada. Puedes volver a activarla cuando quieras.</p>}
         {!plan && <p className="text-sm">Tu centro no necesita suscripción.</p>}

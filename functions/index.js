@@ -305,7 +305,8 @@ async function guardarSuscripcion(centroId, sub) {
   const alDia = ['active', 'trialing'].includes(sub.status)
   await getFirestore().doc(`centros/${centroId}`).update({
     plan: alDia ? 'pago' : sub.status === 'canceled' ? 'cancelado' : 'impago',
-    suscripcion: { id: sub.id, estado: sub.status, finPeriodo: fin ? Timestamp.fromMillis(fin * 1000) : null, cancelaAlFinal: sub.cancel_at_period_end === true, modoPrueba: sub.livemode === false, actualizada: FieldValue.serverTimestamp() },
+    // Stripe marca la cancelación con cancel_at_period_end (versiones antiguas) o con cancel_at (actuales)
+    suscripcion: { id: sub.id, estado: sub.status, finPeriodo: fin ? Timestamp.fromMillis(fin * 1000) : null, cancelaAlFinal: sub.cancel_at_period_end === true || !!sub.cancel_at, enPrueba: sub.status === 'trialing', modoPrueba: sub.livemode === false, actualizada: FieldValue.serverTimestamp() },
   })
 }
 
@@ -326,7 +327,8 @@ exports.crearPagoSuscripcion = onCall({ region: REGION, secrets: [STRIPE_SECRET_
     mode: 'subscription', customer: cliente, locale: 'es',
     line_items: [{ quantity: 1, price_data: { currency: 'eur', unit_amount: PRECIO.centimos, recurring: { interval: PRECIO.intervalo }, product_data: { name: PRECIO.nombre } } }],
     client_reference_id: yo.centroId,
-    subscription_data: { metadata: { centroId: yo.centroId } },
+    // Si aún le quedan días de prueba, el primer cobro llega al terminar la prueba (Stripe exige 2 días mínimo)
+    subscription_data: { metadata: { centroId: yo.centroId }, ...(centro?.pruebaHasta?.toMillis() > Date.now() + 2 * 864e5 ? { trial_end: Math.floor(centro.pruebaHasta.toMillis() / 1000) } : {}) },
     success_url: `${origen}/suscripcion?pago={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origen}/suscripcion`,
   })
