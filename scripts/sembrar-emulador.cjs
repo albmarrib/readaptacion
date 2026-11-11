@@ -17,7 +17,9 @@ const { getAuth } = reqF('firebase-admin/auth')
 // Cuentas de prueba (solo existen en el emulador de este ordenador)
 const CLAVE = 'prueba-local-123'
 const CUENTAS = [
-  { uid: 'admin-prueba', email: 'admin@prueba.test', nombre: 'Marcos (prueba)', rol: 'admin', superadmin: true },
+  { uid: 'admin-prueba', email: 'admin@prueba.test', nombre: 'Marcos (prueba)', rol: 'admin' },
+  // Dueño de la app: superadministrador en su propio centro, KinetiQ
+  { uid: 'super-prueba', email: 'super@prueba.test', nombre: 'Albert (prueba)', rol: 'admin', centroId: 'kinetiq', superadmin: true },
   { uid: 'paciente-prueba', email: 'paciente@prueba.test', nombre: 'Ana García', rol: 'paciente', pacienteId: 'ana' },
   // Otro centro, para ver el panel de centros y la separación de datos
   { uid: 'admin-otro', email: 'otro@prueba.test', nombre: 'Laura (Centro Norte)', rol: 'admin', centroId: 'centro-norte' },
@@ -34,6 +36,7 @@ async function main() {
 
   const C = 'osteorubi'
   await db.doc(`centros/${C}`).set({ nombre: 'Osteorubi', logo: '/centros/osteorubi.jpg', estado: 'activo', creado: Timestamp.now() })
+  await db.doc('centros/kinetiq').set({ nombre: 'KinetiQ Entrenamiento Personal', estado: 'activo', creado: Timestamp.now() })
   await db.doc('centros/centro-norte').set({ nombre: 'Centro Norte', estado: 'activo', creado: Timestamp.now() })
   await db.doc('pacientes/norte1').set({ nombre: 'Paciente de Centro Norte', entrenadorId: 'admin-otro', estado: 'activo', centroId: 'centro-norte' })
   for (const { uid, email, nombre, rol, pacienteId, superadmin, centroId = C } of CUENTAS) {

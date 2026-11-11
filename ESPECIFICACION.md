@@ -131,6 +131,10 @@ Un centro solo puede subir o borrar fotos de sus propios ejercicios. Para cargar
 centro (p. ej. el **centro de demo** con una muestra de Osteorubi): `scripts/copiar-catalogo.cjs`, que copia
 grupos, ejercicios con sus fotos (a carpeta propia), sistemas y volúmenes.
 
+**Centros actuales (11-nov-2026):** **Osteorubi** (Marcos, administrador; el catálogo completo) y **KinetiQ
+Entrenamiento Personal** (`kinetiq`, el del dueño de la app, para probar y hacer demos: muestra de 5 ejercicios por
+grupo copiada de Osteorubi y una copia de «Paciente de prueba»).
+
 **Superadministrador** (dueño de la app): campo `superadmin: true` en su usuario, que solo se pone a mano
 (consola o script; ningún cliente puede ponérselo). Ve el panel **Centros**: lista con recuentos (entrenadores,
 pacientes, ejercicios) y puede **suspender o reactivar** un centro (no el suyo). Nunca ve datos de pacientes de
