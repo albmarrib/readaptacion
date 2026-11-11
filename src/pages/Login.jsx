@@ -1,3 +1,4 @@
+import { EnlacesLegales } from './Legal'
 import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { GoogleAuthProvider, isSignInWithEmailLink, sendPasswordResetEmail, sendSignInLinkToEmail, signInWithEmailAndPassword, signInWithEmailLink, signInWithPopup } from 'firebase/auth'
@@ -117,6 +118,7 @@ export default function Login() {
         )}
         {enviado && <p className="rounded-xl bg-teal-50 p-3 text-center text-sm text-teal-900">{enviado}</p>}
         {error && <p role="alert" className="text-center text-sm text-red-600">{error}</p>}
+        <EnlacesLegales className="border-t border-slate-100 pt-4" />
       </div>
     </div>
   )

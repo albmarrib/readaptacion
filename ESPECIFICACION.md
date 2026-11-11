@@ -244,6 +244,7 @@ avisos/{id}
 - Firestore está en **región UE**. Cloud Storage por defecto está en **EE. UU.**: se usa solo para fotos genéricas del catálogo. **Cualquier archivo personal del paciente** (fotos, vídeos de técnica) irá a un **bucket adicional en la UE**.
 - Prever derecho de acceso, rectificación y borrado de un paciente.
 - Antes de usar la app con pacientes reales: revisión por un asesor de protección de datos (política de privacidad, contrato de encargado, registro de actividades).
+- **Documentos legales públicos** (borradores, 11-nov-2026) en `/legal`: aviso legal (LSSI art. 10), privacidad (RGPD arts. 13-14), cookies (solo técnicas, LSSI art. 22.2), condiciones del servicio para centros y contrato de encargo del tratamiento (RGPD art. 28). Papeles: el **centro** es responsable de los datos de sus pacientes; el **titular** de la app es encargado. Los datos del titular están en `src/legal/titular.js` (provisionales, se muestran como «pendiente»). Al registrarse, el centro aceptará condiciones y encargo, guardando fecha y `VERSION_LEGAL`.
 
 ## 9. Carga inicial de datos
 
