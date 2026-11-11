@@ -79,10 +79,10 @@ export default function Login() {
 
         {!firebaseConfigurado && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Falta la configuración de Firebase (archivo <code>.env</code>).</p>}
 
-        {(estado === 'sinPerfil' || estado === 'inactivo') ? (
+        {(estado === 'sinPerfil' || estado === 'inactivo' || estado === 'suspendido') ? (
           <div className="space-y-3 text-center">
             <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-              {estado === 'inactivo' ? 'Tu cuenta está desactivada.' : <>La cuenta <b>{usuario?.email}</b> no está dada de alta.</>}
+              {estado === 'suspendido' ? 'El acceso de tu centro está suspendido.' : estado === 'inactivo' ? 'Tu cuenta está desactivada.' : <>La cuenta <b>{usuario?.email}</b> no está dada de alta.</>}
               {' '}Contacta con tu entrenador o con el administrador.
             </p>
             <button className="btn-sec w-full" onClick={salir}>Usar otra cuenta</button>

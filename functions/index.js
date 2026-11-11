@@ -44,6 +44,8 @@ async function personalActivo(req) {
   if (!yo.exists || d.activo !== true || !['admin', 'entrenador'].includes(d.rol)) {
     throw new HttpsError('permission-denied', 'No tienes permiso para hacer esto.')
   }
+  const centro = d.centroId ? await getFirestore().doc(`centros/${d.centroId}`).get() : null
+  if (centro?.data()?.estado === 'suspendido') throw new HttpsError('permission-denied', 'Tu centro está suspendido.')
   return d
 }
 
@@ -73,6 +75,45 @@ async function fichaAutorizada(req) {
   }
   return { ref, pacienteId, ficha: snap.data() }
 }
+
+// Superadministrador (dueño de la app). Solo ve recuentos por centro, nunca datos de pacientes.
+async function superActivo(req) {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Inicia sesión.')
+  const d = (await getFirestore().doc(`usuarios/${req.auth.uid}`).get()).data()
+  if (!d || d.activo !== true || d.superadmin !== true) throw new HttpsError('permission-denied', 'Solo para el superadministrador.')
+  return d
+}
+
+// Lista de centros con recuentos (entrenadores, pacientes, ejercicios)
+exports.resumenCentros = onCall({ region: REGION }, async (req) => {
+  await superActivo(req)
+  const db = getFirestore()
+  const centros = await db.collection('centros').get()
+  const cuenta = async q => (await q.count().get()).data().count
+  return Promise.all(centros.docs.map(async c => {
+    const d = c.data()
+    const [entrenadores, pacientes, pacientesActivos, ejercicios] = await Promise.all([
+      cuenta(db.collection('usuarios').where('centroId', '==', c.id).where('rol', 'in', ['admin', 'entrenador'])),
+      cuenta(db.collection('pacientes').where('centroId', '==', c.id)),
+      cuenta(db.collection('pacientes').where('centroId', '==', c.id).where('estado', '==', 'activo')),
+      cuenta(db.collection('ejercicios').where('centroId', '==', c.id)),
+    ])
+    return { id: c.id, nombre: d.nombre, logo: d.logo ?? null, estado: d.estado ?? 'activo', creado: d.creado?.toMillis?.() ?? null, entrenadores, pacientes, pacientesActivos, ejercicios }
+  }))
+})
+
+// Suspender o reactivar un centro. No se puede suspender el propio (para no quedarse fuera).
+exports.cambiarEstadoCentro = onCall({ region: REGION }, async (req) => {
+  const yo = await superActivo(req)
+  const centroId = String(req.data?.centroId ?? '')
+  const estado = req.data?.estado
+  if (!['activo', 'suspendido'].includes(estado)) throw new HttpsError('invalid-argument', 'Estado no válido.')
+  if (estado === 'suspendido' && centroId === yo.centroId) throw new HttpsError('failed-precondition', 'No puedes suspender tu propio centro.')
+  const ref = getFirestore().doc(`centros/${centroId}`)
+  if (!(await ref.get()).exists) throw new HttpsError('not-found', 'No existe ese centro.')
+  await ref.update({ estado, estadoCambiado: FieldValue.serverTimestamp() })
+  return { ok: true }
+})
 
 // Alta de entrenadores: solo la puede hacer un administrador activo.
 exports.crearEntrenador = onCall({ region: REGION }, async (req) => {

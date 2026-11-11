@@ -16,8 +16,16 @@ service cloud.firestore {
       return request.auth != null
         && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
     }
-    function activo()       { return hayPerfil() && yo().activo == true; }
     function miCentro()     { return yo().centroId; }
+    // Un centro suspendido (por el superadministrador) deja a toda su gente sin acceso
+    function centroActivo() {
+      return !exists(/databases/$(database)/documents/centros/$(miCentro()))
+        || get(/databases/$(database)/documents/centros/$(miCentro())).data.estado != 'suspendido';
+    }
+    function activo()       { return hayPerfil() && yo().activo == true && centroActivo(); }
+    // Superadministrador (dueño de la app): ve la lista de centros, nunca los datos de sus pacientes.
+    // El campo superadmin solo se pone a mano en la consola o con un script.
+    function esSuper()      { return hayPerfil() && yo().activo == true && yo().superadmin == true; }
     function delCentro(d)   { return d.centroId == miCentro(); }
     function esAdmin()      { return activo() && yo().rol == 'admin'; }
     function esEntrenador() { return activo() && yo().rol == 'entrenador'; }
@@ -69,7 +77,8 @@ service cloud.firestore {
 
     // ---------- Centros (los crea y cambia una Cloud Function) ----------
     match /centros/{cid} {
-      allow read: if activo() && miCentro() == cid;
+      // Cada persona puede leer su centro (también si está suspendido, para avisarle); el superadministrador, todos
+      allow read: if (hayPerfil() && miCentro() == cid) || esSuper();
       allow write: if false;
     }
 

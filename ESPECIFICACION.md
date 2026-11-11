@@ -131,6 +131,11 @@ Un centro solo puede subir o borrar fotos de sus propios ejercicios. Para cargar
 centro (p. ej. el **centro de demo** con una muestra de Osteorubi): `scripts/copiar-catalogo.cjs`, que copia
 grupos, ejercicios con sus fotos (a carpeta propia), sistemas y volúmenes.
 
+**Superadministrador** (dueño de la app): campo `superadmin: true` en su usuario, que solo se pone a mano
+(consola o script; ningún cliente puede ponérselo). Ve el panel **Centros**: lista con recuentos (entrenadores,
+pacientes, ejercicios) y puede **suspender o reactivar** un centro (no el suyo). Nunca ve datos de pacientes de
+otros centros. Un centro suspendido deja a toda su gente sin acceso (reglas y funciones), sin borrar nada.
+
 Pruebas en local: `firebase emulators:start --project demo-readaptacion` (requiere Java) y
 `VITE_EMULADOR=1 npx vite`. Con el emulador la app usa un proyecto "demo-" y no puede tocar los datos reales.
 

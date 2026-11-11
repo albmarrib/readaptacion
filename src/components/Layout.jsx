@@ -7,14 +7,14 @@ import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
 import BienvenidaApp from './BienvenidaApp'
 import MarcoPaciente from './paciente/MarcoPaciente'
-import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, LogoCentro } from './Iconos'
+import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, IconoCentros, LogoCentro } from './Iconos'
 import { useCentro } from '../lib/centro'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
 const CLAVE = 'readaptacion.menuLateral'
 
 export default function Layout() {
-  const { perfil, esAdmin, esPersonal, salir } = useAuth()
+  const { perfil, esAdmin, esPersonal, esSuper, salir } = useAuth()
   const centro = useCentro(perfil?.centroId)
   const avisos = useAvisos(esPersonal ? perfil.uid : null)
   const sinLeer = (avisos ?? []).filter(a => !a.leido).length
@@ -31,6 +31,7 @@ export default function Layout() {
       ['/volumenes', 'Volúmenes', IconoVolumenes],
       ['/avisos', 'Avisos', IconoAvisos, sinLeer],
       ...(esAdmin ? [['/entrenadores', 'Equipo', IconoEntrenadores]] : []),
+      ...(esSuper ? [['/centros', 'Centros', IconoCentros]] : []),
     ]
     : [['/hoy', 'Hoy', IconoCasa], ['/mi-rutina', 'Rutina', IconoRutina], ['/mi-evolucion', 'Evolución', IconoEvolucion]]
 

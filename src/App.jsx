@@ -17,6 +17,7 @@ import Avisos from './pages/Avisos'
 import Perfil from './pages/Perfil'
 import ImpresionRutina from './pages/ImpresionRutina'
 import Evolucion from './pages/Evolucion'
+import Centros from './pages/Centros'
 import { lazy, Suspense } from 'react'
 const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
 
@@ -47,7 +48,7 @@ function Inicio() {
 }
 
 export default function App() {
-  const { esAdmin, esPersonal, esPaciente } = useAuth()
+  const { esAdmin, esPersonal, esPaciente, esSuper } = useAuth()
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />
+        <Route path="centros" element={<Solo cond={esSuper}><Centros /></Solo>} />
         <Route path="hoy" element={<Solo cond={esPaciente}><InicioPaciente /></Solo>} />
         <Route path="agenda" element={<Solo cond={esPaciente}><Agenda /></Solo>} />
         <Route path="mi-rutina" element={<Solo cond={esPaciente}><Rutina /></Solo>} />

@@ -17,8 +17,10 @@ const { getAuth } = reqF('firebase-admin/auth')
 // Cuentas de prueba (solo existen en el emulador de este ordenador)
 const CLAVE = 'prueba-local-123'
 const CUENTAS = [
-  { uid: 'admin-prueba', email: 'admin@prueba.test', nombre: 'Marcos (prueba)', rol: 'admin' },
+  { uid: 'admin-prueba', email: 'admin@prueba.test', nombre: 'Marcos (prueba)', rol: 'admin', superadmin: true },
   { uid: 'paciente-prueba', email: 'paciente@prueba.test', nombre: 'Ana García', rol: 'paciente', pacienteId: 'ana' },
+  // Otro centro, para ver el panel de centros y la separación de datos
+  { uid: 'admin-otro', email: 'otro@prueba.test', nombre: 'Laura (Centro Norte)', rol: 'admin', centroId: 'centro-norte' },
 ]
 
 const dia = d => { const f = new Date(); f.setHours(12, 0, 0, 0); f.setDate(f.getDate() + d); return Timestamp.fromDate(f) }
@@ -31,10 +33,12 @@ async function main() {
   await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/emulator/v1/projects/${P}/accounts`, { method: 'DELETE' })
 
   const C = 'osteorubi'
-  await db.doc(`centros/${C}`).set({ nombre: 'Osteorubi', logo: '/centros/osteorubi.jpg', estado: 'activo' })
-  for (const { uid, email, nombre, rol, pacienteId } of CUENTAS) {
+  await db.doc(`centros/${C}`).set({ nombre: 'Osteorubi', logo: '/centros/osteorubi.jpg', estado: 'activo', creado: Timestamp.now() })
+  await db.doc('centros/centro-norte').set({ nombre: 'Centro Norte', estado: 'activo', creado: Timestamp.now() })
+  await db.doc('pacientes/norte1').set({ nombre: 'Paciente de Centro Norte', entrenadorId: 'admin-otro', estado: 'activo', centroId: 'centro-norte' })
+  for (const { uid, email, nombre, rol, pacienteId, superadmin, centroId = C } of CUENTAS) {
     await auth.createUser({ uid, email, password: CLAVE, displayName: nombre, emailVerified: true })
-    await db.doc(`usuarios/${uid}`).set({ rol, nombre, email, activo: true, centroId: C, ...(rol === 'admin' ? { puedeEditarCatalogo: true } : { pacienteId }) })
+    await db.doc(`usuarios/${uid}`).set({ rol, nombre, email, activo: true, centroId, ...(rol === 'admin' ? { puedeEditarCatalogo: true } : { pacienteId }), ...(superadmin ? { superadmin: true } : {}) })
   }
 
   // Catálogo
