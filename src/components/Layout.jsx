@@ -7,7 +7,7 @@ import ChatFlotante from './ChatFlotante'
 import CuentaPaciente from './CuentaPaciente'
 import BienvenidaApp from './BienvenidaApp'
 import MarcoPaciente from './paciente/MarcoPaciente'
-import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, IconoCentros, LogoCentro } from './Iconos'
+import { Avatar, IconoCasa, IconoEvolucion, IconoAvisos, IconoCatalogo, IconoEntrenadores, IconoPacientes, IconoPanel, IconoRutina, IconoSalir, IconoVolumenes, IconoCentros, IconoTarjeta, LogoCentro } from './Iconos'
 import { useCentro } from '../lib/centro'
 
 const ROL = { admin: 'Administrador', entrenador: 'Entrenador', paciente: 'Paciente' }
@@ -30,7 +30,7 @@ export default function Layout() {
       ['/catalogo', 'Catálogo', IconoCatalogo],
       ['/volumenes', 'Volúmenes', IconoVolumenes],
       ['/avisos', 'Avisos', IconoAvisos, sinLeer],
-      ...(esAdmin ? [['/entrenadores', 'Equipo', IconoEntrenadores]] : []),
+      ...(esAdmin ? [['/entrenadores', 'Equipo', IconoEntrenadores], ['/suscripcion', 'Suscripción', IconoTarjeta]] : []),
       ...(esSuper ? [['/centros', 'Centros', IconoCentros]] : []),
     ]
     : [['/hoy', 'Hoy', IconoCasa], ['/mi-rutina', 'Rutina', IconoRutina], ['/mi-evolucion', 'Evolución', IconoEvolucion]]
@@ -105,7 +105,7 @@ export default function Layout() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-slate-200 bg-white/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur md:hidden">
-        {enlaces.map(movil)}
+        {enlaces.filter(([a]) => a !== "/suscripcion").map(movil)}
       </nav>
 
       {fotoAbierta && <CuentaPaciente onClose={() => setFotoAbierta(false)} />}

@@ -98,7 +98,7 @@ exports.resumenCentros = onCall({ region: REGION }, async (req) => {
       cuenta(db.collection('pacientes').where('centroId', '==', c.id).where('estado', '==', 'activo')),
       cuenta(db.collection('ejercicios').where('centroId', '==', c.id)),
     ])
-    return { id: c.id, nombre: d.nombre, logo: d.logo ?? null, estado: d.estado ?? 'activo', creado: d.creado?.toMillis?.() ?? null, plan: d.plan ?? null, pruebaHasta: d.pruebaHasta?.toMillis?.() ?? null, entrenadores, pacientes, pacientesActivos, ejercicios }
+    return { id: c.id, nombre: d.nombre, logo: d.logo ?? null, estado: d.estado ?? 'activo', creado: d.creado?.toMillis?.() ?? null, plan: d.plan ?? null, pruebaHasta: d.pruebaHasta?.toMillis?.() ?? null, pagoHasta: d.suscripcion?.finPeriodo?.toMillis?.() ?? null, entrenadores, pacientes, pacientesActivos, ejercicios }
   }))
 })
 
@@ -271,4 +271,97 @@ exports.nuevoMensaje = onDocumentCreated({ document: 'pacientes/{pid}/mensajes/{
   const p = paciente.data()
   if (delPaciente) await enviarPush(p.entrenadorId, { titulo: 'Mensaje nuevo', cuerpo: `${p.nombre} te ha escrito`, url: `/?chat=${pid}` })
   else await enviarPush(p.uid, { titulo: 'Mensaje de tu entrenador', cuerpo: 'Tienes un mensaje nuevo', url: '/?chat=1' })
+})
+
+// ───────────────────────── Suscripción con Stripe (SOLO MODO PRUEBA) ─────────────────────────
+// La clave se guarda como secreto de Firebase (STRIPE_SECRET_KEY), nunca en el repositorio.
+// Mientras no se decida empezar a cobrar, el servidor SOLO acepta claves de prueba (sk_test_…):
+// con una clave real se niega a funcionar. No hace falta webhook: el estado se sincroniza al
+// volver del pago, al abrir la página Suscripción y cada día.
+const { defineSecret } = require('firebase-functions/params')
+const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY')
+// Precio PROVISIONAL (se decidirá tras el estudio de mercado). Céntimos de euro, IVA aparte.
+const PRECIO = { centimos: 2900, intervalo: 'month', nombre: 'Entrenamiento Personal · Suscripción del centro' }
+
+function stripe() {
+  const clave = STRIPE_SECRET_KEY.value()
+  if (!clave?.startsWith('sk_test_')) throw new HttpsError('failed-precondition', 'Los pagos están en modo de prueba y falta una clave de prueba de Stripe.')
+  return new (require('stripe'))(clave)
+}
+
+// Administrador activo de su centro (aunque el centro esté suspendido: así puede pagar y reactivarlo)
+async function adminDeCentro(req) {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Inicia sesión.')
+  const d = (await getFirestore().doc(`usuarios/${req.auth.uid}`).get()).data()
+  if (!d || d.activo !== true || d.rol !== 'admin' || !d.centroId) throw new HttpsError('permission-denied', 'Solo el administrador del centro.')
+  return d
+}
+
+// Lleva a Firestore el estado de la suscripción de Stripe. Si el centro deja de pagar NO se
+// suspende solo: mientras estemos en pruebas lo decide el superadministrador desde Centros.
+async function guardarSuscripcion(centroId, sub) {
+  const item = sub.items?.data?.[0]
+  const fin = item?.current_period_end ?? sub.current_period_end
+  const alDia = ['active', 'trialing'].includes(sub.status)
+  await getFirestore().doc(`centros/${centroId}`).update({
+    plan: alDia ? 'pago' : sub.status === 'canceled' ? 'cancelado' : 'impago',
+    suscripcion: { id: sub.id, estado: sub.status, finPeriodo: fin ? Timestamp.fromMillis(fin * 1000) : null, cancelaAlFinal: sub.cancel_at_period_end === true, modoPrueba: sub.livemode === false, actualizada: FieldValue.serverTimestamp() },
+  })
+}
+
+// Abre el pago de Stripe (Checkout) para el centro de quien llama
+exports.crearPagoSuscripcion = onCall({ region: REGION, secrets: [STRIPE_SECRET_KEY] }, async (req) => {
+  const yo = await adminDeCentro(req)
+  const s = stripe()
+  const ref = getFirestore().doc(`centros/${yo.centroId}`)
+  const centro = (await ref.get()).data()
+  if (centro?.plan === 'pago') throw new HttpsError('already-exists', 'Tu centro ya tiene la suscripción activa.')
+  let cliente = centro?.stripeClienteId
+  if (!cliente) {
+    cliente = (await s.customers.create({ email: yo.email, name: centro?.nombre, metadata: { centroId: yo.centroId } })).id
+    await ref.update({ stripeClienteId: cliente })
+  }
+  const origen = /^https?:\/\/(localhost(:\d+)?|readaptacion-app\.web\.app|readaptacion-app\.firebaseapp\.com)$/.test(req.data?.origen ?? '') ? req.data.origen : 'https://readaptacion-app.web.app'
+  const sesion = await s.checkout.sessions.create({
+    mode: 'subscription', customer: cliente, locale: 'es',
+    line_items: [{ quantity: 1, price_data: { currency: 'eur', unit_amount: PRECIO.centimos, recurring: { interval: PRECIO.intervalo }, product_data: { name: PRECIO.nombre } } }],
+    client_reference_id: yo.centroId,
+    subscription_data: { metadata: { centroId: yo.centroId } },
+    success_url: `${origen}/suscripcion?pago={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origen}/suscripcion`,
+  })
+  return { url: sesion.url }
+})
+
+// Comprueba en Stripe el estado del centro de quien llama (al volver del pago o al abrir la página)
+exports.sincronizarSuscripcion = onCall({ region: REGION, secrets: [STRIPE_SECRET_KEY] }, async (req) => {
+  const yo = await adminDeCentro(req)
+  const s = stripe()
+  const centro = (await getFirestore().doc(`centros/${yo.centroId}`).get()).data()
+  if (!centro?.stripeClienteId) return { plan: centro?.plan ?? null }
+  const subs = await s.subscriptions.list({ customer: centro.stripeClienteId, status: 'all', limit: 1 })
+  if (subs.data[0]) await guardarSuscripcion(yo.centroId, subs.data[0])
+  return { ok: true }
+})
+
+// Portal de Stripe para cambiar la tarjeta, ver facturas o cancelar
+exports.portalSuscripcion = onCall({ region: REGION, secrets: [STRIPE_SECRET_KEY] }, async (req) => {
+  const yo = await adminDeCentro(req)
+  const centro = (await getFirestore().doc(`centros/${yo.centroId}`).get()).data()
+  if (!centro?.stripeClienteId) throw new HttpsError('failed-precondition', 'Tu centro aún no tiene suscripción.')
+  const origen = /^https?:\/\/(localhost(:\d+)?|readaptacion-app\.web\.app|readaptacion-app\.firebaseapp\.com)$/.test(req.data?.origen ?? '') ? req.data.origen : 'https://readaptacion-app.web.app'
+  const p = await stripe().billingPortal.sessions.create({ customer: centro.stripeClienteId, return_url: `${origen}/suscripcion`, locale: 'es' })
+  return { url: p.url }
+})
+
+// Cada día: sincroniza todas las suscripciones (renovaciones, impagos, cancelaciones)
+exports.revisarSuscripciones = onSchedule({ region: REGION, schedule: 'every day 06:00', timeZone: 'Europe/Madrid', secrets: [STRIPE_SECRET_KEY] }, async () => {
+  const s = stripe()
+  const centros = await getFirestore().collection('centros').where('stripeClienteId', '!=', null).get()
+  for (const c of centros.docs) {
+    try {
+      const subs = await s.subscriptions.list({ customer: c.data().stripeClienteId, status: 'all', limit: 1 })
+      if (subs.data[0]) await guardarSuscripcion(c.id, subs.data[0])
+    } catch (e) { console.error('suscripción', c.id, e.message) }
+  }
 })

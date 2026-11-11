@@ -19,6 +19,7 @@ import ImpresionRutina from './pages/ImpresionRutina'
 import Evolucion from './pages/Evolucion'
 import Centros from './pages/Centros'
 import Legal from './pages/Legal'
+import Suscripcion from './pages/Suscripcion'
 import Registro from './pages/Registro'
 import { lazy, Suspense } from 'react'
 const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />
         <Route path="entrenadores" element={<Solo cond={esAdmin}><Entrenadores /></Solo>} />
         <Route path="centros" element={<Solo cond={esSuper}><Centros /></Solo>} />
+        <Route path="suscripcion" element={<Solo cond={esAdmin}><Suscripcion /></Solo>} />
         <Route path="hoy" element={<Solo cond={esPaciente}><InicioPaciente /></Solo>} />
         <Route path="agenda" element={<Solo cond={esPaciente}><Agenda /></Solo>} />
         <Route path="mi-rutina" element={<Solo cond={esPaciente}><Rutina /></Solo>} />

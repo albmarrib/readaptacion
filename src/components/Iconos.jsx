@@ -20,6 +20,7 @@ export const IconoCerrar = p => <svg {...base} {...p}><path d="M18 6 6 18M6 6l12
 export const IconoPdf = p => <svg {...base} {...p}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M12 11v6M9.5 14.5 12 17l2.5-2.5" /></svg>
 export const IconoCentros = p => <svg {...base} {...p}><path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 21v-6h6v6" /><path d="M9 10h.01M15 10h.01" /></svg>
 export const IconoCasa = p => <svg {...base} {...p}><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z" /></svg>
+export const IconoTarjeta = p => <svg {...base} {...p}><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /><path d="M6 15h4" /></svg>
 export const IconoChevronIzq = p => <svg {...base} {...p}><path d="m15 18-6-6 6-6" /></svg>
 
 // Marca de la app: cuadrado con una mancuerna. variante "claro" para fondos oscuros.

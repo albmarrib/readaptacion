@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
@@ -29,6 +30,7 @@ export default function Perfil() {
   return (
     <div className="max-w-xl space-y-4">
       <EncabezadoPagina icono={IconoPacientes} color="teal" titulo="Mi perfil" subtitulo="Tus datos y tu foto" />
+      {perfil.rol === 'admin' && <Link to="/suscripcion" className="tarjeta flex items-center justify-between !p-4 hover:border-teal-300 md:hidden"><span className="font-medium">Suscripción del centro</span><span className="text-teal-700">→</span></Link>}
       <section className="tarjeta">
         <h2 className="tarjeta-titulo">Foto</h2>
         <div className="flex items-center gap-4">

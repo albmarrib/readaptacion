@@ -55,6 +55,9 @@ export default function Centros() {
                   <div className="text-xs text-slate-500">
                     Alta: {fecha(c.creado)}
                     {c.plan === 'prueba' && <span className={c.pruebaHasta < Date.now() ? 'text-rose-600' : ''}> · Prueba {c.pruebaHasta < Date.now() ? 'terminada el' : 'hasta el'} {fecha(c.pruebaHasta)}</span>}
+                    {c.plan === 'pago' && <span className="text-emerald-700"> · De pago hasta el {fecha(c.pagoHasta)}</span>}
+                    {c.plan === 'impago' && <span className="text-amber-700"> · Pago pendiente</span>}
+                    {c.plan === 'cancelado' && <span className="text-rose-600"> · Suscripción cancelada</span>}
                   </div>
                 </div>
                 <dl className="flex gap-5 text-center text-sm">
