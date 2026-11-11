@@ -98,7 +98,7 @@ exports.resumenCentros = onCall({ region: REGION }, async (req) => {
       cuenta(db.collection('pacientes').where('centroId', '==', c.id).where('estado', '==', 'activo')),
       cuenta(db.collection('ejercicios').where('centroId', '==', c.id)),
     ])
-    return { id: c.id, nombre: d.nombre, logo: d.logo ?? null, estado: d.estado ?? 'activo', creado: d.creado?.toMillis?.() ?? null, entrenadores, pacientes, pacientesActivos, ejercicios }
+    return { id: c.id, nombre: d.nombre, logo: d.logo ?? null, estado: d.estado ?? 'activo', creado: d.creado?.toMillis?.() ?? null, plan: d.plan ?? null, pruebaHasta: d.pruebaHasta?.toMillis?.() ?? null, entrenadores, pacientes, pacientesActivos, ejercicios }
   }))
 })
 
@@ -113,6 +113,48 @@ exports.cambiarEstadoCentro = onCall({ region: REGION }, async (req) => {
   if (!(await ref.get()).exists) throw new HttpsError('not-found', 'No existe ese centro.')
   await ref.update({ estado, estadoCambiado: FieldValue.serverTimestamp() })
   return { ok: true }
+})
+
+// Registro de un centro nuevo por su cuenta. Quien llama debe haber iniciado sesión con un correo
+// verificado (Google o enlace al correo) y no tener todavía perfil en la app. Se crea el centro
+// (vacío, con 30 días de prueba) y su perfil de administrador, guardando la aceptación de las
+// condiciones y del contrato de encargo (fecha del servidor + versión).
+// VERSION_LEGAL debe coincidir con src/legal/titular.js.
+const VERSION_LEGAL = '2026-11-borrador'
+const DIAS_PRUEBA = 30
+const slug = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+
+exports.registrarCentro = onCall({ region: REGION }, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'Inicia sesión.')
+  const email = String(req.auth.token.email ?? '').toLowerCase()
+  if (!email || req.auth.token.email_verified !== true) throw new HttpsError('failed-precondition', 'Entra con Google o con el enlace al correo para verificar tu correo.')
+  const nombreCentro = String(req.data?.nombreCentro ?? '').trim().replace(/\s+/g, ' ')
+  const nombre = String(req.data?.nombre ?? '').trim().replace(/\s+/g, ' ')
+  if (nombreCentro.length < 2 || nombreCentro.length > 80) throw new HttpsError('invalid-argument', 'Escribe el nombre del centro (de 2 a 80 caracteres).')
+  if (nombre.length < 2 || nombre.length > 80) throw new HttpsError('invalid-argument', 'Escribe tu nombre.')
+  if (req.data?.acepta !== true || req.data?.version !== VERSION_LEGAL) throw new HttpsError('failed-precondition', 'Tienes que aceptar las condiciones y el contrato de encargo vigentes.')
+
+  const db = getFirestore()
+  const uRef = db.doc(`usuarios/${req.auth.uid}`)
+  const base = slug(nombreCentro) || 'centro'
+  return db.runTransaction(async t => {
+    if ((await t.get(uRef)).exists) throw new HttpsError('already-exists', 'Esta cuenta ya pertenece a un centro.')
+    // Id legible y único: nombre del centro, con un sufijo si ya existe
+    let id = base
+    for (let i = 0; (await t.get(db.doc(`centros/${id}`))).exists; i++) {
+      if (i > 4) throw new HttpsError('aborted', 'Inténtalo de nuevo.')
+      id = `${base}-${crypto.randomBytes(2).toString('hex')}`
+    }
+    const ahora = Timestamp.now()
+    t.create(db.doc(`centros/${id}`), {
+      nombre: nombreCentro, estado: 'activo', creado: FieldValue.serverTimestamp(),
+      plan: 'prueba', pruebaHasta: Timestamp.fromMillis(ahora.toMillis() + DIAS_PRUEBA * 864e5),
+      titularUid: req.auth.uid,
+      aceptacion: { version: VERSION_LEGAL, fecha: FieldValue.serverTimestamp(), uid: req.auth.uid, email, nombre },
+    })
+    t.create(uRef, { rol: 'admin', nombre, email, activo: true, centroId: id, puedeEditarCatalogo: true })
+    return { centroId: id }
+  })
 })
 
 // Alta de entrenadores: solo la puede hacer un administrador activo.

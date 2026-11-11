@@ -1,6 +1,7 @@
 import { EnlacesLegales } from './Legal'
 import { useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { MARCA_REGISTRO } from './Registro'
 import { GoogleAuthProvider, isSignInWithEmailLink, sendPasswordResetEmail, sendSignInLinkToEmail, signInWithEmailAndPassword, signInWithEmailLink, signInWithPopup } from 'firebase/auth'
 import { auth, firebaseConfigurado } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
@@ -49,6 +50,10 @@ export default function Login() {
   }, [])
 
   if (estado === 'ok') return <Navigate to="/" replace />
+  // Venía de «Registra tu centro» y ya se ha identificado: vuelve al paso 2
+  let registrando = false
+  try { registrando = localStorage.getItem(MARCA_REGISTRO) === '1' } catch { /* sin almacenamiento */ }
+  if (estado === 'sinPerfil' && registrando) return <Navigate to="/registro" replace />
 
   const ejecutar = async fn => {
     setError(''); setEnviado(''); setOcupado(true)
@@ -86,6 +91,7 @@ export default function Login() {
               {estado === 'suspendido' ? 'El acceso de tu centro está suspendido.' : estado === 'inactivo' ? 'Tu cuenta está desactivada.' : <>La cuenta <b>{usuario?.email}</b> no está dada de alta.</>}
               {' '}Contacta con tu entrenador o con el administrador.
             </p>
+            {estado === 'sinPerfil' && <Link to="/registro" className="btn w-full">Registrar un centro nuevo</Link>}
             <button className="btn-sec w-full" onClick={salir}>Usar otra cuenta</button>
           </div>
         ) : (
@@ -118,6 +124,7 @@ export default function Login() {
         )}
         {enviado && <p className="rounded-xl bg-teal-50 p-3 text-center text-sm text-teal-900">{enviado}</p>}
         {error && <p role="alert" className="text-center text-sm text-red-600">{error}</p>}
+        {estado !== 'sinPerfil' && <p className="text-center text-sm text-slate-500">¿Tienes un centro? <Link to="/registro" className="font-medium text-teal-700 hover:underline">Pruébalo gratis 30 días</Link></p>}
         <EnlacesLegales className="border-t border-slate-100 pt-4" />
       </div>
     </div>

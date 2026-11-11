@@ -52,7 +52,10 @@ export default function Centros() {
                     {c.nombre}
                     {mio && <span className="ml-2 rounded-full bg-teal-100 px-2 py-0.5 text-xs text-teal-800">Tu centro</span>}
                   </div>
-                  <div className="text-xs text-slate-500">Alta: {fecha(c.creado)}</div>
+                  <div className="text-xs text-slate-500">
+                    Alta: {fecha(c.creado)}
+                    {c.plan === 'prueba' && <span className={c.pruebaHasta < Date.now() ? 'text-rose-600' : ''}> · Prueba {c.pruebaHasta < Date.now() ? 'terminada el' : 'hasta el'} {fecha(c.pruebaHasta)}</span>}
+                  </div>
                 </div>
                 <dl className="flex gap-5 text-center text-sm">
                   <div><dt className="text-xs text-slate-500">Entrenadores</dt><dd className="font-semibold">{c.entrenadores}</dd></div>

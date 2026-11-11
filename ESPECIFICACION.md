@@ -140,12 +140,20 @@ grupo copiada de Osteorubi y una copia de «Paciente de prueba»).
 pacientes, ejercicios) y puede **suspender o reactivar** un centro (no el suyo). Nunca ve datos de pacientes de
 otros centros. Un centro suspendido deja a toda su gente sin acceso (reglas y funciones), sin borrar nada.
 
+**Registro de centros nuevos** (`/registro`, público): 1) la persona se identifica con Google o con enlace al
+correo (correo verificado); 2) escribe el nombre del centro y el suyo y acepta condiciones + contrato de encargo.
+La función `registrarCentro` crea el centro (catálogo vacío, `plan: "prueba"`, 30 días) y su perfil de
+administrador, y guarda la aceptación (versión + fecha del servidor). Una cuenta con perfil no puede registrar otro
+centro. Al terminar la prueba aún no se bloquea nada: eso llegará con Stripe.
+
 Pruebas en local: `firebase emulators:start --project demo-readaptacion` (requiere Java) y
 `VITE_EMULADOR=1 npx vite`. Con el emulador la app usa un proyecto "demo-" y no puede tocar los datos reales.
 
 ```
 centros/{cid}                       // lo crea/cambia solo una Cloud Function o un script
   nombre, logo, estado: "activo" | "suspendido", creado
+  plan: "prueba", pruebaHasta, titularUid           // centros registrados por su cuenta
+  aceptacion: { version, fecha, uid, email, nombre }  // condiciones + contrato de encargo aceptados
 
 usuarios/{uid}
   rol: "admin" | "entrenador" | "paciente"
