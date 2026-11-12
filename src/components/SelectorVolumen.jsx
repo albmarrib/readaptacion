@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
-import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen, ordenVolumenes } from '../lib/volumen'
+import { describirLinea, formatLineas, nombreVolumen, ordenVolumenes } from '../lib/volumen'
 import EditorVolumen from './EditorVolumen'
 import Pestanas from './Pestanas'
 import Modal from './Modal'
@@ -36,21 +36,16 @@ export default function SelectorVolumen({ actual, onClose, onElegir, onQuitar })
           </>
         )}
 
-        {agruparPorSistema(filtrados, sistemas).map(({ sistema, items }) => (
-          <section key={sistema.id}>
-            <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">{sistema.nombre}</h3>
-            <ul className="space-y-2">
-              {items.map(v => (
+        <ul className="space-y-2">
+              {filtrados.map(v => (
                 <li key={v.id}>
                   <button onClick={() => onElegir(v)} title={v.lineas.map(describirLinea).join('\n')} className={`flex h-11 w-full items-center justify-between gap-3 rounded-lg border px-3 text-left transition hover:border-teal-400 ${v.id === actual ? 'border-teal-500 bg-teal-50' : 'border-slate-200 bg-white'}`}>
                     <span className="min-w-0 truncate text-[13px] font-medium"><span className="font-mono">{nombreVolumen(v)}</span>{v.nombre && <span className="ml-2 font-mono text-xs text-slate-500">{formatLineas(v.lineas)}</span>}</span>
-                    <span className="insignia shrink-0 bg-teal-50 text-teal-700">{v.seriesTotales} series</span>
+                    <span className="flex shrink-0 items-center gap-2">{sistemaId === 'todos' && <span className="text-[11px] text-slate-400">{sistemas.find(s => s.id === v.sistemaId)?.nombre ?? 'Sin sistema'}</span>}<span className="insignia bg-teal-50 text-teal-700">{v.seriesTotales} series</span></span>
                   </button>
                 </li>
               ))}
-            </ul>
-          </section>
-        ))}
+        </ul>
         {volumenes.length > 0 && filtrados.length === 0 && <p className="text-center text-sm text-slate-500">Ningún volumen coincide.</p>}
         {volumenes.length === 0 && <p className="text-center text-sm text-slate-500">El catálogo de volúmenes está vacío. Crea el primero.</p>}
         {onQuitar && <button className="btn-sec w-full" onClick={onQuitar}>Quitar el volumen de este ejercicio</button>}
