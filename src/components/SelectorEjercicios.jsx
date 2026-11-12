@@ -7,10 +7,11 @@ import { tituloGrupo } from '../lib/volumen'
 import Foto from './Foto'
 import Modal from './Modal'
 
+// Copia en memoria para mostrar la lista al instante; siempre se vuelve a pedir al servidor,
+// para que los ejercicios añadidos en el catálogo aparezcan sin tener que cerrar la app.
 const cache = new Map() // grupoId -> ejercicios
 
 async function cargar(grupoId) {
-  if (cache.has(grupoId)) return cache.get(grupoId)
   const s = await getDocs(deCentro('ejercicios', where('grupoId', '==', grupoId)))
   const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.orden - b.orden)
   cache.set(grupoId, lista)
@@ -30,7 +31,9 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
 
   useEffect(() => {
     let vivo = true
-    setCargando(true); setBusqueda(''); setVisibles(POR_PAGINA)
+    setBusqueda(''); setVisibles(POR_PAGINA)
+    const guardada = cache.get(grupoId)
+    setLista(guardada ?? []); setCargando(!guardada)
     cargar(grupoId).then(l => { if (vivo) { setLista(l); setCargando(false) } }).catch(() => vivo && setCargando(false))
     return () => { vivo = false }
   }, [grupoId])
