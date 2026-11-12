@@ -82,3 +82,25 @@ export function agruparPorSistema(volumenes, sistemas) {
   if (huerfanos.length) grupos.push({ sistema: { id: '?', nombre: 'Sin sistema' }, items: huerfanos })
   return grupos
 }
+
+// Orden de los volúmenes: por las series de la primera línea (1, 2, 3…), luego por sus
+// repeticiones (números antes que textos), luego por las líneas siguientes y por último por nombre.
+const claveTramo = t => (typeof t === 'number' ? [0, t, ''] : [1, 0, String(t)])
+function compararLineas(a = [], b = []) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const la = a[i], lb = b[i]
+    if (!la || !lb) return la ? 1 : -1
+    if (la.series !== lb.series) return la.series - lb.series
+    for (let j = 0; j < Math.max(la.tramos.length, lb.tramos.length); j++) {
+      if (la.tramos[j] == null || lb.tramos[j] == null) return la.tramos[j] == null ? -1 : 1
+      const [ta, na, sa] = claveTramo(la.tramos[j]), [tb, nb, sb] = claveTramo(lb.tramos[j])
+      if (ta !== tb) return ta - tb
+      if (na !== nb) return na - nb
+      const c = sa.localeCompare(sb, 'es', { numeric: true })
+      if (c) return c
+    }
+  }
+  return 0
+}
+export const ordenVolumenes = (a, b) =>
+  compararLineas(a.lineas, b.lineas) || nombreVolumen(a).localeCompare(nombreVolumen(b), 'es', { numeric: true })

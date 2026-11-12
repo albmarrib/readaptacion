@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
-import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
+import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen, ordenVolumenes } from '../lib/volumen'
 import EditorVolumen from './EditorVolumen'
 import Pestanas from './Pestanas'
 import Modal from './Modal'
@@ -19,7 +19,7 @@ export default function SelectorVolumen({ actual, onClose, onElegir, onQuitar })
     return (volumenes ?? [])
       .filter(v => sistemaId === 'todos' || v.sistemaId === sistemaId)
       .filter(v => !q || normalizar(`${v.nombre ?? ''} ${formatLineas(v.lineas)}`).includes(q))
-      .sort((a, b) => nombreVolumen(a).localeCompare(nombreVolumen(b), 'es', { numeric: true }))
+      .sort(ordenVolumenes)
   }, [volumenes, sistemaId, busqueda])
 
   if (!sistemas || !volumenes) return <Modal titulo="Volumen" onClose={onClose}><p className="text-slate-500">Cargando…</p></Modal>

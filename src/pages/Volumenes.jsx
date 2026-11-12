@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSistemas, useVolumenes } from '../lib/datos'
 import { normalizar } from '../lib/util'
-import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '../lib/volumen'
+import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen, ordenVolumenes } from '../lib/volumen'
 
 const describirVolumen = v => v.lineas.map(describirLinea).join('\n')
 import EditorVolumen from '../components/EditorVolumen'
@@ -22,7 +22,7 @@ export default function Volumenes() {
     return (volumenes ?? [])
       .filter(v => sistemaId === 'todos' || v.sistemaId === sistemaId)
       .filter(v => !q || normalizar(`${v.nombre ?? ''} ${formatLineas(v.lineas)} ${v.observaciones ?? ''}`).includes(q))
-      .sort((a, b) => nombreVolumen(a).localeCompare(nombreVolumen(b), 'es', { numeric: true }))
+      .sort(ordenVolumenes)
   }, [volumenes, sistemaId, busqueda])
 
   if (!sistemas || !volumenes) return <p className="text-slate-500">Cargando…</p>
