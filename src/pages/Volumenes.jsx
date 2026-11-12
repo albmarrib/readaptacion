@@ -31,7 +31,7 @@ export default function Volumenes() {
     <div className="space-y-4">
       <EncabezadoPagina icono={IconoVolumenes} color="violet" titulo="Volúmenes" subtitulo="Series y repeticiones reutilizables en las rutinas (p. ej. 3*10)">
         <div className="flex gap-2">
-          <button className="btn-sec" onClick={() => setGestion(true)}>Sistemas</button>
+          <button className="btn-sec" onClick={() => setGestion(true)} title="Añadir, renombrar o borrar los sistemas de entrenamiento">Editar sistemas de entrenamiento</button>
           <button className="btn" onClick={() => setEditor({})}>+ Nuevo volumen</button>
         </div>
       </EncabezadoPagina>
