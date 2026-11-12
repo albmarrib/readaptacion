@@ -5,6 +5,7 @@ import { agruparPorSistema, describirLinea, formatLineas, nombreVolumen } from '
 
 const describirVolumen = v => v.lineas.map(describirLinea).join('\n')
 import EditorVolumen from '../components/EditorVolumen'
+import GestionSistemas from '../components/GestionSistemas'
 import { EncabezadoPagina, IconoVolumenes } from '../components/Iconos'
 import Pestanas from '../components/Pestanas'
 
@@ -14,6 +15,7 @@ export default function Volumenes() {
   const [sistemaId, setSistemaId] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
   const [editor, setEditor] = useState(null) // { volumen? } | null
+  const [gestion, setGestion] = useState(false)
 
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda.trim())
@@ -28,7 +30,10 @@ export default function Volumenes() {
   return (
     <div className="space-y-4">
       <EncabezadoPagina icono={IconoVolumenes} color="violet" titulo="Volúmenes" subtitulo="Series y repeticiones reutilizables en las rutinas (p. ej. 3*10)">
-        <button className="btn" onClick={() => setEditor({})}>+ Nuevo volumen</button>
+        <div className="flex gap-2">
+          <button className="btn-sec" onClick={() => setGestion(true)}>Sistemas</button>
+          <button className="btn" onClick={() => setEditor({})}>+ Nuevo volumen</button>
+        </div>
       </EncabezadoPagina>
 
       {volumenes.length > 0 && (
@@ -45,7 +50,7 @@ export default function Volumenes() {
           {agruparPorSistema(filtrados, sistemas).map(({ sistema, items }) => (
             <section key={sistema.id}>
               <h2 className="mb-2 flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                {sistema.nombre} <span className="text-xs font-normal normal-case text-slate-400">{items.length} volumen{items.length === 1 ? '' : 'es'}</span>
+                {sistema.nombre} <span className="text-xs font-normal normal-case text-slate-400">{items.length} {items.length === 1 ? 'volumen' : 'volúmenes'}</span>
               </h2>
               <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
                 {items.map(v => (
@@ -64,6 +69,7 @@ export default function Volumenes() {
         </div>
       )}
 
+      {gestion && <GestionSistemas sistemas={sistemas} volumenes={volumenes} onClose={() => { setGestion(false); if (!sistemas.some(s => s.id === sistemaId)) setSistemaId('todos') }} />}
       {editor && (
         <EditorVolumen volumen={editor.volumen} sistemas={sistemas} onClose={() => setEditor(null)}
           onGuardado={() => setEditor(null)} onBorrado={() => setEditor(null)} />
