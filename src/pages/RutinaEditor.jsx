@@ -108,6 +108,24 @@ export default function RutinaEditor() {
     setSelector(false)
   }
 
+  // Copia los grupos, ejercicios, volúmenes y observaciones del día activo en todos los demás días
+  // (cada día conserva su día de la semana). Cada copia es independiente: luego se puede cambiar.
+  const replicarDia = () => {
+    const origen = dias[diaActivo]
+    const conEjercicios = dias.map((d, i) => i !== diaActivo && d.ejercicios.length ? i + 1 : null).filter(Boolean)
+    const pregunta = conEjercicios.length
+      ? `Los días ${conEjercicios.join(', ')} ya tienen ejercicios y se sustituirán por los del día ${diaActivo + 1}. ¿Continuar?`
+      : `Se copiarán los ejercicios del día ${diaActivo + 1} (con sus volúmenes) en los demás días. ¿Continuar?`
+    if (!window.confirm(pregunta)) return
+    setDias(ds => ds.map((d, i) => i === diaActivo ? d : {
+      ...d,
+      gruposIds: [...origen.gruposIds],
+      ejercicios: origen.ejercicios.map(({ pesos, pesosActualizado, ...e }) => ({ ...e, clave: crypto.randomUUID(), pesos: {} })), // eslint-disable-line no-unused-vars
+    }))
+    setSucio(true)
+    setAviso(`Día ${diaActivo + 1} replicado en ${dias.length === 2 ? 'el otro día' : `los otros ${dias.length - 1} días`}. Recuerda guardar.`)
+  }
+
   const quitar = clave => cambiarDia(diaActivo, d => ({ ...d, ejercicios: d.ejercicios.filter(e => e.clave !== clave) }))
   const mover = (clave, delta) => cambiarDia(diaActivo, d => {
     const i = d.ejercicios.findIndex(e => e.clave === clave), j = i + delta
@@ -379,6 +397,11 @@ export default function RutinaEditor() {
         </ul>
 
         {editable && <button className="btn-sec w-full" disabled={!dia.gruposIds.length} onClick={() => setSelector(true)}>+ Añadir ejercicios</button>}
+        {editable && dias.length > 1 && dia.ejercicios.length > 0 && (
+          <button className="btn-sec mt-2 w-full" onClick={replicarDia}>
+            Replicar el día {diaActivo + 1} en {dias.length === 2 ? 'el otro día' : `los ${dias.length - 1} días restantes`}
+          </button>
+        )}
       </section>
 
       {!nueva && !editable && <SeguimientoRutina paciente={paciente} rutina={{ ...meta }} rid={rid} onCerrada={() => cambiarEstadoLocal('cerrada')} onDuplicar={duplicar} duplicando={duplicando} />}

@@ -65,7 +65,7 @@ export default function Catalogo() {
 
   return (
     <div className="space-y-4">
-      <EncabezadoPagina icono={IconoCatalogo} color="sky" titulo="Catálogo de ejercicios" subtitulo={grupo ? `${grupo.nombre} · ${lista.length} ejercicios` : ''}>
+      <EncabezadoPagina icono={IconoCatalogo} color="sky" titulo="Biblioteca de Ejercicios" subtitulo={grupo ? `${grupo.nombre} · ${lista.length} ejercicios` : ''}>
         {puedeEditarCatalogo && <>
           <button className="btn-sec" onClick={() => setEditorGrupo({})}>+ Grupo</button>
           <button className="btn" onClick={() => setEditor({})} disabled={!grupos.length}>+ Ejercicio</button>

@@ -29,8 +29,8 @@ export default function Layout() {
   const enlaces = esPersonal
     ? [
       ['/pacientes', 'Pacientes', IconoPacientes],
-      ['/catalogo', 'Catálogo', IconoCatalogo],
-      ['/volumenes', 'Volúmenes', IconoVolumenes],
+      ['/catalogo', 'Biblioteca', IconoCatalogo],
+      ['/volumenes', 'Entrenamiento', IconoVolumenes],
       ['/avisos', 'Avisos', IconoAvisos, sinLeer],
       ...(esAdmin ? [['/entrenadores', 'Equipo', IconoEntrenadores], ['/suscripcion', 'Suscripción', IconoTarjeta]] : []),
       ...(esSuper ? [['/centros', 'Centros', IconoCentros, sinPagar.length]] : []),
