@@ -94,7 +94,7 @@ Una rutina pertenece a un paciente, dentro de una **temporada**.
 
 ### 4.5 bis Esfuerzo percibido y dolor (16-nov-2026)
 
-Al pulsar «Terminar» el paciente puede indicar (opcional) el esfuerzo percibido (1-10) y si le ha dolido algo: toca la zona en un dibujo anatómico (frente y espalda, mujer u hombre, izquierda y derecha) y su intensidad (0-10), con una nota. El entrenador lo ve en **Evolución** (resúmenes, mapa del dolor, gráfica por sesión, zonas y comentarios) y recibe un **aviso** (, función ) si alguna zona llega a 7 o más. El entrenador puede desactivar las preguntas por paciente (; por defecto, activadas). Es un dato de salud: lo cubre el consentimiento del paciente.
+Al pulsar «Terminar» el paciente puede indicar (opcional) el esfuerzo percibido (1-10) y si le ha dolido algo: toca la zona en un dibujo anatómico (frente y espalda, mujer u hombre, izquierda y derecha) y su intensidad (0-10), con una nota. El entrenador lo ve en **Evolución** (resúmenes, mapa del dolor, gráfica por sesión, zonas y comentarios) y recibe un **aviso** (`tipo: dolor_alto`, función `dolorAlto`) si alguna zona llega a 7 o más. El entrenador puede desactivar las preguntas por paciente (`pacientes.preguntarSensaciones: false`; por defecto, activadas). Es un dato de salud: lo cubre el consentimiento del paciente.
 
 ### 4.6 Avisos y seguimiento
 - Al vencer la duración de una rutina activa, el sistema avisa al entrenador (aviso dentro de la app + correo). La rutina pasa a `pendiente`.
