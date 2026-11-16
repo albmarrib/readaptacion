@@ -61,8 +61,10 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
             ))}
           </div>
         )}
-        <input className="input" type="search" autoFocus placeholder="Buscar ejercicio…" value={busqueda} onChange={e => { setBusqueda(e.target.value); setVisibles(POR_PAGINA) }} />
-        <FiltroMaterial ejercicios={lista} valor={material} onChange={m => { setMaterial(m); setVisibles(POR_PAGINA) }} />
+        <div className="flex gap-2">
+          <input className="input min-w-0 flex-1" type="search" autoFocus placeholder="Buscar ejercicio…" value={busqueda} onChange={e => { setBusqueda(e.target.value); setVisibles(POR_PAGINA) }} />
+          <FiltroMaterial ejercicios={lista} valor={material} onChange={m => { setMaterial(m); setVisibles(POR_PAGINA) }} className="w-40 sm:w-52" />
+        </div>
         <p className="text-sm text-slate-500">{cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}`}</p>
 
         <ul className="grid gap-2 sm:grid-cols-2">

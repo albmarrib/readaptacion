@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, where, writeBatch } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getCountFromServer, getDoc, getDocs, onSnapshot, query, setDoc, where, writeBatch } from 'firebase/firestore'
 import { deleteObject, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
@@ -8,7 +8,6 @@ import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import Foto from '../components/Foto'
 import Modal from '../components/Modal'
 import { EncabezadoPagina, IconoCatalogo } from '../components/Iconos'
-import Pestanas from '../components/Pestanas'
 import { tituloGrupo } from '../lib/volumen'
 import { MATERIALES, cumpleMaterial, detectarMaterial, nombreMaterial } from '../lib/material'
 import FiltroMaterial from '../components/FiltroMaterial'
@@ -17,6 +16,26 @@ const POR_PAGINA = 60
 
 // El nombre de una celda puede tener varias líneas: la primera es el título, el resto detalle
 const lineas = nombre => nombre.split('\n').filter(Boolean)
+
+// Apartados de la lista de grupos, deducidos del nombre (no se guarda nada nuevo):
+// «PECTORAL ANALITICO» → Analíticos / «Pectoral»; «PECTORAL BASICOS» → Básicos / «Pectoral».
+const APARTADOS = [
+  { nombre: 'Analíticos', patron: /\s+anal[ií]tic[oa]s?$/i },
+  { nombre: 'Básicos', patron: /\s+b[aá]sic[oa]s?$/i },
+]
+function agruparPorApartado(grupos) {
+  const salida = []
+  for (const g of grupos) {
+    const ap = APARTADOS.find(a => a.patron.test(g.nombre.trim()))
+    const nombre = ap?.nombre ?? 'Generales'
+    const corto = tituloGrupo(ap ? g.nombre.trim().replace(ap.patron, '') : g.nombre.trim())
+    let sec = salida.find(s => s.nombre === nombre)
+    if (!sec) salida.push(sec = { nombre, items: [] })
+    sec.items.push({ ...g, corto })
+  }
+  const orden = ['Generales', 'Analíticos', 'Básicos']
+  return salida.sort((a, b) => orden.indexOf(a.nombre) - orden.indexOf(b.nombre))
+}
 
 export default function Catalogo() {
   const { puedeEditarCatalogo } = useAuth()
@@ -59,6 +78,19 @@ export default function Catalogo() {
     return lista.filter(e => (!q || normalizar(e.nombre).includes(q)) && cumpleMaterial(e, material))
   }, [lista, busqueda, material])
   const grupo = grupos.find(g => g.id === grupoId)
+  const apartados = useMemo(() => agruparPorApartado(grupos), [grupos])
+
+  // Número de ejercicios de cada grupo (consultas de recuento: no descargan los ejercicios)
+  const [cuentas, setCuentas] = useState({})
+  const claveGrupos = grupos.map(g => g.id).join('|')
+  useEffect(() => {
+    let vivo = true
+    Promise.all(grupos.map(async g => [g.id, (await getCountFromServer(deCentro('ejercicios', where('grupoId', '==', g.id)))).data().count]))
+      .then(l => { if (vivo) setCuentas(Object.fromEntries(l)) }).catch(() => {})
+    return () => { vivo = false }
+  }, [claveGrupos]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Al añadir o borrar ejercicios, el recuento del grupo cargado se actualiza con la lista
+  useEffect(() => { if (grupoId && porGrupo[grupoId]) setCuentas(c => ({ ...c, [grupoId]: porGrupo[grupoId].length })) }, [grupoId, porGrupo])
 
   const alGuardar = async (gidAnterior, gidNuevo) => {
     setEditor(null); setDetalle(null)
@@ -68,7 +100,7 @@ export default function Catalogo() {
 
   return (
     <div className="space-y-4">
-      <EncabezadoPagina icono={IconoCatalogo} color="sky" titulo="Biblioteca de Ejercicios" subtitulo={grupo ? `${grupo.nombre} · ${lista.length} ejercicios` : ''}>
+      <EncabezadoPagina icono={IconoCatalogo} color="sky" titulo="Biblioteca de Ejercicios" subtitulo={grupos.length ? `${Object.values(cuentas).reduce((s, n) => s + n, 0).toLocaleString('es-ES')} ejercicios en ${grupos.length} grupos` : ''}>
         {puedeEditarCatalogo && <>
           <button className="btn-sec" onClick={() => setEditorGrupo({})}>+ Grupo</button>
           <button className="btn" onClick={() => setEditor({})} disabled={!grupos.length}>+ Ejercicio</button>
@@ -77,39 +109,83 @@ export default function Catalogo() {
 
       {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <Pestanas items={grupos.map(g => ({ id: g.id, etiqueta: tituloGrupo(g.nombre) }))} activo={grupoId} onChange={setGrupoId} />
+      <div className="md:grid md:grid-cols-[14rem_minmax(0,1fr)] md:gap-5">
+        {/* Ordenador: lista lateral de grupos, por apartados */}
+        <nav className="tarjeta hidden self-start !p-2 md:sticky md:top-4 md:block" aria-label="Grupos musculares">
+          {apartados.map(({ nombre, items }) => (
+            <div key={nombre} className="mb-2 last:mb-0">
+              {apartados.length > 1 && <p className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">{nombre}</p>}
+              <ul>
+                {items.map(g => (
+                  <li key={g.id}>
+                    <button onClick={() => setGrupoId(g.id)} aria-current={g.id === grupoId ? 'true' : undefined}
+                      className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition ${g.id === grupoId ? 'bg-teal-50 font-medium text-teal-900' : 'text-slate-700 hover:bg-slate-50'}`}>
+                      <span className="truncate">{g.corto}</span>
+                      <span className={`text-xs tabular-nums ${g.id === grupoId ? 'text-teal-700' : 'text-slate-400'}`}>{cuentas[g.id] ?? ''}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
-      <div className="flex items-center gap-2">
-        <input className="input" type="search" placeholder={`Buscar en ${grupo?.nombre ?? 'el grupo'}…`} value={busqueda} onChange={e => setBusqueda(e.target.value)} />
-        {puedeEditarCatalogo && grupo && <button className="btn-sec shrink-0" onClick={() => setEditorGrupo({ grupo })}>Editar grupo</button>}
+        <div className="min-w-0 space-y-3">
+          {/* Móvil: el grupo se elige con un desplegable */}
+          <label className="block md:hidden">
+            <span className="sr-only">Grupo muscular</span>
+            <select className="input font-medium" value={grupoId ?? ''} onChange={e => setGrupoId(e.target.value)}>
+              {apartados.map(({ nombre, items }) => (
+                <optgroup key={nombre} label={nombre}>
+                  {items.map(g => <option key={g.id} value={g.id}>{g.corto}{cuentas[g.id] != null ? ` (${cuentas[g.id]})` : ''}</option>)}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+
+          <div className="hidden items-baseline justify-between gap-3 md:flex">
+            <h2 className="text-lg font-semibold text-slate-900">{grupo ? tituloGrupo(grupo.nombre) : ''}</h2>
+            {puedeEditarCatalogo && grupo && <button className="text-sm font-medium text-teal-700 hover:underline" onClick={() => setEditorGrupo({ grupo })}>Editar grupo</button>}
+          </div>
+
+          <div className="flex gap-2">
+            <input className="input min-w-0 flex-1" type="search" placeholder="Buscar ejercicio…" value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+            <FiltroMaterial ejercicios={lista} valor={material} onChange={setMaterial} className="w-40 sm:w-52" />
+          </div>
+
+          <div className="flex min-h-6 flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
+            <span>{cargando ? 'Cargando…' : busqueda || material ? `${filtrados.length} de ${lista.length} ejercicios` : `${lista.length} ejercicios`}</span>
+            {(busqueda || material) && <button className="font-medium text-teal-700 hover:underline" onClick={() => { setBusqueda(''); setMaterial(null) }}>Quitar filtros</button>}
+            {puedeEditarCatalogo && grupo && <button className="font-medium text-teal-700 hover:underline md:hidden" onClick={() => setEditorGrupo({ grupo })}>Editar grupo</button>}
+          </div>
+
+          <ul className="grid gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
+            {filtrados.slice(0, visibles).map(e => {
+              const [titulo, ...resto] = lineas(e.nombre)
+              return (
+                <li key={e.id}>
+                  <button onClick={() => setDetalle(e)} className="tarjeta flex h-full w-full items-center gap-3 !p-2.5 text-left hover:border-teal-500">
+                    {e.fotos?.[0]
+                      ? <Foto ruta={e.fotos[0]} className="h-14 w-[4.5rem] shrink-0 rounded-lg" />
+                      : <div className="flex h-14 w-[4.5rem] shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[11px] text-slate-400">sin foto</div>}
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium leading-snug">{titulo}</div>
+                      {resto.length > 0 && <div className="line-clamp-1 text-xs text-slate-500">{resto.join(' · ')}</div>}
+                      <div className="mt-1 truncate text-xs text-slate-400">
+                        {[e.material?.length ? e.material.map(nombreMaterial).join(' · ') : null,
+                          e.fotos?.length ? `${e.fotos.length} foto${e.fotos.length === 1 ? '' : 's'}` : null,
+                          e.videos?.length ? `${e.videos.length} vídeo${e.videos.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'Sin material ni fotos'}
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          {!cargando && grupo && filtrados.length === 0 && <p className="tarjeta text-center text-sm text-slate-500">{lista.length ? 'Ningún ejercicio coincide con la búsqueda.' : 'Este grupo todavía no tiene ejercicios.'}</p>}
+          {filtrados.length > visibles && <button className="btn-sec w-full" onClick={() => setVisibles(v => v + POR_PAGINA)}>Ver más ({filtrados.length - visibles} restantes)</button>}
+        </div>
       </div>
-
-      <FiltroMaterial ejercicios={lista} valor={material} onChange={setMaterial} />
-
-      <p className="text-sm text-slate-500">
-        {cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}${busqueda || material ? ' encontrados' : ''}`}
-      </p>
-
-      <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
-        {filtrados.slice(0, visibles).map(e => {
-          const [titulo, ...resto] = lineas(e.nombre)
-          return (
-            <li key={e.id}>
-              <button onClick={() => setDetalle(e)} className="tarjeta flex w-full items-center gap-3 !p-2.5 text-left hover:border-teal-500">
-                {e.fotos?.[0]
-                  ? <Foto ruta={e.fotos[0]} className="h-14 w-[4.5rem] shrink-0 rounded-lg" />
-                  : <div className="flex h-14 w-[4.5rem] shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[11px] text-slate-400">sin foto</div>}
-                <div className="min-w-0">
-                  <div className="text-sm font-medium leading-snug">{titulo}</div>
-                  {resto.length > 0 && <div className="line-clamp-2 text-xs text-slate-500">{resto.join(' · ')}</div>}
-                  <div className="mt-1 text-xs text-slate-400">{e.fotos?.length ?? 0} foto{e.fotos?.length === 1 ? '' : 's'}{e.videos?.length ? ` · ${e.videos.length} vídeo${e.videos.length === 1 ? '' : 's'}` : ''}</div>
-                </div>
-              </button>
-            </li>
-          )
-        })}
-      </ul>
-      {filtrados.length > visibles && <button className="btn-sec w-full" onClick={() => setVisibles(v => v + POR_PAGINA)}>Ver más ({filtrados.length - visibles} restantes)</button>}
 
       {detalle && (
         <Detalle ejercicio={detalle} puedeEditar={puedeEditarCatalogo} onClose={() => setDetalle(null)}
