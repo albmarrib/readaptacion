@@ -60,3 +60,7 @@
   .chip-off { @apply border-slate-300/90 bg-white text-slate-600 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-800; }
   .chip-on { @apply border-teal-700 bg-gradient-to-b from-teal-600 to-teal-700 text-white shadow-sm shadow-teal-900/20; }
 }
+
+/* Dibujo del cuerpo (react-muscle-highlighter): silueta clara en lugar de gris oscuro */
+.cuerpo path[fill="#454545"] { fill: #cbd5e1; }
+.cuerpo svg { max-width: 100%; height: auto; }

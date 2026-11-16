@@ -24,6 +24,7 @@ import { PantallaBloqueoPago } from './components/AvisoPago'
 import Registro from './pages/Registro'
 import { lazy, Suspense } from 'react'
 const DemoPaciente = import.meta.env.DEV ? lazy(() => import('./dev/DemoPaciente.jsx')) : null
+const DemoDolor = import.meta.env.DEV ? lazy(() => import('./dev/DemoDolor.jsx')) : null
 
 function Cargando() {
   return <div className="flex min-h-dvh items-center justify-center text-slate-500">Cargando…</div>
@@ -61,6 +62,7 @@ export default function App() {
       <Route path="/legal" element={<Legal />} />
       <Route path="/legal/:doc" element={<Legal />} />
       {DemoPaciente && <Route path="/demo-paciente" element={<Suspense fallback={null}><DemoPaciente /></Suspense>} />}
+      {DemoDolor && <Route path="/demo-dolor" element={<Suspense fallback={null}><DemoDolor /></Suspense>} />}
       <Route element={<ProtegidaSinMarco />}>
         <Route path="pacientes/:id/rutinas/:rid/imprimir" element={<Solo cond={esPersonal}><ImpresionRutina /></Solo>} />
       </Route>
