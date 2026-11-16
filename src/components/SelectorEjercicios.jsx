@@ -6,6 +6,8 @@ import { normalizar } from '../lib/util'
 import { tituloGrupo } from '../lib/volumen'
 import Foto from './Foto'
 import Modal from './Modal'
+import FiltroMaterial from './FiltroMaterial'
+import { cumpleMaterial } from '../lib/material'
 
 // Copia en memoria para mostrar la lista al instante; siempre se vuelve a pedir al servidor,
 // para que los ejercicios añadidos en el catálogo aparezcan sin tener que cerrar la app.
@@ -26,6 +28,7 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
   const [lista, setLista] = useState([])
   const [cargando, setCargando] = useState(true)
   const [busqueda, setBusqueda] = useState('')
+  const [material, setMaterial] = useState(null) // se mantiene al cambiar de grupo
   const [visibles, setVisibles] = useState(POR_PAGINA)
   const [marcados, setMarcados] = useState(new Map()) // id -> ejercicio (se conserva al cambiar de grupo)
 
@@ -40,8 +43,8 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
 
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda.trim())
-    return q ? lista.filter(e => normalizar(e.nombre).includes(q)) : lista
-  }, [lista, busqueda])
+    return lista.filter(e => (!q || normalizar(e.nombre).includes(q)) && cumpleMaterial(e, material))
+  }, [lista, busqueda, material])
 
   const alternar = e => setMarcados(m => { const n = new Map(m); n.has(e.id) ? n.delete(e.id) : n.set(e.id, e); return n })
 
@@ -59,6 +62,7 @@ export default function SelectorEjercicios({ grupos, gruposDia, onClose, onAnadi
           </div>
         )}
         <input className="input" type="search" autoFocus placeholder="Buscar ejercicio…" value={busqueda} onChange={e => { setBusqueda(e.target.value); setVisibles(POR_PAGINA) }} />
+        <FiltroMaterial ejercicios={lista} valor={material} onChange={m => { setMaterial(m); setVisibles(POR_PAGINA) }} />
         <p className="text-sm text-slate-500">{cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}`}</p>
 
         <ul className="grid gap-2 sm:grid-cols-2">

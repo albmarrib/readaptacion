@@ -10,6 +10,8 @@ import Modal from '../components/Modal'
 import { EncabezadoPagina, IconoCatalogo } from '../components/Iconos'
 import Pestanas from '../components/Pestanas'
 import { tituloGrupo } from '../lib/volumen'
+import { MATERIALES, cumpleMaterial, detectarMaterial, nombreMaterial } from '../lib/material'
+import FiltroMaterial from '../components/FiltroMaterial'
 
 const POR_PAGINA = 60
 
@@ -23,6 +25,7 @@ export default function Catalogo() {
   const [porGrupo, setPorGrupo] = useState({})       // cache: grupoId -> ejercicios
   const [cargando, setCargando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
+  const [material, setMaterial] = useState(null)
   const [visibles, setVisibles] = useState(POR_PAGINA)
   const [detalle, setDetalle] = useState(null)
   const [editor, setEditor] = useState(null)         // { ejercicio?: ..} | null
@@ -48,13 +51,13 @@ export default function Catalogo() {
   }, [porGrupo])
 
   useEffect(() => { if (grupoId) cargarGrupo(grupoId) }, [grupoId]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => setVisibles(POR_PAGINA), [grupoId, busqueda])
+  useEffect(() => setVisibles(POR_PAGINA), [grupoId, busqueda, material])
 
   const lista = porGrupo[grupoId] ?? []
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda.trim())
-    return q ? lista.filter(e => normalizar(e.nombre).includes(q)) : lista
-  }, [lista, busqueda])
+    return lista.filter(e => (!q || normalizar(e.nombre).includes(q)) && cumpleMaterial(e, material))
+  }, [lista, busqueda, material])
   const grupo = grupos.find(g => g.id === grupoId)
 
   const alGuardar = async (gidAnterior, gidNuevo) => {
@@ -81,8 +84,10 @@ export default function Catalogo() {
         {puedeEditarCatalogo && grupo && <button className="btn-sec shrink-0" onClick={() => setEditorGrupo({ grupo })}>Editar grupo</button>}
       </div>
 
+      <FiltroMaterial ejercicios={lista} valor={material} onChange={setMaterial} />
+
       <p className="text-sm text-slate-500">
-        {cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}${busqueda ? ' encontrados' : ''}`}
+        {cargando ? 'Cargando…' : `${filtrados.length} ejercicio${filtrados.length === 1 ? '' : 's'}${busqueda || material ? ' encontrados' : ''}`}
       </p>
 
       <ul className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
@@ -130,6 +135,7 @@ function Detalle({ ejercicio, puedeEditar, onClose, onEditar }) {
       <div className="space-y-4">
         {resto.length > 0 && <ul className="list-disc space-y-0.5 pl-5 text-slate-700">{resto.map((l, i) => <li key={i}>{l}</li>)}</ul>}
         <p className="text-sm text-slate-500">{ejercicio.grupoNombre}</p>
+        {ejercicio.material?.length > 0 && <p className="flex flex-wrap gap-1.5">{ejercicio.material.map(m => <span key={m} className="insignia bg-slate-100 text-slate-700">{nombreMaterial(m)}</span>)}</p>}
         {ejercicio.fotos?.length > 0
           ? <div className="grid gap-3 sm:grid-cols-2">{ejercicio.fotos.map(f => <Foto key={f} ruta={f} className="aspect-[4/3] rounded-xl" />)}</div>
           : <p className="text-sm text-slate-400">Este ejercicio no tiene fotos.</p>}
@@ -151,6 +157,11 @@ function EditorEjercicio({ ejercicio, grupos, grupoInicial, obtenerGrupo, onClos
   const [grupoId, setGrupoId] = useState(ejercicio?.grupoId ?? grupoInicial ?? grupos[0]?.id)
   const [fotos, setFotos] = useState(ejercicio?.fotos ?? [])
   const [videos, setVideos] = useState(ejercicio?.videos ?? [])
+  // Material: el guardado o, si no tiene, el que se deduce del nombre (se puede corregir)
+  const [material, setMaterial] = useState(ejercicio?.material ?? detectarMaterial(ejercicio?.nombre))
+  const [materialTocado, setMaterialTocado] = useState(!!ejercicio?.material)
+  const cambiarNombre = n => { setNombre(n); if (!materialTocado) setMaterial(detectarMaterial(n)) }
+  const alternarMaterial = id => { setMaterialTocado(true); setMaterial(m => (m.includes(id) ? m.filter(x => x !== id) : [...m, id])) }
   const [nuevasFotos, setNuevasFotos] = useState([])
   const [video, setVideo] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -193,7 +204,7 @@ function EditorEjercicio({ ejercicio, grupos, grupoInicial, obtenerGrupo, onClos
       }
       await setDoc(doc(db, 'ejercicios', id), {
         nombre: nombre.trim(), grupoId, grupoNombre: g.nombre,
-        fotos: [...fotos, ...subidas], videos, orden,
+        fotos: [...fotos, ...subidas], videos, orden, material,
         origen: ejercicio?.origen ?? 'creado en la app',
         centroId: ejercicio?.centroId ?? centroActual(),
       })
@@ -219,7 +230,7 @@ function EditorEjercicio({ ejercicio, grupos, grupoInicial, obtenerGrupo, onClos
       <form onSubmit={guardar} className="space-y-4">
         <div>
           <label className="etiqueta" htmlFor="nombre">Nombre</label>
-          <textarea id="nombre" rows={2} className="input" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej.: Sentadilla con barra" />
+          <textarea id="nombre" rows={2} className="input" value={nombre} onChange={e => cambiarNombre(e.target.value)} placeholder="Ej.: Sentadilla con barra" />
           <p className="mt-1 text-xs text-slate-500">Una línea por cada variante o detalle; la primera es el título.</p>
         </div>
         <div>
@@ -227,6 +238,17 @@ function EditorEjercicio({ ejercicio, grupos, grupoInicial, obtenerGrupo, onClos
           <select id="grupo" className="input" value={grupoId} onChange={e => setGrupoId(e.target.value)}>
             {grupos.map(g => <option key={g.id} value={g.id}>{g.nombre}</option>)}
           </select>
+        </div>
+
+        <div>
+          <span className="etiqueta">Material</span>
+          <div className="flex flex-wrap gap-1.5">
+            {MATERIALES.map(m => (
+              <button type="button" key={m.id} onClick={() => alternarMaterial(m.id)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium ${material.includes(m.id) ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-teal-400'}`}>{m.nombre}</button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-slate-500">{materialTocado ? 'Puedes marcar varios.' : 'Propuesto a partir del nombre: corrígelo si hace falta. Puedes marcar varios.'}</p>
         </div>
 
         <div>

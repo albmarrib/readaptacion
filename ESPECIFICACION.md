@@ -172,6 +172,8 @@ ejercicios/{id}                      // id = slug de grupo + nombre, ej. "pierna
   fotos: [ruta en Storage]
   videos: [url]
   orden, origen                      // origen = documento Word de procedencia
+  material: [id]                     // mancuernas, barra, polea, maquina… (src/lib/material.js). Sin el campo = «Sin clasificar».
+                                     // Se propone a partir del nombre (scripts/rellenar-material.cjs) y el entrenador lo corrige.
 
 sistemasEntrenamiento/{id}
   nombre
