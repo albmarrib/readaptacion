@@ -5,7 +5,7 @@ const { getAuth } = require('firebase-admin/auth')
 const { getMessaging } = require('firebase-admin/messaging')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
-const { onDocumentCreated } = require('firebase-functions/v2/firestore')
+const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore')
 
 initializeApp()
 const REGION = 'europe-west1'
@@ -257,6 +257,27 @@ exports.revisarRutinas = onSchedule({ region: REGION, schedule: 'every day 07:00
     n++
   }
   console.log(`Rutinas vencidas procesadas: ${n}`)
+})
+
+// Dolor alto: si el paciente marca una zona con dolor de 7 o más al terminar un entreno, se crea un
+// aviso para su entrenador (uno por sesión). El aviso push no dice el nombre ni la zona: la pantalla
+// bloqueada la puede ver cualquiera y es un dato de salud.
+const UMBRAL_DOLOR = 7 // igual que UMBRAL_AVISO en src/lib/sensaciones.js
+exports.dolorAlto = onDocumentWritten({ document: 'pacientes/{pid}/rutinas/{rid}/sesiones/{sid}', region: REGION }, async (event) => {
+  const s = event.data?.after?.data()
+  const max = Math.max(0, ...(s?.sensaciones?.zonas ?? []).map(z => Number(z.intensidad) || 0))
+  if (max < UMBRAL_DOLOR) return
+  const { pid, rid, sid } = event.params
+  const db = getFirestore()
+  const paciente = await db.doc(`pacientes/${pid}`).get()
+  if (!paciente.exists) return
+  try {
+    await db.doc(`avisos/dolor_${rid}_${sid}`).create({
+      entrenadorId: paciente.data().entrenadorId, pacienteId: pid, rutinaId: rid, centroId: paciente.data().centroId,
+      tipo: 'dolor_alto', dolorMaximo: max, fecha: FieldValue.serverTimestamp(), leido: false,
+    })
+  } catch (e) { if (e.code === 6 || /already exists/i.test(e.message)) return; throw e } // ya avisado
+  await enviarPush(paciente.data().entrenadorId, { titulo: 'Aviso de dolor', cuerpo: 'Un paciente ha marcado dolor alto al terminar su entreno', url: '/avisos' })
 })
 
 // Chat: al llegar un mensaje se actualiza el resumen de la conversación (último mensaje y no leídos

@@ -61,6 +61,14 @@ service cloud.firestore {
     function entrenadorDelCentro(uid) {
       return get(/databases/$(database)/documents/usuarios/$(uid)).data.centroId == miCentro();
     }
+    // Esfuerzo y dolor que indica el paciente al terminar un entreno (opcional)
+    function sensacionesValidas(s) {
+      return s == null || (s is map
+        && s.keys().hasOnly(['esfuerzo', 'zonas', 'nota', 'fecha'])
+        && (s.get('esfuerzo', null) == null || (s.esfuerzo is int && s.esfuerzo >= 1 && s.esfuerzo <= 10))
+        && s.get('zonas', []) is list && s.get('zonas', []).size() <= 30
+        && s.get('nota', '') is string && s.get('nota', '').size() <= 300);
+    }
     function soyPaciente(pid) {
       return activo() && yo().rol == 'paciente' && yo().pacienteId == pid
         && pacienteDe(pid).estado != 'archivado';
@@ -178,11 +186,12 @@ service cloud.firestore {
           allow read: if personalDe(pid) || soyPaciente(pid);
           allow create, update: if soyPaciente(pid)
             && get(/databases/$(database)/documents/pacientes/$(pid)/rutinas/$(rid)).data.estado == 'activa'
-            && request.resource.data.keys().hasOnly(['dia', 'fecha', 'hechos', 'completada', 'actualizado'])
+            && request.resource.data.keys().hasOnly(['dia', 'fecha', 'hechos', 'completada', 'actualizado', 'sensaciones'])
             && request.resource.data.dia is int
             && request.resource.data.fecha is string && request.resource.data.fecha.size() == 10
-            && request.resource.data.hechos is map
-            && request.resource.data.completada is bool;
+            && request.resource.data.get('hechos', {}) is map
+            && request.resource.data.completada is bool
+            && sensacionesValidas(request.resource.data.get('sensaciones', null));
           allow delete: if personalDe(pid);
         }
       }

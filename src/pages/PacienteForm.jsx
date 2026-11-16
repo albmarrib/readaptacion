@@ -179,6 +179,10 @@ export default function PacienteForm() {
               </div>
               <Campo clase="sm:col-span-2" etiqueta="Notas del entrenador"><textarea rows={1} className="input resize-y" {...input('notas')} /></Campo>
             </div>
+            <label className="mt-3 flex items-start gap-3 rounded-xl bg-slate-50 p-3">
+              <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-teal-700" checked={f.preguntarSensaciones !== false} onChange={e => set('preguntarSensaciones', e.target.checked)} />
+              <span className="text-sm"><b className="font-medium">Preguntar esfuerzo y dolor al terminar cada entreno</b><span className="block text-xs text-slate-500">El paciente puede contestar o saltárselo. Lo verás en su evolución, con aviso si marca dolor de 7 o más.</span></span>
+            </label>
           </section>
         </div>
 

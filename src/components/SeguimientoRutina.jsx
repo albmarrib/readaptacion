@@ -59,7 +59,7 @@ export default function SeguimientoRutina({ paciente, rutina, rid, onCerrada, on
         {paciente.telefono
           ? <a className="btn-sec" href={enlaceWhatsApp(paciente.telefono, mensaje)} target="_blank" rel="noreferrer">WhatsApp con {paciente.nombre.split(' ')[0]}</a>
           : <span className="btn-sec pointer-events-none opacity-50" title="La ficha no tiene teléfono">WhatsApp (falta teléfono)</span>}
-        <Link className="btn-sec" to={`/pacientes/${pid}/evolucion`}>Ver evolución de pesos</Link>
+        <Link className="btn-sec" to={`/pacientes/${pid}/evolucion`}>Ver evolución</Link>
         <button className="btn-sec" onClick={onDuplicar} disabled={duplicando}>{duplicando ? 'Duplicando…' : 'Duplicar como nueva rutina'}</button>
         {rutina.estado !== 'cerrada' && <button className="btn" onClick={cerrar} disabled={ocupado}>Cerrar rutina</button>}
       </div>

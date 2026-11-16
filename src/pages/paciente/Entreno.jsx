@@ -10,23 +10,25 @@ import Foto from '../../components/Foto'
 import Descanso from '../../components/Descanso'
 import { Bloque, agruparEnBloques } from '../../components/paciente/Bloques'
 import VisorEjercicio from '../../components/paciente/VisorEjercicio'
+import PreguntasSensaciones from '../../components/paciente/PreguntasSensaciones'
+import { preguntarSensaciones } from '../../lib/sensaciones'
 import { IAtras, IBandera, ICheck, ICrono, IInfo, IPlay } from '../../components/paciente/IconosPaciente'
 
 // "2 series × 10+8 reps" · "3 series × SG"
 const textoLinea = l => `${l.series} serie${l.series === 1 ? '' : 's'}  ×  ${l.tramos.join('+')}${l.tramos.every(t => typeof t === 'number') ? ' reps' : ''}`
 
 export default function Entreno() {
-  return <PuertaPaciente>{pid => <PantallaEntreno pid={pid} />}</PuertaPaciente>
+  return <PuertaPaciente>{(pid, ficha) => <PantallaEntreno pid={pid} ficha={ficha} />}</PuertaPaciente>
 }
 
-function PantallaEntreno({ pid }) {
+function PantallaEntreno({ pid, ficha }) {
   const { n } = useParams()
   const navigate = useNavigate()
   const { rutinas, rutina, sesiones, delDia } = usePlanPaciente(pid)
   const grupos = useGrupos()
   const [descanso, setDescanso] = useState(false)
   const [visor, setVisor] = useState(null)
-  const [fin, setFin] = useState(false)
+  const [fin, setFin] = useState(null) // null · 'preguntas' (esfuerzo y dolor) · 'completado'
 
   if (!rutinas) return <p className="px-5 pt-6 font-light text-slate-500">Cargando…</p>
   const dia = rutina?.dias.find(d => d.numero === Number(n))
@@ -36,7 +38,15 @@ function PantallaEntreno({ pid }) {
   const hechos = ejercicios.filter(e => ejercicioHecho(sesion, e)).length
 
   const completar = (e, hecho) => marcarEjercicio({ pid, rid: rutina.id, dia: dia.numero, delDia: ejercicios, sesion, ejercicio: e, hecho }).catch(() => {})
-  const terminar = async () => { await terminarSesion({ pid, rid: rutina.id, dia: dia.numero }).catch(() => {}); setFin(true) }
+  const terminar = async () => {
+    await terminarSesion({ pid, rid: rutina.id, dia: dia.numero }).catch(() => {})
+    setFin(preguntarSensaciones(ficha) && !sesion?.sensaciones ? 'preguntas' : 'completado')
+  }
+
+  if (fin === 'preguntas') return (
+    <PreguntasSensaciones pid={pid} rid={rutina.id} dia={dia.numero} ficha={ficha}
+      resumen={`${dia.titulo || `Día ${dia.numero}`} · ${hechos} de ${ejercicios.length} ejercicios`} onHecho={() => setFin('completado')} />
+  )
 
   if (fin) return (
     <div className="paciente fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center">
