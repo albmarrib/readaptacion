@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, getCountFromServer, getDoc, getDocs, onSnap
 import { deleteObject, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
-import { comprimirImagen, normalizar, slug } from '../lib/util'
+import { comprimirImagen, normalizar, porNombre, slug } from '../lib/util'
 import { centroActual, deCentro, idDeCentro } from '../lib/centro'
 import Foto from '../components/Foto'
 import Modal from '../components/Modal'
@@ -62,7 +62,7 @@ export default function Catalogo() {
     setCargando(true)
     try {
       const s = await getDocs(deCentro('ejercicios', where('grupoId', '==', gid)))
-      const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.orden - b.orden)
+      const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort(porNombre)
       setPorGrupo(p => ({ ...p, [gid]: lista }))
       return lista
     } catch (e) { setError('No se pudo cargar el grupo: ' + e.message); return [] }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { centroActual, deCentro, idDeCentro } from '../lib/centro'
-import { normalizar } from '../lib/util'
+import { normalizar, porNombre } from '../lib/util'
 import { tituloGrupo } from '../lib/volumen'
 import Foto from './Foto'
 import Modal from './Modal'
@@ -15,7 +15,7 @@ const cache = new Map() // grupoId -> ejercicios
 
 async function cargar(grupoId) {
   const s = await getDocs(deCentro('ejercicios', where('grupoId', '==', grupoId)))
-  const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.orden - b.orden)
+  const lista = s.docs.map(d => ({ id: d.id, ...d.data() })).sort(porNombre)
   cache.set(grupoId, lista)
   return lista
 }

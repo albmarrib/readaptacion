@@ -50,3 +50,8 @@ export async function fotoDePerfil(archivo, lado = 192, calidad = 0.82) {
   lienzo.getContext('2d').drawImage(bmp, (bmp.width - m) / 2, (bmp.height - m) / 2, m, m, 0, 0, lado, lado)
   return lienzo.toDataURL('image/webp', calidad)
 }
+
+// Orden alfabético de ejercicios por nombre (sin distinguir mayúsculas ni tildes, ignorando
+// comillas o signos al principio, y con los números en su orden natural: 2 antes que 10).
+const claveNombre = n => (n ?? '').replace(/^[^\p{L}\p{N}]+/u, '')
+export const porNombre = (a, b) => claveNombre(a.nombre).localeCompare(claveNombre(b.nombre), 'es', { sensitivity: 'base', numeric: true })
