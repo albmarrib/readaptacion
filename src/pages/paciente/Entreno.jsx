@@ -1,3 +1,4 @@
+import { useRutaPaciente, useVistaPaciente } from '../../lib/vistaPaciente'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
@@ -22,6 +23,8 @@ export default function Entreno() {
 }
 
 function PantallaEntreno({ pid, ficha }) {
+  const r = useRutaPaciente()
+  const soloLectura = !!useVistaPaciente() // vista previa del entrenador: no se guarda nada
   const { n } = useParams()
   const navigate = useNavigate()
   const { rutinas, rutina, sesiones, delDia } = usePlanPaciente(pid)
@@ -37,8 +40,9 @@ function PantallaEntreno({ pid, ficha }) {
   const sesion = sesionDeHoy(sesiones, dia.numero)
   const hechos = ejercicios.filter(e => ejercicioHecho(sesion, e)).length
 
-  const completar = (e, hecho) => marcarEjercicio({ pid, rid: rutina.id, dia: dia.numero, delDia: ejercicios, sesion, ejercicio: e, hecho }).catch(() => {})
+  const completar = (e, hecho) => soloLectura ? null : marcarEjercicio({ pid, rid: rutina.id, dia: dia.numero, delDia: ejercicios, sesion, ejercicio: e, hecho }).catch(() => {})
   const terminar = async () => {
+    if (soloLectura) { setFin('completado'); return }
     await terminarSesion({ pid, rid: rutina.id, dia: dia.numero }).catch(() => {})
     setFin(preguntarSensaciones(ficha) && !sesion?.sensaciones ? 'preguntas' : 'completado')
   }
@@ -54,7 +58,7 @@ function PantallaEntreno({ pid, ficha }) {
       <span className="relative flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500 text-white"><ICheck width={52} height={52} strokeWidth={2} /></span>
       <h2 className="relative mt-8 text-[34px] font-light leading-tight">Entreno completado</h2>
       <p className="relative mt-2 text-[17px] font-light text-slate-500">{dia.titulo || `Día ${dia.numero}`} · {hechos} de {ejercicios.length} ejercicios</p>
-      <div className="relative mt-10 w-full max-w-sm"><button className="boton-pildora" onClick={() => navigate('/hoy')}>Volver al inicio</button></div>
+      <div className="relative mt-10 w-full max-w-sm"><button className="boton-pildora" onClick={() => navigate(r('/hoy'))}>Volver al inicio</button></div>
     </div>
   )
 
@@ -99,6 +103,7 @@ function TarjetaEjercicio({ pid, rid, ejercicio: e, hecho, onCompletar, onVer })
       <div className="flex gap-5">
         <button onClick={onVer} aria-label="Ver fotos y vídeo" className="relative h-32 w-32 shrink-0 overflow-hidden bg-slate-100 active:opacity-80">
           {cat?.fotos?.[0] && <Foto ruta={cat.fotos[0]} className="h-full w-full !bg-white" />}
+          {cat?.fotos?.length > 1 && <span className="absolute bottom-1.5 right-1.5 rounded-full bg-tinta/75 px-2 py-0.5 text-[11px] font-medium text-white">{cat.fotos.length} fotos</span>}
           {cat?.videos?.length > 0 && <span className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/70 text-tinta backdrop-blur"><IPlay width={22} height={22} /></span>}
         </button>
         <div className="min-w-0 flex-1">
@@ -131,6 +136,7 @@ function TarjetaEjercicio({ pid, rid, ejercicio: e, hecho, onCompletar, onVer })
 
 // Peso de una línea (uno por rutina): se guarda al salir del campo
 function PesoLinea({ pid, rid, ejercicio: e, indice }) {
+  const soloLectura = !!useVistaPaciente()
   const guardado = e.pesos?.[indice]
   const [valor, setValor] = useState(guardado ?? '')
   const [estado, setEstado] = useState('')
@@ -151,7 +157,7 @@ function PesoLinea({ pid, rid, ejercicio: e, indice }) {
     <label className="flex shrink-0 items-center gap-1.5">
       <input type="text" inputMode="decimal" placeholder="—" aria-label={`Peso de la línea ${indice + 1} en kilos`}
         className={`h-11 w-[4.5rem] border-b-2 bg-transparent text-center text-[19px] font-medium outline-none transition ${estado === 'error' ? 'border-red-400' : estado === 'ok' ? 'border-emerald-500' : 'border-tinta/40 focus:border-tinta'}`}
-        value={valor} onChange={ev => { setValor(ev.target.value); setEstado('') }} onBlur={guardar} onKeyDown={ev => ev.key === 'Enter' && ev.currentTarget.blur()} />
+        value={valor} readOnly={soloLectura} onChange={ev => { setValor(ev.target.value); setEstado('') }} onBlur={soloLectura ? undefined : guardar} onKeyDown={ev => ev.key === 'Enter' && ev.currentTarget.blur()} />
       <span className="text-[14px] font-light text-slate-500">kg</span>
     </label>
   )

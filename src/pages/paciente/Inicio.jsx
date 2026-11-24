@@ -1,3 +1,4 @@
+import { useRutaPaciente } from '../../lib/vistaPaciente'
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../lib/auth'
@@ -17,6 +18,7 @@ export default function Inicio() {
 }
 
 function PantallaInicio({ pid, ficha }) {
+  const r = useRutaPaciente()
   const { perfil } = useAuth()
   const navigate = useNavigate()
   const { rutinas, rutina, sesiones, delDia } = usePlanPaciente(pid)
@@ -46,7 +48,7 @@ function PantallaInicio({ pid, ficha }) {
       <section className="mt-9">
         <div className="flex items-baseline justify-between">
           <h2 className="text-[28px] font-light tracking-tight">Plan de hoy</h2>
-          <Link to="/agenda" className="text-[14px] font-light text-tinta underline underline-offset-4">Ver agenda</Link>
+          <Link to={r("/agenda")} className="text-[14px] font-light text-tinta underline underline-offset-4">Ver agenda</Link>
         </div>
         {ejerciciosHoy.length > 0 && (
           <div className="mt-3 flex gap-1.5" aria-label={`${hechosHoy} de ${ejerciciosHoy.length} ejercicios hechos`}>
@@ -71,7 +73,7 @@ function PantallaInicio({ pid, ficha }) {
           ) : previstos.map(({ dia }) => {
             const estado = estadoEntreno(sesiones, hoy, dia.numero)
             const n = delDia(dia.numero).length
-            return <TarjetaEntreno key={dia.numero} to={`/mi-rutina/dia/${dia.numero}`} numero={dia.numero} titulo={dia.titulo || `Día ${dia.numero}`} subtitulo={`${n} ejercicio${n === 1 ? '' : 's'} · ${ESTADO[estado]}`} estado={estado} />
+            return <TarjetaEntreno key={dia.numero} to={r(`/mi-rutina/dia/${dia.numero}`)} numero={dia.numero} titulo={dia.titulo || `Día ${dia.numero}`} subtitulo={`${n} ejercicio${n === 1 ? '' : 's'} · ${ESTADO[estado]}`} estado={estado} />
           })}
         </div>
       </section>
@@ -83,7 +85,7 @@ function PantallaInicio({ pid, ficha }) {
             <span className="text-[14px] font-light text-slate-500">{hechosSemana} de {previstosSemana} entrenos</span>
           </div>
           <div className="-mx-4 mt-4">
-            <SemanaCapsulas rutina={rutina} sesiones={sesiones} ancla={hoy} seleccionada={hoy} onElegir={d => navigate(`/agenda?f=${claveFecha(d)}`)} />
+            <SemanaCapsulas rutina={rutina} sesiones={sesiones} ancla={hoy} seleccionada={hoy} onElegir={d => navigate(r(`/agenda?f=${claveFecha(d)}`))} />
           </div>
         </section>
       )}

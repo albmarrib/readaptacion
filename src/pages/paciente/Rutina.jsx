@@ -1,3 +1,4 @@
+import { useRutaPaciente } from '../../lib/vistaPaciente'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { usePlanPaciente } from '../../lib/planPaciente'
@@ -29,6 +30,7 @@ export default function Rutina() {
 }
 
 function PantallaRutina({ pid }) {
+  const r = useRutaPaciente()
   const { rutinas, rutina, delDia } = usePlanPaciente(pid)
   if (!rutinas) return <p className="px-5 pt-6 font-light text-slate-500">Cargando…</p>
   return (
@@ -46,7 +48,7 @@ function PantallaRutina({ pid }) {
               const ds = diaSemanaDe(rutina, i)
               return (
                 <li key={dia.numero} className="border-b border-tinta/70">
-                  <Link to={`/mi-rutina/dia/${dia.numero}`} className="flex items-center gap-4 px-5 py-6 active:bg-white/60">
+                  <Link to={r(`/mi-rutina/dia/${dia.numero}`)} className="flex items-center gap-4 px-5 py-6 active:bg-white/60">
                     <span className="text-[34px] font-extralight tabular-nums text-slate-400">{String(dia.numero).padStart(2, '0')}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[19px] uppercase tracking-wide">{dia.titulo || `Día ${dia.numero}`}</span>
@@ -61,7 +63,7 @@ function PantallaRutina({ pid }) {
         </>
       )}
       {rutinas.some(r => r.estado !== 'activa') && (
-        <Link to="/mi-rutina/historial" className="mt-8 inline-block text-[15px] font-light text-tinta underline underline-offset-4">Ver rutinas anteriores</Link>
+        <Link to={r("/mi-rutina/historial")} className="mt-8 inline-block text-[15px] font-light text-tinta underline underline-offset-4">Ver rutinas anteriores</Link>
       )}
     </div>
   )
@@ -73,6 +75,7 @@ export function DiaRutina() {
 }
 
 function PantallaDia({ pid }) {
+  const r = useRutaPaciente()
   const { n } = useParams()
   const navigate = useNavigate()
   const { rutinas, rutina, delDia } = usePlanPaciente(pid)
@@ -103,7 +106,7 @@ function PantallaDia({ pid }) {
       </div>
 
       <div className="fixed inset-x-0 bottom-[4.9rem] z-20 px-5 pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto max-w-xl"><button className="boton-pildora" onClick={() => navigate(`/entreno/${dia.numero}`)} disabled={!ejercicios.length}>Iniciar entrenamiento</button></div>
+        <div className="mx-auto max-w-xl"><button className="boton-pildora" onClick={() => navigate(r(`/entreno/${dia.numero}`))} disabled={!ejercicios.length}>Iniciar entrenamiento</button></div>
       </div>
       <div className="h-24" />
       {visor && <VisorEjercicio ejercicio={visor} onCerrar={() => setVisor(null)} />}
@@ -117,8 +120,9 @@ function FilaEjercicio({ ejercicio: e, onAbrir }) {
   return (
     <li>
       <button onClick={onAbrir} className="flex w-full items-stretch text-left active:bg-slate-50">
-        <span className="h-[8.5rem] w-[38%] max-w-44 shrink-0 bg-slate-100">
+        <span className="relative h-[8.5rem] w-[38%] max-w-44 shrink-0 bg-slate-100">
           {cat?.fotos?.[0] && <Foto ruta={cat.fotos[0]} className="h-full w-full !bg-white" />}
+          {cat?.fotos?.length > 1 && <span className="absolute bottom-1.5 right-1.5 rounded-full bg-tinta/75 px-2 py-0.5 text-[11px] font-medium text-white">{cat.fotos.length} fotos</span>}
         </span>
         <span className="flex min-w-0 flex-1 flex-col justify-between px-5 py-4">
           <span className="flex items-start justify-between gap-3">

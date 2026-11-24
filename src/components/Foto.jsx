@@ -31,6 +31,13 @@ export default function Foto({ ruta, alt = '', className = '' }) {
   const reintentada = useRef(false)
   const caja = useRef(null)
 
+  // Si cambia la foto que hay que mostrar (p. ej. al pasar de foto en el visor), se empieza de cero
+  // con la nueva; si no, seguiría viéndose la anterior.
+  const [rutaVista, setRutaVista] = useState(ruta)
+  if (ruta !== rutaVista) {
+    setRutaVista(ruta); setUrl(cache.get(ruta) ?? null); setError(false); reintentada.current = false
+  }
+
   useEffect(() => {
     if (url || !ruta) return
     let vivo = true

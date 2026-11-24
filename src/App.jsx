@@ -6,7 +6,8 @@ import Catalogo from './pages/Catalogo'
 import Pacientes from './pages/Pacientes'
 import PacienteForm from './pages/PacienteForm'
 import Entrenadores from './pages/Entrenadores'
-import MiRutina, { PuertaPaciente, VistaPreviaPaciente } from './pages/MiRutina'
+import MiRutina, { PuertaPaciente } from './pages/MiRutina'
+import VistaPaciente from './pages/VistaPaciente'
 import InicioPaciente from './pages/paciente/Inicio'
 import Agenda from './pages/paciente/Agenda'
 import Rutina, { DiaRutina } from './pages/paciente/Rutina'
@@ -75,7 +76,7 @@ export default function App() {
         <Route path="pacientes/:id/rutinas/nueva" element={<Solo cond={esPersonal}><RutinaEditor /></Solo>} />
         <Route path="pacientes/:id/rutinas/:rid" element={<Solo cond={esPersonal}><RutinaEditor /></Solo>} />
         <Route path="pacientes/:id/evolucion" element={<Solo cond={esPersonal}><Evolucion /></Solo>} />
-        <Route path="pacientes/:id/vista-paciente" element={<Solo cond={esPersonal}><VistaPreviaPaciente /></Solo>} />
+        <Route path="pacientes/:id/vista-paciente/*" element={<Solo cond={esPersonal}><VistaPaciente /></Solo>} />
         <Route path="perfil" element={<Solo cond={esPersonal}><Perfil /></Solo>} />
         <Route path="avisos" element={<Solo cond={esPersonal}><Avisos /></Solo>} />
         <Route path="volumenes" element={<Solo cond={esPersonal}><Volumenes /></Solo>} />

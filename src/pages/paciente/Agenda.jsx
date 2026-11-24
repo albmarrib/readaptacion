@@ -1,3 +1,4 @@
+import { useRutaPaciente } from '../../lib/vistaPaciente'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { usePlanPaciente } from '../../lib/planPaciente'
@@ -16,6 +17,7 @@ export default function Agenda() {
 }
 
 function PantallaAgenda({ pid }) {
+  const r = useRutaPaciente()
   const [params] = useSearchParams()
   const inicial = params.get('f') ? soloDia(new Date(params.get('f') + 'T12:00')) : soloDia(new Date())
   const [vista, setVista] = useState('semana')
@@ -63,7 +65,7 @@ function PantallaAgenda({ pid }) {
           const estado = estadoEntreno(sesiones, fecha, dia.numero)
           const n = delDia(dia.numero).length
           const texto = estado === 'pendiente' && pasado ? 'No registrado' : ESTADO[estado]
-          return <TarjetaEntreno key={dia.numero} to={`/mi-rutina/dia/${dia.numero}`} numero={dia.numero} titulo={dia.titulo || `Día ${dia.numero}`} subtitulo={`${n} ejercicio${n === 1 ? '' : 's'} · ${texto}`} estado={estado} />
+          return <TarjetaEntreno key={dia.numero} to={r(`/mi-rutina/dia/${dia.numero}`)} numero={dia.numero} titulo={dia.titulo || `Día ${dia.numero}`} subtitulo={`${n} ejercicio${n === 1 ? '' : 's'} · ${texto}`} estado={estado} />
         })}
       </section>
     </div>

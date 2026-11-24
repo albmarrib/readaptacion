@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
 import { collection, deleteField, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
+import { useVistaPaciente } from '../lib/vistaPaciente'
 import { describirLinea, formatLinea } from '../lib/volumen'
 import Foto from '../components/Foto'
 import PantallaConsentimiento from '../components/PantallaConsentimiento'
@@ -17,7 +17,8 @@ const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDate
 // children es una función que recibe el id de su ficha.
 export function PuertaPaciente({ children }) {
   const { perfil } = useAuth()
-  const pid = perfil.pacienteId
+  const vista = useVistaPaciente() // «Ver como paciente» (entrenador): ese paciente, sin pedir consentimiento
+  const pid = vista?.pid ?? perfil.pacienteId
   const [ficha, setFicha] = useState(undefined) // undefined = cargando
   const [error, setError] = useState('')
 
@@ -32,7 +33,7 @@ export function PuertaPaciente({ children }) {
   if (!pid) return <p className="tarjeta text-slate-600">Tu cuenta aún no está enlazada a una ficha. Contacta con tu entrenador.</p>
   if (error) return <p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
   if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
-  if (!consentimientoVigente(ficha?.consentimiento)) return <PantallaConsentimiento pacienteId={pid} />
+  if (!vista && !consentimientoVigente(ficha?.consentimiento)) return <PantallaConsentimiento pacienteId={pid} />
   return children(pid, ficha)
 }
 
@@ -41,25 +42,7 @@ export default function MiRutina() {
   return <PuertaPaciente>{pid => <ContenidoRutina pid={pid} nombre={perfil.nombre} />}</PuertaPaciente>
 }
 
-// Vista previa para el entrenador: lo que ve el paciente, solo lectura
-export function VistaPreviaPaciente() {
-  const { id } = useParams()
-  const [ficha, setFicha] = useState(undefined)
-  useEffect(() => onSnapshot(doc(db, 'pacientes', id), s => setFicha(s.exists() ? s.data() : null), () => setFicha(null)), [id])
-  if (ficha === undefined) return <p className="text-slate-500">Cargando…</p>
-  if (!ficha) return <p className="rounded-xl bg-red-50 p-3 text-red-700">No se encuentra el paciente.</p>
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-        <span>👁 Vista previa: así ve la app <b>{ficha.nombre}</b>. Solo lectura.</span>
-        <Link to={`/pacientes/${id}`} className="btn-sec ml-auto !py-1.5">Volver a la ficha</Link>
-      </div>
-      <ContenidoRutina pid={id} nombre={ficha.nombre} soloLectura />
-    </div>
-  )
-}
-
-function ContenidoRutina({ pid, nombre, soloLectura = false }) {
+export function ContenidoRutina({ pid, nombre, soloLectura = false }) {
   const [rutinas, setRutinas] = useState(null)
   const [elegida, setElegida] = useState(null)
   const [error, setError] = useState('')
