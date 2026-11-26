@@ -188,7 +188,7 @@ function Detalle({ ejercicio, onVolver, modoPaciente }) {
             <ul className="mt-2 space-y-1">
               {x.lineas.map((l, k) => (
                 <li key={k} className={`flex items-center justify-between ${modoPaciente ? 'text-[15px] font-light' : 'text-sm'}`}>
-                  <span className="font-mono text-slate-600">{formatLinea(l)}</span>
+                  <span className="min-w-0 font-mono text-slate-600 [overflow-wrap:anywhere]">{formatLinea(l)}</span>
                   <b className={x.pesos[k] != null ? (modoPaciente ? 'font-medium text-tinta' : 'text-teal-800') : 'font-normal text-slate-400'}>{x.pesos[k] != null ? `${x.pesos[k]} kg` : 'sin peso'}</b>
                 </li>
               ))}

@@ -366,10 +366,10 @@ export default function RutinaEditor() {
                     <>
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <div className="font-mono text-sm font-semibold">{e.volumenNombre ? `${e.volumenNombre} · ` : ''}{formatLineas(e.lineas)}</div>
+                          <div className="font-mono text-sm font-semibold [overflow-wrap:anywhere]">{e.volumenNombre ? `${e.volumenNombre} · ` : ''}{formatLineas(e.lineas)}</div>
                           <ul className="mt-0.5 text-xs text-slate-500">
                             {e.lineas.map((l, k) => (
-                              <li key={k}>{describirLinea(l)}
+                              <li key={k} className="[overflow-wrap:anywhere]">{describirLinea(l)}
                                 {!editable && <b className={`ml-2 text-sm ${e.pesos?.[k] != null ? 'text-teal-800' : 'font-normal text-slate-400'}`}>{e.pesos?.[k] != null ? `${e.pesos[k]} kg` : 'sin peso'}</b>}
                               </li>
                             ))}

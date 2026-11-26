@@ -16,7 +16,7 @@ import { preguntarSensaciones } from '../../lib/sensaciones'
 import { IAtras, IBandera, ICheck, ICrono, IInfo, IPlay } from '../../components/paciente/IconosPaciente'
 
 // "2 series × 10+8 reps" · "3 series × SG"
-const textoLinea = l => `${l.series} serie${l.series === 1 ? '' : 's'}  ×  ${l.tramos.join('+')}${l.tramos.every(t => typeof t === 'number') ? ' reps' : ''}`
+const textoLinea = l => `${l.series} serie${l.series === 1 ? '' : 's'}  ×  ${l.tramos.join('+​')}${l.tramos.every(t => typeof t === 'number') ? ' reps' : ''}`
 
 export default function Entreno() {
   return <PuertaPaciente>{(pid, ficha) => <PantallaEntreno pid={pid} ficha={ficha} />}</PuertaPaciente>
@@ -119,7 +119,7 @@ function TarjetaEjercicio({ pid, rid, ejercicio: e, hecho, onCompletar, onVer })
         {(e.lineas ?? []).map((l, k) => (
           <li key={k} className="flex items-center gap-3">
             <IBandera width={24} height={24} className="shrink-0" />
-            <span className="min-w-0 flex-1 text-[17px] font-light tracking-wide">{textoLinea(l)}</span>
+            <span className="min-w-0 flex-1 text-[17px] font-light tracking-wide [overflow-wrap:anywhere]">{textoLinea(l)}</span>
             <PesoLinea pid={pid} rid={rid} ejercicio={e} indice={k} />
           </li>
         ))}

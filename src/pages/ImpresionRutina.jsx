@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { getDownloadURL, ref } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
-import { describirLinea, formatLinea } from '../lib/volumen'
+import { formatLinea } from '../lib/volumen'
 import { LogoCentro } from '../components/Iconos'
 import { useAuth } from '../lib/auth'
 import { useCentro } from '../lib/centro'
@@ -145,8 +145,7 @@ export default function ImpresionRutina() {
                         <ul className="ml-7 mt-1 space-y-0.5">
                           {(e.lineas ?? []).map((l, j) => (
                             <li key={j} className="flex items-center gap-2">
-                              <span className="w-16 shrink-0 font-mono font-bold">{formatLinea(l)}</span>
-                              <span className="flex-1 text-slate-600">{describirLinea(l)}</span>
+                              <span className="min-w-0 flex-1 font-mono font-bold [overflow-wrap:anywhere]">{formatLinea(l).split('+').join('+​')}</span>
                               {pesos === 'anotados'
                                 ? <span className="w-16 shrink-0 text-right font-semibold">{e.pesos?.[j] != null ? `${e.pesos[j]} kg` : ''}</span>
                                 : <span className="w-16 shrink-0 border-b border-slate-400 text-right text-[9px] text-slate-400">kg</span>}

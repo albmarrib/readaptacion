@@ -289,8 +289,8 @@ export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeA
             {(e.lineas ?? []).map((l, i) => (
               <li key={i} className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-slate-200/70">
                 <div className="min-w-0 flex-1">
-                  <div className="font-mono text-lg font-bold tracking-tight">{formatLinea(l)}</div>
-                  <div className="mt-0.5 text-sm leading-snug text-slate-600">{describirLinea(l)}</div>
+                  <div className="font-mono text-lg font-bold tracking-tight [overflow-wrap:anywhere]">{formatLinea(l)}</div>
+                  <div className="mt-0.5 text-sm leading-snug text-slate-600 [overflow-wrap:anywhere]">{describirLinea(l)}</div>
                 </div>
                 <CampoPeso pid={pid} rid={rid} ejercicio={e} indice={i} puedeAnotar={puedeAnotar} />
                 {onMarcar && (() => {
