@@ -28,7 +28,7 @@ export default function ImpresionRutina() {
   const [datos, setDatos] = useState(null)
   const { perfil } = useAuth()
   const centro = useCentro(perfil?.centroId)
-  const [catalogo, setCatalogo] = useState({}) // ejercicioId -> fotos
+  const [catalogo, setCatalogo] = useState({}) // ejercicioId -> [rutas de sus fotos]
   const [error, setError] = useState('')
   const [conFotos, setConFotos] = useState(true)
   const [pesos, setPesos] = useState('blanco') // blanco | anotados
@@ -59,7 +59,7 @@ export default function ImpresionRutina() {
       const ejercicios = e.docs.map(d => ({ id: d.id, ...d.data() }))
       const ids = [...new Set(ejercicios.map(x => x.ejercicioId).filter(Boolean))]
       const fotos = {}
-      await Promise.all(ids.map(id => getDoc(doc(db, 'ejercicios', id)).then(s => { fotos[id] = s.exists() ? (s.data().fotos?.[0] ?? null) : null }).catch(() => { fotos[id] = null })))
+      await Promise.all(ids.map(id => getDoc(doc(db, 'ejercicios', id)).then(s => { fotos[id] = s.exists() ? (s.data().fotos ?? []) : [] }).catch(() => { fotos[id] = [] })))
       if (!vivo) return
       setCatalogo(fotos)
       setDatos({ paciente: p.data(), rutina: r.data(), ejercicios })
@@ -69,7 +69,7 @@ export default function ImpresionRutina() {
   }, [pid, rid])
 
   const marcar = useCallback(ruta => setListas(s => (s.has(ruta) ? s : new Set(s).add(ruta))), [])
-  const rutasFotos = useMemo(() => (conFotos && datos ? [...new Set(datos.ejercicios.map(e => catalogo[e.ejercicioId]).filter(Boolean))] : []), [conFotos, datos, catalogo])
+  const rutasFotos = useMemo(() => (conFotos && datos ? [...new Set(datos.ejercicios.flatMap(e => catalogo[e.ejercicioId] ?? []))] : []), [conFotos, datos, catalogo])
   const cargando = rutasFotos.some(r => !listas.has(r))
 
   if (error) return <p className="m-6 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>
@@ -128,12 +128,16 @@ export default function ImpresionRutina() {
               <ol className="space-y-2">
                 {delDia.map((e, k) => {
                   const [titulo, ...resto] = e.nombre.split('\n').filter(Boolean)
-                  const foto = conFotos ? catalogo[e.ejercicioId] : null
+                  const fotos = conFotos ? (catalogo[e.ejercicioId] ?? []) : []
                   return (
                     <li key={e.id} className="evitar-corte flex gap-3 rounded border border-slate-300 p-2">
                       {conFotos && (
-                        <div className="h-[22mm] w-[30mm] shrink-0 overflow-hidden rounded bg-slate-100">
-                          {foto && <FotoImpresion ruta={foto} onListo={marcar} />}
+                        <div className="flex w-[30mm] shrink-0 flex-col gap-1">
+                          {(fotos.length ? fotos : [null]).map((f, i) => (
+                            <div key={f ?? i} className="h-[22mm] w-[30mm] overflow-hidden rounded bg-slate-100">
+                              {f && <FotoImpresion ruta={f} onListo={marcar} />}
+                            </div>
+                          ))}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
