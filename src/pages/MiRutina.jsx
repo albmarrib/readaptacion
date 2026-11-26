@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteField, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { MODO_TECLADO, leerPeso, textoPeso } from '../lib/pesos'
 import { useAuth } from '../lib/auth'
 import { useVistaPaciente } from '../lib/vistaPaciente'
 import { describirLinea, formatLinea } from '../lib/volumen'
@@ -326,17 +327,16 @@ export function DetalleEjercicio({ pid, rid, ejercicio: e, numero, total, puedeA
 // Un peso por línea del volumen, una vez por rutina. Se guarda al salir del campo.
 function CampoPeso({ pid, rid, ejercicio: e, indice, puedeAnotar }) {
   const guardado = e.pesos?.[indice]
-  const [valor, setValor] = useState(guardado ?? '')
+  const [valor, setValor] = useState(textoPeso(guardado))
   const [estado, setEstado] = useState('') // '' | guardando | ok | error
 
-  useEffect(() => { setValor(guardado ?? '') }, [guardado])
+  useEffect(() => { setValor(textoPeso(guardado)) }, [guardado])
 
-  if (!puedeAnotar) return <div className="w-24 text-right text-lg font-bold">{guardado != null ? `${guardado} kg` : <span className="text-sm font-normal text-slate-400">sin peso</span>}</div>
+  if (!puedeAnotar) return <div className="w-24 text-right text-lg font-bold">{guardado != null ? `${textoPeso(guardado)} kg` : <span className="text-sm font-normal text-slate-400">sin peso</span>}</div>
 
   const guardar = async () => {
-    const texto = String(valor).replace(',', '.').trim()
-    const n = texto === '' ? null : Number(texto)
-    if (n !== null && (!Number.isFinite(n) || n < 0 || n > 1000)) { setEstado('error'); return }
+    const { valor: n, error } = leerPeso(valor)
+    if (error) { setEstado('error'); return }
     if ((n ?? undefined) === guardado) return
     setEstado('guardando')
     try {
@@ -351,8 +351,8 @@ function CampoPeso({ pid, rid, ejercicio: e, indice, puedeAnotar }) {
   return (
     <label className="flex shrink-0 flex-col items-end">
       <span className="flex items-center gap-1.5">
-        <input type="text" inputMode="decimal" placeholder="0" aria-label={`Peso de la línea ${indice + 1} en kilos`}
-          className={`h-14 w-24 rounded-xl border-2 bg-white px-2 text-center text-xl font-bold shadow-sm focus:outline-none focus:ring-4 ${estado === 'error' ? 'border-red-400 focus:ring-red-200' : guardado != null ? 'border-teal-500 focus:ring-teal-600/15' : 'border-slate-300 focus:border-teal-600 focus:ring-teal-600/15'}`}
+        <input type="text" inputMode={MODO_TECLADO} placeholder="0" aria-label={`Peso de la línea ${indice + 1} en kilos`}
+          style={{ width: `${Math.min(10, Math.max(6, String(valor).length * 0.9 + 2))}rem` }} className={`h-14 rounded-xl border-2 bg-white px-2 text-center text-xl font-bold shadow-sm focus:outline-none focus:ring-4 ${estado === 'error' ? 'border-red-400 focus:ring-red-200' : guardado != null ? 'border-teal-500 focus:ring-teal-600/15' : 'border-slate-300 focus:border-teal-600 focus:ring-teal-600/15'}`}
           value={valor} onChange={ev => { setValor(ev.target.value); setEstado('') }} onBlur={guardar}
           onKeyDown={ev => ev.key === 'Enter' && ev.currentTarget.blur()} />
         <span className="text-sm font-semibold text-slate-500">kg</span>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useCatalogo } from '../../pages/MiRutina'
 import { describirLinea } from '../../lib/volumen'
+import { textoPeso } from '../../lib/pesos'
 import Foto from '../Foto'
 import { IAtras, IBandera, IChevronDer, IChevronIzq, IInfo, IPlay } from './IconosPaciente'
 
@@ -60,7 +61,7 @@ export default function VisorEjercicio({ ejercicio: e, onCerrar }) {
             {(e.lineas ?? []).map((l, k) => (
               <li key={k} className="flex items-start gap-3 text-[17px] font-light">
                 <IBandera width={24} height={24} className="mt-0.5 shrink-0" />
-                <span className="min-w-0 [overflow-wrap:anywhere]">{describirLinea(l)}{e.pesos?.[k] != null && <span className="text-slate-500"> · {e.pesos[k]} kg</span>}</span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">{describirLinea(l)}{e.pesos?.[k] != null && <span className="text-slate-500"> · {textoPeso(e.pesos[k])} kg</span>}</span>
               </li>
             ))}
           </ul>

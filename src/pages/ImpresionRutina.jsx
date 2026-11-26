@@ -4,6 +4,7 @@ import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { getDownloadURL, ref } from 'firebase/storage'
 import { db, storage } from '../lib/firebase'
 import { formatLinea } from '../lib/volumen'
+import { textoPeso } from '../lib/pesos'
 import { LogoCentro } from '../components/Iconos'
 import { useAuth } from '../lib/auth'
 import { useCentro } from '../lib/centro'
@@ -151,7 +152,7 @@ export default function ImpresionRutina() {
                             <li key={j} className="flex items-center gap-2">
                               <span className="min-w-0 flex-1 font-mono font-bold [overflow-wrap:anywhere]">{formatLinea(l).split('+').join('+​')}</span>
                               {pesos === 'anotados'
-                                ? <span className="w-16 shrink-0 text-right font-semibold">{e.pesos?.[j] != null ? `${e.pesos[j]} kg` : ''}</span>
+                                ? <span className="min-w-16 shrink-0 whitespace-nowrap text-right font-semibold">{e.pesos?.[j] != null ? `${textoPeso(e.pesos[j])} kg` : ''}</span>
                                 : <span className="w-16 shrink-0 border-b border-slate-400 text-right text-[9px] text-slate-400">kg</span>}
                             </li>
                           ))}

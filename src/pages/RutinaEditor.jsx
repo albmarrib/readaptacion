@@ -5,6 +5,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../lib/auth'
 import { useGrupos } from '../lib/datos'
 import { describirLinea, formatLineas, seriesTotales, tituloDia, tituloGrupo } from '../lib/volumen'
+import { textoPeso } from '../lib/pesos'
 import SelectorEjercicios from '../components/SelectorEjercicios'
 import SelectorVolumen from '../components/SelectorVolumen'
 import SeguimientoRutina from '../components/SeguimientoRutina'
@@ -370,7 +371,7 @@ export default function RutinaEditor() {
                           <ul className="mt-0.5 text-xs text-slate-500">
                             {e.lineas.map((l, k) => (
                               <li key={k} className="[overflow-wrap:anywhere]">{describirLinea(l)}
-                                {!editable && <b className={`ml-2 text-sm ${e.pesos?.[k] != null ? 'text-teal-800' : 'font-normal text-slate-400'}`}>{e.pesos?.[k] != null ? `${e.pesos[k]} kg` : 'sin peso'}</b>}
+                                {!editable && <b className={`ml-2 text-sm ${e.pesos?.[k] != null ? 'text-teal-800' : 'font-normal text-slate-400'}`}>{e.pesos?.[k] != null ? `${textoPeso(e.pesos[k])} kg` : 'sin peso'}</b>}
                               </li>
                             ))}
                           </ul>

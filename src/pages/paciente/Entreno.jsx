@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { MODO_TECLADO, leerPeso, textoPeso } from '../../lib/pesos'
 import { usePlanPaciente } from '../../lib/planPaciente'
 import { useGrupos } from '../../lib/datos'
 import { ejercicioHecho, marcarEjercicio, sesionDeHoy, terminarSesion } from '../../lib/sesiones'
@@ -138,14 +139,13 @@ function TarjetaEjercicio({ pid, rid, ejercicio: e, hecho, onCompletar, onVer })
 function PesoLinea({ pid, rid, ejercicio: e, indice }) {
   const soloLectura = !!useVistaPaciente()
   const guardado = e.pesos?.[indice]
-  const [valor, setValor] = useState(guardado ?? '')
+  const [valor, setValor] = useState(textoPeso(guardado))
   const [estado, setEstado] = useState('')
-  useEffect(() => { setValor(guardado ?? '') }, [guardado])
+  useEffect(() => { setValor(textoPeso(guardado)) }, [guardado])
 
   const guardar = async () => {
-    const texto = String(valor).replace(',', '.').trim()
-    const n = texto === '' ? null : Number(texto)
-    if (n !== null && (!Number.isFinite(n) || n < 0 || n > 1000)) { setEstado('error'); return }
+    const { valor: n, error } = leerPeso(valor)
+    if (error) { setEstado('error'); return }
     if ((n ?? undefined) === guardado) return
     try {
       await updateDoc(doc(db, 'pacientes', pid, 'rutinas', rid, 'ejercicios', e.id), { [`pesos.${indice}`]: n === null ? deleteField() : n, pesosActualizado: serverTimestamp() })
@@ -155,8 +155,8 @@ function PesoLinea({ pid, rid, ejercicio: e, indice }) {
 
   return (
     <label className="flex shrink-0 items-center gap-1.5">
-      <input type="text" inputMode="decimal" placeholder="—" aria-label={`Peso de la línea ${indice + 1} en kilos`}
-        className={`h-11 w-[4.5rem] border-b-2 bg-transparent text-center text-[19px] font-medium outline-none transition ${estado === 'error' ? 'border-red-400' : estado === 'ok' ? 'border-emerald-500' : 'border-tinta/40 focus:border-tinta'}`}
+      <input type="text" inputMode={MODO_TECLADO} placeholder="—" aria-label={`Peso de la línea ${indice + 1} en kilos`}
+        style={{ width: `${Math.min(9, Math.max(4.5, String(valor).length * 0.8 + 1.5))}rem` }} className={`h-11 border-b-2 bg-transparent text-center text-[19px] font-medium outline-none transition ${estado === 'error' ? 'border-red-400' : estado === 'ok' ? 'border-emerald-500' : 'border-tinta/40 focus:border-tinta'}`}
         value={valor} readOnly={soloLectura} onChange={ev => { setValor(ev.target.value); setEstado('') }} onBlur={soloLectura ? undefined : guardar} onKeyDown={ev => ev.key === 'Enter' && ev.currentTarget.blur()} />
       <span className="text-[14px] font-light text-slate-500">kg</span>
     </label>

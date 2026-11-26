@@ -4,11 +4,12 @@ import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firesto
 import { db } from '../lib/firebase'
 import { normalizar } from '../lib/util'
 import { formatLinea } from '../lib/volumen'
+import { pesoMaximo, textoPeso } from '../lib/pesos'
 import Volver from '../components/Volver'
 import PanelSensaciones from '../components/PanelSensaciones'
 
 const fmt = t => (t?.toDate ? t.toDate() : t ? new Date(t) : null)?.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
-const maximo = pesos => { const v = Object.values(pesos ?? {}).filter(Number.isFinite); return v.length ? Math.max(...v) : null }
+const maximo = pesoMaximo // el peso más alto anotado (en «2-4-2», el 4)
 
 // Evolución de los pesos de un paciente: cada ejercicio a lo largo de sus rutinas
 // modoPaciente: el propio paciente ve su evolución (sin botón de volver a la ficha)
@@ -189,7 +190,7 @@ function Detalle({ ejercicio, onVolver, modoPaciente }) {
               {x.lineas.map((l, k) => (
                 <li key={k} className={`flex items-center justify-between ${modoPaciente ? 'text-[15px] font-light' : 'text-sm'}`}>
                   <span className="min-w-0 font-mono text-slate-600 [overflow-wrap:anywhere]">{formatLinea(l)}</span>
-                  <b className={x.pesos[k] != null ? (modoPaciente ? 'font-medium text-tinta' : 'text-teal-800') : 'font-normal text-slate-400'}>{x.pesos[k] != null ? `${x.pesos[k]} kg` : 'sin peso'}</b>
+                  <b className={x.pesos[k] != null ? (modoPaciente ? 'font-medium text-tinta' : 'text-teal-800') : 'font-normal text-slate-400'}>{x.pesos[k] != null ? `${textoPeso(x.pesos[k])} kg` : 'sin peso'}</b>
                 </li>
               ))}
             </ul>

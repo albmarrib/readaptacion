@@ -225,7 +225,7 @@ pacientes/{id}/rutinas/{rid}/ejercicios/{eid}
   lineas: [{ series, tramos: [..] }]
   seriesTotales
   observaciones
-  pesos: { "0": number, "1": number } // clave = índice de línea
+  pesos: { "0": number | "2-4-2", ... } // clave = índice de línea; varios pesos (series con partes, p. ej. 12-6-12) como texto con guiones; las gráficas usan el más alto (src/lib/pesos.js, 26-nov-2026)
   pesosActualizado: timestamp
 
 pacientes/{id}/rutinas/{rid}/sesiones/{AAAA-MM-DD_dN}   // entrenamientos hechos (10-nov-2026)
